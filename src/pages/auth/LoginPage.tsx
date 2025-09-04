@@ -8,8 +8,24 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HeroButton } from "@/components/ui/button-variants";
 
+/**
+ * Página de inicio de sesión con múltiples roles
+ * 
+ * Características principales:
+ * - Selector de roles con tabs (Estudiantes, Organizaciones, Administradores)
+ * - Detección automática del rol basado en la URL
+ * - Enlaces de registro específicos para cada rol
+ * - Validación de formularios y estados de carga
+ * 
+ * La página maneja tres flujos principales:
+ * 1. Login directo
+ * 2. Redirección a registro de estudiantes
+ * 3. Redirección a registro de organizaciones
+ */
 const LoginPage = () => {
+  // Estado para mostrar/ocultar la contraseña
   const [showPassword, setShowPassword] = useState(false);
+  // Estado para el proceso de inicio de sesión
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (event: React.FormEvent) => {
@@ -57,7 +73,11 @@ const LoginPage = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="student" className="w-full">
+        {/* Tabs para selección de rol 
+            El valor por defecto se determina dinámicamente basado en la URL actual
+            Esto permite que al acceder directamente a /auth/organization
+            se muestre automáticamente la pestaña de organizaciones */}
+        <Tabs defaultValue={window.location.pathname === "/auth/organization" ? "organization" : "student"} className="w-full">
           {/* Role Selector */}
           <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm border-white/20">
             {Object.entries(roleInfo).map(([key, info]) => {
@@ -203,7 +223,7 @@ const LoginPage = () => {
                             <p className="text-sm text-muted-foreground">
                               ¿Primera vez?{" "}
                               <Link
-                                to="/auth/register/organization"
+                                to="/auth/register-organization"
                                 className="text-primary hover:underline font-medium"
                               >
                                 Registrar organización
