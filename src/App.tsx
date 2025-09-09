@@ -12,6 +12,7 @@ import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import NotFound from "./pages/NotFound";
+import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +29,8 @@ const App = () => (
           <Route path="/auth/student" element={<LoginPage />} />
           <Route path="/auth/organization" element={<LoginPage />} />
           <Route path="/auth/admin" element={<LoginPage />} />
-          
+          <Route path="/auth/register/student" element={<RegisterPageStudent />} /> {/* <-- Agrega aquí la ruta */}
+
           {/* Student Routes */}
           <Route path="/student/*" element={
             <AuthGuard allowedRoles={['student']}>
