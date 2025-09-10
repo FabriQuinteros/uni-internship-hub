@@ -119,14 +119,30 @@ export function OrganizationRegisterForm() {
     handleSubmit,
     formState: { errors, isValid },
     watch,
+    setValue,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+      companyName: '',
+      industry: '',
+      website: '',
+      description: '',
+      address: '',
+      contactName: '',
+      contactPhone: '',
+      termsAccepted: false
+    }
   });
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
     try {
+      console.log('Datos del formulario:', data); // Para depuración
+      
       // Aquí iría la llamada a la API para registrar la organización
       await new Promise(resolve => setTimeout(resolve, 1500)); // Simulación de llamada API
 
@@ -136,10 +152,11 @@ export function OrganizationRegisterForm() {
       });
 
       navigate('/auth/confirmation');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error en el registro:', error);
       toast({
         title: "Error en el registro",
-        description: "Ha ocurrido un error. Por favor intenta nuevamente.",
+        description: error.message || "Ha ocurrido un error. Por favor intenta nuevamente.",
         variant: "destructive",
       });
     } finally {
@@ -231,7 +248,15 @@ export function OrganizationRegisterForm() {
         <Label htmlFor="industry">
           Industria <span className="text-red-500">*</span>
         </Label>
-        <Select onValueChange={(value) => register('industry').onChange({ target: { value } })}>
+        <Select 
+          defaultValue={watch('industry')}
+          onValueChange={(value) => {
+            setValue('industry', value, {
+              shouldValidate: true,
+              shouldDirty: true
+            });
+          }}
+        >
           <SelectTrigger className={errors.industry ? 'border-red-500' : ''}>
             <SelectValue placeholder="Selecciona una industria" />
           </SelectTrigger>
