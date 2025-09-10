@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, BookOpen, GraduationCap, Building, Users } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,31 +9,54 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HeroButton } from "@/components/ui/button-variants";
 
-/**
- * Página de inicio de sesión con múltiples roles
- * 
- * Características principales:
- * - Selector de roles con tabs (Estudiantes, Organizaciones, Administradores)
- * - Detección automática del rol basado en la URL
- * - Enlaces de registro específicos para cada rol
- * - Validación de formularios y estados de carga
- * 
- * La página maneja tres flujos principales:
- * 1. Login directo
- * 2. Redirección a registro de estudiantes
- * 3. Redirección a registro de organizaciones
- */
+interface LocationState {
+  from?: string;
+}
+
 const LoginPage = () => {
   // Estado para mostrar/ocultar la contraseña
   const [showPassword, setShowPassword] = useState(false);
   // Estado para el proceso de inicio de sesión
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated, user } = useAuth();
+  const locationState = location.state as LocationState;
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Verificar si hay una ruta anterior guardada
+      const from = locationState?.from || getDashboardRoute(user.role);
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  // Función auxiliar para obtener la ruta del dashboard según el rol
+  const getDashboardRoute = (role: string) => {
+    const dashboardRoutes: Record<string, string> = {
+      student: '/student/dashboard',
+      organization: '/organization/dashboard',
+      admin: '/admin/dashboard'
+    };
+    return dashboardRoutes[role] || '/student/dashboard';
+  };
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
+    setError("");
     setIsLoading(true);
-    // Aquí iría la lógica de autenticación
-    setTimeout(() => setIsLoading(false), 2000);
+    
+    try {
+      await login(email, password);
+    } catch (err) {
+      setError("Credenciales inválidas");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const roleInfo = {
@@ -143,6 +167,8 @@ const LoginPage = () => {
                           <Input
                             id="email"
                             type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             placeholder="estudiante@universidad.edu"
                             required
                             className="bg-background"
@@ -155,6 +181,8 @@ const LoginPage = () => {
                             <Input
                               id="password"
                               type={showPassword ? "text" : "password"}
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
                               placeholder="••••••••"
                               required
                               className="bg-background pr-10"

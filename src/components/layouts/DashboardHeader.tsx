@@ -1,4 +1,4 @@
-import { Bell, Search, User, LogOut, Settings } from "lucide-react";
+import { Bell, Search, User, LogOut, Settings, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,48 +9,40 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
+  DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   userRole: 'student' | 'organization' | 'admin';
 }
 
 export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
-  const getUserInfo = () => {
-    switch (userRole) {
-      case 'student':
-        return {
-          name: "María González",
-          email: "maria.gonzalez@universidad.edu",
-          avatar: "/api/placeholder/32/32",
-          role: "Estudiante"
-        };
-      case 'organization':
-        return {
-          name: "TechCorp Solutions",
-          email: "rrhh@techcorp.com",
-          avatar: "/api/placeholder/32/32",
-          role: "Organización"
-        };
-      case 'admin':
-        return {
-          name: "Dr. Carlos Mendoza",
-          email: "admin@universidad.edu",
-          avatar: "/api/placeholder/32/32",
-          role: "Administrador"
-        };
-      default:
-        return {
-          name: "Usuario",
-          email: "usuario@email.com",
-          avatar: "/api/placeholder/32/32",
-          role: "Usuario"
-        };
-    }
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const getRoleBadge = () => {
+    const roleConfig = {
+      student: { text: "Estudiante", class: "bg-primary/10 text-primary hover:bg-primary/20" },
+      organization: { text: "Organización", class: "bg-secondary/10 text-secondary hover:bg-secondary/20" },
+      admin: { text: "Administrador", class: "bg-destructive/10 text-destructive hover:bg-destructive/20" },
+    };
+
+    const config = roleConfig[userRole];
+    return (
+      <Badge variant="outline" className={config.class}>
+        {config.text}
+      </Badge>
+    );
   };
 
-  const userInfo = getUserInfo();
+  const handleLogout = () => {
+    logout();
+    navigate('/auth/login');
+  };
 
   return (
     <header className="h-16 border-b bg-card/50 backdrop-blur-sm px-6 flex items-center justify-between">
@@ -83,9 +75,9 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={userInfo.avatar} alt={userInfo.name} />
+                <AvatarImage src={user?.imageUrl} alt={user?.name} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  {userInfo.name.split(' ').map(n => n[0]).join('')}
+                  {user?.name?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -93,28 +85,33 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{userInfo.name}</p>
+                <p className="text-sm font-medium leading-none">{user?.name}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {userInfo.email}
+                  {user?.email}
                 </p>
-                <Badge variant="secondary" className="w-fit text-xs mt-1">
-                  {userInfo.role}
-                </Badge>
+                <div className="mt-2">
+                  {getRoleBadge()}
+                </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Configuración</span>
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem>
+                <UserCircle className="mr-2 h-4 w-4" />
+                <span>Perfil</span>
+                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Configuración</span>
+                <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Cerrar sesión</span>
+              <span>Cerrar Sesión</span>
+              <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
