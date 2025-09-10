@@ -81,14 +81,22 @@ const LandingPage = () => {
             Conectamos estudiantes de Ingeniería en Sistemas con oportunidades profesionales 
             que transforman su futuro académico y laboral
           </p>
+          {/* Botones de acción principales */}
+          {/* Estos botones son los CTA (Call To Action) principales de la landing page */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* Botón primario para estudiantes */}
             <HeroButton variant="primary">
               Explorar Oportunidades
               <ArrowRight className="ml-2 h-5 w-5" />
             </HeroButton>
-            <HeroButton variant="secondary">
-              Registrar Organización
-            </HeroButton>
+            {/* Botón de registro de organizaciones
+                Este botón redirige directamente al formulario de registro
+                usando React Router para mantener la navegación SPA */}
+            <Link to="/auth/register-organization">
+              <HeroButton variant="secondary">
+                Registrar Organización
+              </HeroButton>
+            </Link>
           </div>
         </div>
       </section>

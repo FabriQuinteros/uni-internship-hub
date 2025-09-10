@@ -37,31 +37,31 @@ const navigationItems = {
   student: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/student/dashboard",
       icon: Home,
       description: "Vista general"
     },
     {
       title: "Mi Perfil",
-      url: "/dashboard/profile",
+      url: "/student/profile",
       icon: User,
       description: "Información personal"
     },
     {
       title: "Ofertas",
-      url: "/dashboard/offers",
+      url: "/student/offers",
       icon: FileText,
       description: "Buscar pasantías"
     },
     {
       title: "Mis Postulaciones",
-      url: "/dashboard/applications",
+      url: "/student/applications",
       icon: Send,
       description: "Estado de aplicaciones"
     },
     {
       title: "Favoritos",
-      url: "/dashboard/favorites",
+      url: "/student/favorites",
       icon: Heart,
       description: "Ofertas guardadas"
     }
@@ -69,31 +69,31 @@ const navigationItems = {
   organization: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/organization/dashboard",
       icon: Home,
       description: "Vista general"
     },
     {
       title: "Perfil Empresa",
-      url: "/dashboard/profile",
+      url: "/organization/profile",
       icon: Building,
       description: "Información corporativa"
     },
     {
       title: "Mis Ofertas",
-      url: "/dashboard/offers",
+      url: "/organization/offers",
       icon: FileText,
       description: "Gestionar publicaciones"
     },
     {
       title: "Postulaciones",
-      url: "/dashboard/applications",
+      url: "/organization/applications",
       icon: Users,
       description: "Candidatos recibidos"
     },
     {
       title: "Estadísticas",
-      url: "/dashboard/analytics",
+      url: "/organization/analytics",
       icon: BarChart3,
       description: "Métricas y reportes"
     }
@@ -101,37 +101,37 @@ const navigationItems = {
   admin: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/admin/dashboard",
       icon: Home,
       description: "Vista general del sistema"
     },
     {
       title: "Gestión de Usuarios",
-      url: "/dashboard/users",
+      url: "/admin/users",
       icon: Users,
       description: "Estudiantes y organizaciones"
     },
     {
       title: "Aprobación de Ofertas",
-      url: "/dashboard/approval",
+      url: "/admin/approval",
       icon: Shield,
       description: "Revisar publicaciones"
     },
     {
       title: "Catálogos",
-      url: "/dashboard/catalogs",
+      url: "/admin/catalogs",
       icon: Database,
       description: "Tecnologías y habilidades"
     },
     {
       title: "Configuración",
-      url: "/dashboard/settings",
+      url: "/admin/settings",
       icon: Settings,
       description: "Parámetros del sistema"
     },
     {
       title: "Reportes",
-      url: "/dashboard/reports",
+      url: "/admin/reports",
       icon: BarChart3,
       description: "Estadísticas generales"
     }
