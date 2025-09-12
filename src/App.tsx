@@ -13,6 +13,7 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import NotFound from "./pages/NotFound";
 import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
+import OrganizationApprovalPanel from "./pages/admin/OrganizationApprovalPanel";
 
 const queryClient = new QueryClient();
 
@@ -68,7 +69,7 @@ const App = () => (
                 <Routes>
                   <Route path="dashboard" element={<AdminDashboardPage />} />
                   <Route path="users" element={<div>Gestión de Usuarios</div>} />
-                  <Route path="approval" element={<div>Aprobación de Ofertas</div>} />
+                  <Route path="organizations" element={<OrganizationApprovalPanel />} />                  <Route path="approval" element={<div>Aprobación de Ofertas</div>} />
                   <Route path="catalogs" element={<CatalogsPage />} />
                   <Route path="settings" element={<div>Configuración</div>} />
                   <Route path="reports" element={<div>Reportes</div>} />
