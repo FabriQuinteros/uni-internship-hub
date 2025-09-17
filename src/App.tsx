@@ -13,6 +13,8 @@ import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import NotFound from "./pages/NotFound";
+import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
+import OrganizationApprovalPanel from "./pages/admin/OrganizationApprovalPanel";
 
 const queryClient = new QueryClient();
 
@@ -54,7 +56,8 @@ const App = () => (
               - Mensajes de confirmación */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
           <Route path="/auth/admin" element={<LoginPage />} />
-          
+          <Route path="/auth/register/student" element={<RegisterPageStudent />} /> {/* <-- Agrega aquí la ruta */}
+
           {/* Student Routes */}
           <Route path="/student/*" element={
             <AuthGuard allowedRoles={['student']}>
@@ -92,7 +95,7 @@ const App = () => (
                 <Routes>
                   <Route path="dashboard" element={<AdminDashboardPage />} />
                   <Route path="users" element={<div>Gestión de Usuarios</div>} />
-                  <Route path="approval" element={<div>Aprobación de Ofertas</div>} />
+                  <Route path="organizations" element={<OrganizationApprovalPanel />} />                  <Route path="approval" element={<div>Aprobación de Ofertas</div>} />
                   <Route path="catalogs" element={<CatalogsPage />} />
                   <Route path="settings" element={<div>Configuración</div>} />
                   <Route path="reports" element={<div>Reportes</div>} />

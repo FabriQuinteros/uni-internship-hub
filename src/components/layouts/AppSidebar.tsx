@@ -112,6 +112,12 @@ const navigationItems = {
       description: "Estudiantes y organizaciones"
     },
     {
+      title: "Gestión de Organizaciones", 
+      url: "/admin/organizations",
+      icon: Building, 
+      description: "Administrar organizaciones"
+    },
+    {
       title: "Aprobación de Ofertas",
       url: "/admin/approval",
       icon: Shield,
