@@ -8,6 +8,9 @@ export const systemService = {
      */
     async ping(): Promise<string> {
         const response = await apiClient.get(API_CONFIG.ENDPOINTS.PING);
-        return response.data.message || 'Respuesta recibida sin mensaje';
+        if (!response?.data?.message) {
+            throw new Error("Respuesta inválida del servidor");
+          }
+        return response.data.message;
     }
 };

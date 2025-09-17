@@ -1,6 +1,6 @@
 export const API_CONFIG = {
     // Durante desarrollo, usamos el proxy configurado en Vite
-    BASE_URL: import.meta.env.DEV ? 'http://localhost:8083' : import.meta.env.VITE_API_URL,
+    BASE_URL: import.meta.env.VITE_API_URL,
     TIMEOUT: 15000, // 15 segundos de timeout por defecto
     ENDPOINTS: {
         PING: '/ping',
