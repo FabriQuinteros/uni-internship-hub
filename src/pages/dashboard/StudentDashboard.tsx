@@ -12,7 +12,8 @@ import {
   XCircle,
   TrendingUp,
   Award,
-  BookOpen
+  BookOpen,
+  WifiOff
 } from "lucide-react";
 
 const StudentDashboard = () => {
