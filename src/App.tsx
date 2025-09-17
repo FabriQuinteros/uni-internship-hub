@@ -13,6 +13,7 @@ import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import NotFound from "./pages/NotFound";
+import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
 
 const queryClient = new QueryClient();
 
@@ -54,7 +55,8 @@ const App = () => (
               - Mensajes de confirmación */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
           <Route path="/auth/admin" element={<LoginPage />} />
-          
+          <Route path="/auth/register/student" element={<RegisterPageStudent />} /> {/* <-- Agrega aquí la ruta */}
+
           {/* Student Routes */}
           <Route path="/student/*" element={
             <AuthGuard allowedRoles={['student']}>
