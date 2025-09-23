@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/auth/LoginPage";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
+import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
+import OrganizationProfilePage from "./pages/dashboard/OrganizationProfilePage";
 import { DashboardLayout } from "./components/layouts/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +34,20 @@ const App = () => (
                 <StudentDashboard />
               </DashboardLayout>
             } 
+          />
+          
+          {/* Organization Routes */}
+          <Route 
+            path="/dashboard/organization" 
+            element={
+              <DashboardLayout userRole="organization">
+                <OrganizationDashboard />
+              </DashboardLayout>
+            } 
+          />
+          <Route 
+            path="/dashboard/organization/profile" 
+            element={<OrganizationProfilePage />} 
           />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
