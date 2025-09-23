@@ -57,7 +57,7 @@ const OrganizationDashboard = () => {
    * Navegar al perfil de la organización
    */
   const handleUpdateProfile = () => {
-    navigate('/dashboard/organization/profile');
+    navigate('/organization/profile');
   };
 
   return (

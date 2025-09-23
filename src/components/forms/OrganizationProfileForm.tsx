@@ -195,21 +195,6 @@ export const OrganizationProfileForm: React.FC<OrganizationProfileFormProps> = (
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Perfil de Organización</h1>
-          <p className="text-muted-foreground">
-            Gestiona la información de tu organización y mantén tu perfil actualizado
-          </p>
-        </div>
-        {readOnly && (
-          <Badge variant="secondary" className="bg-muted">
-            Solo lectura
-          </Badge>
-        )}
-      </div>
-
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Sección: Información Básica */}
         <Card>
