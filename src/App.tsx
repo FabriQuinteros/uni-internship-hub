@@ -10,6 +10,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
+import OrganizationProfilePage from "./pages/dashboard/OrganizationProfilePage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import NotFound from "./pages/NotFound";
@@ -26,7 +27,9 @@ const queryClient = new QueryClient();
  * /auth/organization -> Login específico de organizaciones
  * /auth/register-organization -> Registro de nuevas organizaciones
  * /auth/admin -> Login de administradores
- * /dashboard -> Dashboard principal (requiere autenticación)
+ * /student/* -> Rutas protegidas de estudiantes
+ * /organization/* -> Rutas protegidas de organizaciones
+ * /admin/* -> Rutas protegidas de administradores
  * 
  * Configuración global:
  * - React Query para manejo de estado del servidor
@@ -43,17 +46,18 @@ const App = () => (
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          
           {/* Rutas de autenticación */}
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/student" element={<LoginPage />} />
           <Route path="/auth/organization" element={<LoginPage />} />
+          <Route path="/auth/admin" element={<LoginPage />} />
           {/* Ruta para el registro de nuevas organizaciones
               Esta ruta maneja el flujo de registro completo incluyendo:
               - Formulario con validaciones
               - Redirección post-registro
               - Mensajes de confirmación */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
-          <Route path="/auth/admin" element={<LoginPage />} />
           
           {/* Student Routes */}
           <Route path="/student/*" element={
@@ -65,6 +69,7 @@ const App = () => (
                   <Route path="offers" element={<div>Ofertas Disponibles</div>} />
                   <Route path="applications" element={<div>Mis Postulaciones</div>} />
                   <Route path="favorites" element={<div>Favoritos</div>} />
+                  <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>
             </AuthGuard>
@@ -76,10 +81,11 @@ const App = () => (
               <DashboardLayout userRole="organization">
                 <Routes>
                   <Route path="dashboard" element={<OrganizationDashboard />} />
-                  <Route path="profile" element={<div>Perfil de Organización</div>} />
+                  <Route path="profile" element={<OrganizationProfilePage />} />
                   <Route path="offers" element={<div>Gestión de Ofertas</div>} />
                   <Route path="applications" element={<div>Postulaciones Recibidas</div>} />
                   <Route path="analytics" element={<div>Estadísticas</div>} />
+                  <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>
             </AuthGuard>
@@ -96,12 +102,13 @@ const App = () => (
                   <Route path="catalogs" element={<CatalogsPage />} />
                   <Route path="settings" element={<div>Configuración</div>} />
                   <Route path="reports" element={<div>Reportes</div>} />
+                  <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>
             </AuthGuard>
           } />
           
-          {/* Catch-all route */}
+          {/* Catch-all route - DEBE IR AL FINAL */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
