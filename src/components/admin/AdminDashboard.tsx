@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Code2, Brain, Users, Shield, Settings, BarChart3 } from "lucide-react";
+import { Database, Code2, Brain, Users, Shield, Settings, BarChart3, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCatalogStore } from '../../store/catalogStore';
 
@@ -44,6 +44,12 @@ const AdminDashboard: React.FC = () => {
       description: "Administrar estudiantes y organizaciones",
       icon: Users,
       href: "/admin/users"
+    },
+    {
+      title: "Gestionar Organizaciones",
+      description: "Aprobar, rechazar y gestionar organizaciones",
+      icon: Building2,
+      href: "/admin/organizations"
     },
     {
       title: "Aprobar Ofertas",
@@ -91,7 +97,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {quickActions.map((action, index) => (
           <Card key={index} className="shadow-card hover:shadow-floating transition-all duration-300">
             <CardHeader>
