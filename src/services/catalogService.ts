@@ -1,22 +1,15 @@
 import { apiClient } from '@/lib/api/apiClient';
 import { API_CONFIG } from '@/config/api.config';
-import { processError } from '@/utils/errorTranslator';
+import { handleApiResponse } from '@/lib/api/apiResponseHandler';
+import { ApiHandlerResult } from '@/types/api';
 import { 
   CatalogType, 
   CatalogItem, 
   Technology,
-  Position,
-  Duration,
-  Location,
-  Modality,
-  ApiListResponse,
-  ApiSingleResponse,
   CreateCatalogRequest,
-  UpdateCatalogRequest,
-  ApiErrorResponse
+  UpdateCatalogRequest
 } from '@/types/catalog';
 
-// Endpoint mapping
 const getEndpoints = (type: CatalogType) => {
   const endpoints = {
     technologies: API_CONFIG.ENDPOINTS.CATALOG.TECHNOLOGIES,
@@ -28,121 +21,64 @@ const getEndpoints = (type: CatalogType) => {
   return endpoints[type];
 };
 
-// Get the response key for each catalog type
 const getResponseKey = (type: CatalogType): string => {
-  return type; // The API returns data under the same key as the catalog type
+  return type;
 };
 
-/**
- * Unified catalog service for all catalog types
- */
 export const catalogService = {
-  /**
-   * List all items for a specific catalog type
-   */
   async list<T extends CatalogItem>(type: CatalogType): Promise<T[]> {
-    try {
-      const endpoints = getEndpoints(type);
-      const response = await apiClient.get<any>(endpoints.LIST);
-      
-      // Manejar diferentes estructuras de respuesta
-      let items: T[] = [];
-      
-      if (response.data?.data) {
-        // Estructura: { data: { [type]: [...] } } o { data: [...] }
-        const responseKey = getResponseKey(type);
-        if (Array.isArray(response.data.data[responseKey])) {
-          items = response.data.data[responseKey];
-        } else if (Array.isArray(response.data.data)) {
-          items = response.data.data;
-        }
-      } else if (Array.isArray(response.data)) {
-        // Respuesta directa como array
-        items = response.data;
-      }
-      
-      return items;
-    } catch (error) {
-      console.error(`Error cargando ${type}:`, error);
-      throw new Error(processError(error, type));
+    const result = await catalogServiceInternal.list<T>(type);
+    
+    if (!result.success) {
+      throw new Error(result.message);
     }
+    
+    return result.data || [];
   },
 
-  /**
-   * Create a new catalog item
-   */
   async create<T extends CatalogItem>(
     type: CatalogType, 
     data: CreateCatalogRequest
   ): Promise<T> {
-    try {
-      const endpoints = getEndpoints(type);
-      const response = await apiClient.post<any>(
-        endpoints.CREATE,
-        data
-      );
-      
-      // Extraer el item creado de la respuesta
-      let newItem: T;
-      if (response.data?.data) {
-        newItem = response.data.data;
-      } else {
-        newItem = response.data;
-      }
-      
-      return newItem;
-    } catch (error: any) {
-      console.error(`Error creando ${type}:`, error);
-      throw new Error(processError(error, type));
+    const result = await catalogServiceInternal.create<T>(type, data);
+    
+    if (!result.success) {
+      throw new Error(result.message);
     }
+    
+    if (!result.data) {
+      throw new Error('No data returned from create operation');
+    }
+    
+    return result.data;
   },
 
-  /**
-   * Update an existing catalog item (supports partial updates)
-   */
   async update<T extends CatalogItem>(
     type: CatalogType,
     id: number,
     data: UpdateCatalogRequest
   ): Promise<T> {
-    try {
-      const endpoints = getEndpoints(type);
-      const response = await apiClient.put<any>(
-        endpoints.UPDATE(id),
-        data
-      );
-      
-      // Extraer el item actualizado de la respuesta
-      let updatedItem: T;
-      if (response.data?.data) {
-        updatedItem = response.data.data;
-      } else {
-        updatedItem = response.data;
-      }
-      
-      return updatedItem;
-    } catch (error: any) {
-      console.error(`Error actualizando ${type}:`, error);
-      throw new Error(processError(error, type));
+    const result = await catalogServiceInternal.update<T>(type, id, data);
+    
+    if (!result.success) {
+      throw new Error(result.message);
     }
+    
+    if (!result.data) {
+      throw new Error('No data returned from update operation');
+    }
+    
+    return result.data;
   },
 
-  /**
-   * Delete a catalog item (soft delete)
-   */
   async delete(type: CatalogType, id: number): Promise<void> {
-    try {
-      const endpoints = getEndpoints(type);
-      await apiClient.delete(endpoints.DELETE(id));
-    } catch (error: any) {
-      console.error(`Error eliminando ${type}:`, error);
-      throw new Error(processError(error, type));
+    const result = await catalogServiceInternal.delete(type, id);
+    
+    if (!result.success) {
+      throw new Error(result.message);
     }
   },
 
-  /**
-   * Toggle active status of a catalog item
-   */
   async toggleStatus<T extends CatalogItem>(
     type: CatalogType,
     id: number,
@@ -152,7 +88,64 @@ export const catalogService = {
   }
 };
 
-// Backward compatibility - export the old technologyService for existing code
+const catalogServiceInternal = {
+  async list<T extends CatalogItem>(type: CatalogType): Promise<ApiHandlerResult<T[]>> {
+    const endpoints = getEndpoints(type);
+    const responsePromise = apiClient.get(endpoints.LIST);
+    
+    const result = await handleApiResponse<T[]>(responsePromise);
+    
+    if (result.success && result.data) {
+      let items: T[] = [];
+      
+      if (Array.isArray(result.data)) {
+        items = result.data;
+      } else if (result.data && typeof result.data === 'object') {
+        const responseKey = getResponseKey(type);
+        const nestedData = (result.data as any)[responseKey];
+        if (Array.isArray(nestedData)) {
+          items = nestedData;
+        }
+      }
+      
+      return {
+        ...result,
+        data: items
+      };
+    }
+    
+    return result;
+  },
+
+  async create<T extends CatalogItem>(
+    type: CatalogType, 
+    data: CreateCatalogRequest
+  ): Promise<ApiHandlerResult<T>> {
+    const endpoints = getEndpoints(type);
+    const responsePromise = apiClient.post(endpoints.CREATE, data);
+    
+    return handleApiResponse<T>(responsePromise);
+  },
+
+  async update<T extends CatalogItem>(
+    type: CatalogType,
+    id: number,
+    data: UpdateCatalogRequest
+  ): Promise<ApiHandlerResult<T>> {
+    const endpoints = getEndpoints(type);
+    const responsePromise = apiClient.put(endpoints.UPDATE(id), data);
+    
+    return handleApiResponse<T>(responsePromise);
+  },
+
+  async delete(type: CatalogType, id: number): Promise<ApiHandlerResult<void>> {
+    const endpoints = getEndpoints(type);
+    const responsePromise = apiClient.delete(endpoints.DELETE(id));
+    
+    return handleApiResponse<void>(responsePromise);
+  }
+};
+
 export const technologyService = {
   async list(): Promise<Technology[]> {
     return catalogService.list<Technology>('technologies');

@@ -36,5 +36,8 @@ export const API_CONFIG = {
                 DELETE: (id: number) => `/api/catalog/modalities/${id}`,
             },
         },
+        ORGANIZATIONS: {
+            REGISTER: '/api/v1/organizations/register',
+        },
     }
 } as const;

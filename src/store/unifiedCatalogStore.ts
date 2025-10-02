@@ -87,7 +87,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       set(state => ({
         catalogs: {
           ...state.catalogs,
-          [type]: items,
+          [type]: Array.isArray(items) ? items : [],
         },
         loadingState: { isLoading: false, error: null }
       }));
@@ -117,7 +117,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       
       const newCatalogs = catalogTypes.reduce((acc, type, index) => ({
         ...acc,
-        [type]: results[index],
+        [type]: Array.isArray(results[index]) ? results[index] : [],
       }), {} as Record<CatalogType, CatalogItem[]>);
 
       set({
@@ -219,7 +219,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     }));
 
     try {
-      await catalogService.toggleStatus<CatalogItem>(type, id, isActive);
+      await catalogService.update<CatalogItem>(type, id, { is_active: isActive });
       
       // Refrescar la lista completa después de cambiar estado para asegurar consistencia
       await get().loadCatalog(type);
@@ -239,7 +239,11 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
 
   // Get items for a specific catalog type
   getItems: (type: CatalogType) => {
-    return get().catalogs[type] || [];
+    const catalogs = get().catalogs;
+    if (!catalogs || !catalogs[type]) {
+      return [];
+    }
+    return Array.isArray(catalogs[type]) ? catalogs[type] : [];
   },
 
   // Get only active items for a specific catalog type

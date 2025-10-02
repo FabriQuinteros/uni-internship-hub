@@ -1,43 +1,74 @@
 import { CatalogType } from '@/types/catalog';
+import { ErrorType } from '@/types/api';
 
-/**
- * Traduce errores técnicos a mensajes amigables en español
- */
-export const translateError = (error: string, catalogType?: CatalogType): string => {
-  const errorLower = error.toLowerCase();
+
+const catalogNames: Record<CatalogType, { singular: string; plural: string; article: string }> = {
+  technologies: { singular: 'tecnología', plural: 'tecnologías', article: 'la' },
+  positions: { singular: 'puesto', plural: 'puestos', article: 'el' },
+  durations: { singular: 'duración', plural: 'duraciones', article: 'la' },
+  locations: { singular: 'ubicación', plural: 'ubicaciones', article: 'la' },
+  modalities: { singular: 'modalidad', plural: 'modalidades', article: 'la' },
+};
+
+
+export const getOperationMessages = (
+  operation: 'create' | 'update' | 'delete' | 'list',
+  catalogType?: CatalogType
+) => {
+  const entity = catalogType ? catalogNames[catalogType] : { singular: 'elemento', plural: 'elementos', article: 'el' };
   
-  // Nombres amigables para cada tipo de catálogo
-  const catalogNames: Record<CatalogType, { singular: string; plural: string }> = {
-    technologies: { singular: 'tecnología', plural: 'tecnologías' },
-    positions: { singular: 'puesto', plural: 'puestos' },
-    durations: { singular: 'duración', plural: 'duraciones' },
-    locations: { singular: 'ubicación', plural: 'ubicaciones' },
-    modalities: { singular: 'modalidad', plural: 'modalidades' },
+  const messages = {
+    create: {
+      success: `${entity.article === 'la' ? 'La' : 'El'} ${entity.singular} fue ${entity.article === 'la' ? 'creada' : 'creado'} exitosamente`,
+      duplicateName: `Ya existe ${entity.article === 'la' ? 'una' : 'un'} ${entity.singular} con ese nombre`,
+      requiredField: (field: string) => `El campo ${field} es obligatorio`,
+      invalidCategory: `La categoría debe ser 'technology' o 'skill'`,
+      invalidData: 'Los datos enviados no son válidos',
+      genericError: `Error al crear ${entity.article} ${entity.singular}`
+    },
+    update: {
+      success: `${entity.article === 'la' ? 'La' : 'El'} ${entity.singular} fue ${entity.article === 'la' ? 'actualizada' : 'actualizado'} exitosamente`,
+      notFound: `${entity.article === 'la' ? 'La' : 'El'} ${entity.singular} no existe`,
+      invalidId: 'El identificador no es válido',
+      duplicateName: `Ya existe ${entity.article === 'la' ? 'una' : 'un'} ${entity.singular} con ese nombre`,
+      genericError: `No se pudo actualizar ${entity.article} ${entity.singular}`
+    },
+    delete: {
+      success: `${entity.article === 'la' ? 'La' : 'El'} ${entity.singular} fue ${entity.article === 'la' ? 'eliminada' : 'eliminado'} exitosamente`,
+      invalidId: 'El identificador no es válido',
+      inUse: `No se pudo eliminar ${entity.article} ${entity.singular} (puede estar en uso)`,
+      genericError: `No se pudo eliminar ${entity.article} ${entity.singular}`
+    },
+    list: {
+      success: `${entity.plural} cargados exitosamente`,
+      empty: `No hay ${entity.plural} disponibles`,
+      error: `No se pudieron cargar los ${entity.plural}`
+    }
   };
 
-  const currentCatalog = catalogType ? catalogNames[catalogType] : { singular: 'elemento', plural: 'elementos' };
+  return messages[operation];
+};
+
+
+export const translateError = (error: string, catalogType?: CatalogType): string => {
+  const errorLower = error.toLowerCase();
+  const entity = catalogType ? catalogNames[catalogType] : { singular: 'elemento', plural: 'elementos', article: 'el' };
 
   // Errores de duplicación (MySQL 1062)
   if (errorLower.includes('duplicate entry') || errorLower.includes('1062')) {
-    if (errorLower.includes("for key 'catalog_")) {
-      // Extraer el campo que está duplicado
-      if (errorLower.includes('.name')) {
-        return `Ya existe ${currentCatalog.singular === 'ubicación' ? 'una' : 'un'} ${currentCatalog.singular} con ese nombre. Por favor, elige un nombre diferente.`;
-      }
-      if (errorLower.includes('.code')) {
-        return `Ya existe ${currentCatalog.singular === 'ubicación' ? 'una' : 'un'} ${currentCatalog.singular} con ese código. Por favor, elige un código diferente.`;
-      }
+    if (errorLower.includes('.name')) {
+      return `Ya existe ${entity.article === 'la' ? 'una' : 'un'} ${entity.singular} con ese nombre. Por favor, elige un nombre diferente.`;
     }
-    return `Ya existe ${currentCatalog.singular === 'ubicación' ? 'una' : 'un'} ${currentCatalog.singular} con esos datos. Por favor, verifica la información ingresada.`;
+    if (errorLower.includes('.code')) {
+      return `Ya existe ${entity.article === 'la' ? 'una' : 'un'} ${entity.singular} con ese código. Por favor, elige un código diferente.`;
+    }
+    return `Ya existe ${entity.article === 'la' ? 'una' : 'un'} ${entity.singular} con esos datos. Por favor, verifica la información ingresada.`;
   }
 
   // Errores de unicidad específicos
   if (errorLower.includes('must be unique')) {
     if (errorLower.includes('name')) {
-      return `El nombre de ${currentCatalog.singular === 'ubicación' ? 'la' : 'el'} ${currentCatalog.singular} ya está en uso. Por favor, elige un nombre diferente.`;
-    }
-    if (errorLower.includes('code')) {
-      return `El código de ${currentCatalog.singular === 'ubicación' ? 'la' : 'el'} ${currentCatalog.singular} ya está en uso. Por favor, elige un código diferente.`;
+      return `El nombre de ${entity.article} ${entity.singular} ya está en uso. Por favor, elige un nombre diferente.`;
     }
     return `Los datos ingresados ya están en uso. Por favor, verifica la información.`;
   }
@@ -50,11 +81,6 @@ export const translateError = (error: string, catalogType?: CatalogType): string
   // Errores de campos requeridos
   if (errorLower.includes('required') || errorLower.includes('cannot be null') || errorLower.includes('not null')) {
     return `Todos los campos obligatorios deben ser completados.`;
-  }
-
-  // Errores de longitud
-  if (errorLower.includes('too long') || errorLower.includes('data too long')) {
-    return `Uno o más campos exceden la longitud máxima permitida.`;
   }
 
   // Errores de conexión
@@ -74,12 +100,7 @@ export const translateError = (error: string, catalogType?: CatalogType): string
 
   // Errores de no encontrado
   if (errorLower.includes('not found') || errorLower.includes('404')) {
-    return `${currentCatalog.singular === 'ubicación' ? 'La' : 'El'} ${currentCatalog.singular} no fue ${currentCatalog.singular === 'ubicación' ? 'encontrada' : 'encontrado'}.`;
-  }
-
-  // Errores de conflicto
-  if (errorLower.includes('conflict') || errorLower.includes('409')) {
-    return `Existe un conflicto con los datos. Por favor, recarga la página e intenta nuevamente.`;
+    return `${entity.article === 'la' ? 'La' : 'El'} ${entity.singular} no fue ${entity.article === 'la' ? 'encontrada' : 'encontrado'}.`;
   }
 
   // Si no coincide con ningún patrón conocido, devolver un mensaje genérico amigable
@@ -120,4 +141,37 @@ export const processError = (error: any, catalogType?: CatalogType): string => {
 
   // Traducir el mensaje a algo amigable
   return translateError(errorMessage, catalogType);
+};
+
+/**
+ * Obtiene el mensaje de toast apropiado basado en el tipo de error
+ */
+export const getToastMessage = (
+  errorType: ErrorType,
+  operation: 'create' | 'update' | 'delete' | 'list',
+  catalogType?: CatalogType
+): string => {
+  const entity = catalogType ? catalogNames[catalogType] : { singular: 'elemento', plural: 'elementos', article: 'el' };
+
+  switch (errorType) {
+    case 'validation':
+      switch (operation) {
+        case 'create':
+          return `Error al crear ${entity.article} ${entity.singular}`;
+        case 'update':
+          return `No se pudo actualizar ${entity.article} ${entity.singular}`;
+        case 'delete':
+          return `No se pudo eliminar ${entity.article} ${entity.singular}`;
+        case 'list':
+          return `No se pudieron cargar los ${entity.plural}`;
+        default:
+          return 'Error de validación';
+      }
+    case 'not_found':
+      return `${entity.article === 'la' ? 'La' : 'El'} ${entity.singular} no existe`;
+    case 'server_error':
+      return 'Error del servidor. Intenta nuevamente.';
+    default:
+      return 'Error inesperado. Intenta nuevamente.';
+  }
 };

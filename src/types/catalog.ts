@@ -1,17 +1,10 @@
-// src/types/catalog.ts
-
-// --- CATALOG TYPES ---
 export type CatalogType = 'technologies' | 'positions' | 'durations' | 'locations' | 'modalities';
 
-// --- INTERFAZ BASE PARA TODOS LOS ITEMS ---
-// Esta es la base común para cualquier elemento en el catálogo según la API.
 export interface BaseCatalogItem {
   id: number;
   name: string;
   is_active: boolean;
 }
-
-// --- INTERFACES ESPECÍFICAS QUE EXTIENDEN LA BASE ---
 
 export interface Technology extends BaseCatalogItem {
   category: 'technology' | 'skill';
@@ -34,12 +27,7 @@ export interface Modality extends BaseCatalogItem {
   description?: string;
 }
 
-// --- TIPOS DE UNIÓN ---
-
-// Unión de todos los posibles items de catálogo
 export type CatalogItem = Technology | Position | Duration | Location | Modality;
-
-// --- API REQUEST/RESPONSE INTERFACES ---
 
 export interface ApiListResponse<T> {
   message: string;
@@ -55,8 +43,6 @@ export interface ApiErrorResponse {
   message: string;
   error?: string;
 }
-
-// --- CREATE REQUEST PAYLOADS ---
 
 export interface CreateTechnologyRequest {
   name: string;
@@ -90,8 +76,6 @@ export type CreateCatalogRequest =
   | CreateDurationRequest 
   | CreateLocationRequest 
   | CreateModalityRequest;
-
-// --- UPDATE REQUEST PAYLOADS ---
 
 export interface UpdateTechnologyRequest {
   name?: string;
@@ -130,8 +114,6 @@ export type UpdateCatalogRequest =
   | UpdateDurationRequest 
   | UpdateLocationRequest 
   | UpdateModalityRequest;
-
-// --- UI HELPER INTERFACES ---
 
 export interface CatalogFormField {
   name: string;

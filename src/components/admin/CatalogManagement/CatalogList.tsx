@@ -54,14 +54,16 @@ const CatalogList: React.FC<CatalogListProps> = ({
   const { toast } = useToast();
 
   // Store hooks
-  const items = useCatalogStore(state => state.getItems(type));
+  const items = useCatalogStore(state => state.getItems(type)) || [];
   const loadingState = useCatalogStore(state => state.loadingState);
   const deleteItem = useCatalogStore(state => state.deleteItem);
   const toggleItemStatus = useCatalogStore(state => state.toggleItemStatus);
 
   // Filter items based on search term and status
   const filteredItems = useMemo(() => {
-    let filtered = items;
+    // Ensure items is always an array
+    const safeItems = Array.isArray(items) ? items : [];
+    let filtered = safeItems;
 
     // Status filter
     if (statusFilter === 'active') {
@@ -75,7 +77,7 @@ const CatalogList: React.FC<CatalogListProps> = ({
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(item => {
         // Search in name
-        if (item.name.toLowerCase().includes(searchLower)) return true;
+        if (item.name?.toLowerCase().includes(searchLower)) return true;
         
         // Search in additional fields based on catalog type
         const itemData = item as any;
