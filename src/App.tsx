@@ -10,8 +10,10 @@ import LoginPage from "./pages/auth/LoginPage";
 import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
+import OrganizationProfilePage from "./pages/dashboard/OrganizationProfilePage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
+import OrganizationManagementPage from "./pages/admin/OrganizationManagementPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,7 +55,6 @@ const App = () => (
               - Redirección post-registro
               - Mensajes de confirmación */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
-          <Route path="/auth/admin" element={<LoginPage />} />
           
           {/* Student Routes */}
           <Route path="/student/*" element={
@@ -92,6 +93,7 @@ const App = () => (
                 <Routes>
                   <Route path="dashboard" element={<AdminDashboardPage />} />
                   <Route path="users" element={<div>Gestión de Usuarios</div>} />
+                  <Route path="organizations" element={<OrganizationManagementPage />} />
                   <Route path="approval" element={<div>Aprobación de Ofertas</div>} />
                   <Route path="catalogs" element={<CatalogsPage />} />
                   <Route path="settings" element={<div>Configuración</div>} />
@@ -101,7 +103,21 @@ const App = () => (
             </AuthGuard>
           } />
           
-          {/* Catch-all route */}
+          {/* Organization Routes */}
+          <Route 
+            path="/dashboard/organization" 
+            element={
+              <DashboardLayout userRole="organization">
+                <OrganizationDashboard />
+              </DashboardLayout>
+            } 
+          />
+          <Route 
+            path="/dashboard/organization/profile" 
+            element={<OrganizationProfilePage />} 
+          />
+          
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

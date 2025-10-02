@@ -1,6 +1,5 @@
-import { Bell, Search, User, LogOut, Settings, UserCircle, Wifi, WifiOff } from "lucide-react";
+import { Bell, User, LogOut, Settings, UserCircle, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -102,15 +101,9 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
 
   return (
     <header className="h-16 border-b bg-card/50 backdrop-blur-sm px-6 flex items-center justify-between">
-      {/* Search */}
-      <div className="flex-1 max-w-md">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar..."
-            className="pl-10 bg-background"
-          />
-        </div>
+      {/* Logo/Title area */}
+      <div className="flex-1">
+        <h2 className="text-lg font-semibold">Dashboard</h2>
       </div>
 
       {/* Right side */}
