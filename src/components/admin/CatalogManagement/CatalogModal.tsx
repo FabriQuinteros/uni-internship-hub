@@ -25,11 +25,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { CatalogType, Technology, Skill, Duration, Location, Modality, Language, Role } from '../../../types/catalog';
-import { TECHNOLOGY_CATEGORIES, SKILL_LEVELS, DURATION_MONTHS, MODALITY_TYPES, LANGUAGE_LEVELS } from '../../../data/mockCatalogData';
+import { SKILL_LEVELS, DURATION_MONTHS, MODALITY_TYPES, LANGUAGE_LEVELS } from '../../../data/mockCatalogData';
 
 // Propiedades del componente CatalogModal
 interface CatalogModalProps {
@@ -55,12 +55,8 @@ const CatalogModal: React.FC<CatalogModalProps> = ({
       then: (schema) => schema.required('El nombre es requerido'),
     }),
     description: yup.string().when([], {
-      is: () => type === 'technology' || type === 'skill' || type === 'role',
+      is: () => type === 'role',
       then: (schema) => schema.required('La descripción es requerida'),
-    }),
-    category: yup.string().when([], {
-      is: () => type === 'technology',
-      then: (schema) => schema.required('La categoría es requerida'),
     }),
     level: yup.string().when([], {
       is: () => type === 'skill' || type === 'language',
@@ -96,15 +92,9 @@ const CatalogModal: React.FC<CatalogModalProps> = ({
   const getDefaultValues = () => {
     const baseValues = {
       name: item?.name || '',
-      description: item?.description || '',
     };
 
     switch (type) {
-      case 'technology':
-        return {
-          ...baseValues,
-          category: (item as Technology)?.category || '',
-        };
       case 'skill':
         return {
           ...baseValues,
@@ -131,7 +121,11 @@ const CatalogModal: React.FC<CatalogModalProps> = ({
           level: (item as Language)?.level || '',
         };
       case 'role':
-        return baseValues;
+        return {
+          ... baseValues,
+          description: (item as Role)?.description || '',
+        };
+      case 'technology':
       default:
         return baseValues;
     }
@@ -235,53 +229,6 @@ const CatalogModal: React.FC<CatalogModalProps> = ({
                         'Ingrese el nombre'
                       } {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {(type === 'technology' || type === 'skill' || type === 'role') && (
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descripción</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Ingrese una descripción"
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {type === 'technology' && (
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoría</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccione una categoría" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {TECHNOLOGY_CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

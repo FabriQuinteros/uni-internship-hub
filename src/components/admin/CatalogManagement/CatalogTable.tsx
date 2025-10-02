@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -49,12 +49,21 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [itemToDelete, setItemToDelete] = useState<CatalogItem | null>(null);
-  const items = useCatalogStore(state => state.getItems(type));
+
+  const allItems = useCatalogStore(state => state.items);
 
   // Filtrar elementos según el término de búsqueda
-  const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const items = useMemo(() => 
+    allItems.filter(item => item.type === type), 
+    [allItems, type]
+  );
+
+  const filteredItems = useMemo(() =>
+    items.filter(item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) // Añadimos una comprobación para description
+    ),
+    [items, searchTerm] // Se recalcula si la lista base o el término de búsqueda cambian
   );
 
   // Manejar clic en botón eliminar
@@ -63,7 +72,7 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
   };
 
   const { toast } = useToast();
-  const { updateItem } = useCatalogStore();
+  const updateItemStatus = useCatalogStore(state => state.updateItemStatus)
 
   // Confirmar eliminación del elemento
   const handleConfirmDelete = () => {
@@ -74,13 +83,23 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
   };
 
   // Manejar cambio de estado activo/inactivo
-  const handleStatusChange = (item: CatalogItem, checked: boolean) => {
+  const handleStatusChange = async (item: CatalogItem, checked: boolean) => {
     const newStatus = checked ? 'active' : 'inactive';
-    updateItem(type, item.id, { ...item, status: newStatus });
-    toast({
-      title: "Estado actualizado",
-      description: `${item.name} ahora está ${newStatus === 'active' ? 'activo' : 'inactivo'}.`,
-    });
+    console.log(`[handleStatusChange] Intentando cambiar estado para item ID: ${item.id} a '${newStatus}'`);
+    try {
+      await updateItemStatus(item, newStatus);
+      toast({
+        title: "Estado actualizado",
+        description: `${item.name} ahora está ${newStatus === 'active' ? 'activo' : 'inactivo'}.`,
+      });
+    } catch (error) {
+      console.error("Error al actualizar el estado:", error);
+      toast({
+        title: "Error",
+        description: `No se pudo actualizar el estado de ${item.name}. Inténtalo de nuevo.`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Obtener badge de estado según el estado del elemento
@@ -114,8 +133,7 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
             <TableRow>
               {/* Columnas dinámicas según el tipo de catálogo */}
               {type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableHead>Nombre</TableHead>}
-              {type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableHead>Descripción</TableHead>}
-              {type === 'technology' && <TableHead>Categoría</TableHead>}
+              {type !== 'technology' && type !== 'skill' && type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableHead>Descripción</TableHead>}
               {type === 'skill' && <TableHead>Nivel</TableHead>}
               {type === 'duration' && <TableHead>Meses</TableHead>}
               {type === 'location' && <TableHead>Ciudad</TableHead>}
@@ -137,10 +155,7 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
             {filteredItems.map((item) => (
               <TableRow key={item.id}>
                 {type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableCell className="font-medium">{item.name}</TableCell>}
-                {type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableCell>{item.description}</TableCell>}
-                {type === 'technology' && (
-                  <TableCell>{(item as any).category}</TableCell>
-                )}
+                {type !== 'technology' && type !== 'skill' && type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableCell>{item.description}</TableCell>}
                 {type === 'skill' && (
                   <TableCell>{(item as any).level}</TableCell>
                 )}
