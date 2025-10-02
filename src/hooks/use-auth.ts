@@ -12,7 +12,7 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberSession?: boolean) => Promise<void>;
   logout: () => void;
 }
 
@@ -21,7 +21,7 @@ export const useAuth = create<AuthState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      login: async (email: string, password: string) => {
+      login: async (email: string, password: string, rememberSession: boolean = false) => {
         // Aquí irá la llamada real a tu API
         // Por ahora simulamos una autenticación basada en el email
         const mockUsers: Record<string, User> = {
@@ -41,7 +41,7 @@ export const useAuth = create<AuthState>()(
             id: '3',
             email: 'admin@uni.edu',
             role: 'admin',
-            name: 'Admin'
+            name: 'Administrador del Sistema'
           }
         };
 
@@ -60,7 +60,12 @@ export const useAuth = create<AuthState>()(
       }
     }),
     {
-      name: 'auth-storage'
+      name: 'auth-storage',
+      // Configuración mejorada de persistencia
+      partialize: (state) => ({ 
+        user: state.user, 
+        isAuthenticated: state.isAuthenticated 
+      }),
     }
   )
 );

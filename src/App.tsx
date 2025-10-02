@@ -55,7 +55,6 @@ const App = () => (
               - Redirección post-registro
               - Mensajes de confirmación */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
-          <Route path="/auth/admin" element={<LoginPage />} />
           
           {/* Student Routes */}
           <Route path="/student/*" element={

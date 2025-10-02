@@ -23,13 +23,6 @@ const LandingPage = () => {
       description: "Conecta con el mejor talento universitario",
       features: ["Publicación de ofertas", "Gestión de candidatos", "Proceso de selección"],
       link: "/auth/organization"
-    },
-    {
-      icon: Users,
-      title: "Administradores",
-      description: "Gestiona el ecosistema de pasantías institucional",
-      features: ["Aprobación de ofertas", "Gestión de usuarios", "Métricas del sistema"],
-      link: "/auth/admin"
     }
   ];
 
@@ -109,49 +102,49 @@ const LandingPage = () => {
               ¿Cómo quieres participar?
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Nuestro sistema está diseñado para tres tipos de usuarios, cada uno con herramientas específicas
+              Nuestro sistema está diseñado para dos tipos de usuarios, cada uno con herramientas específicas
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
             {roles.map((role, index) => {
               const Icon = role.icon;
               return (
                 <Card
                   key={index}
-                  className={`relative overflow-hidden transition-all duration-500 cursor-pointer group ${
+                  className={`relative overflow-hidden transition-all duration-500 cursor-pointer group h-full ${
                     hoveredCard === index ? 'scale-105 shadow-hero' : 'shadow-card'
                   }`}
                   onMouseEnter={() => setHoveredCard(index)}
                   onMouseLeave={() => setHoveredCard(null)}
                 >
                   <div className="absolute inset-0 bg-gradient-card" />
-                  <CardHeader className="relative">
-                    <div className="flex items-center justify-between mb-4">
-                      <Icon className={`h-12 w-12 transition-colors duration-300 ${
+                  <CardHeader className="relative pb-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <Icon className={`h-16 w-16 transition-colors duration-300 ${
                         hoveredCard === index ? 'text-primary' : 'text-muted-foreground'
                       }`} />
-                      <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-sm px-3 py-1">
                         Acceso Directo
                       </Badge>
                     </div>
-                    <CardTitle className="text-2xl text-foreground">{role.title}</CardTitle>
-                    <CardDescription className="text-base">{role.description}</CardDescription>
+                    <CardTitle className="text-3xl text-foreground mb-3">{role.title}</CardTitle>
+                    <CardDescription className="text-lg leading-relaxed">{role.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="relative">
-                    <ul className="space-y-3 mb-6">
+                  <CardContent className="relative pt-0">
+                    <ul className="space-y-4 mb-8">
                       {role.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center space-x-2">
-                          <CheckCircle className="h-4 w-4 text-success" />
-                          <span className="text-muted-foreground">{feature}</span>
+                        <li key={idx} className="flex items-center space-x-3">
+                          <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
+                          <span className="text-muted-foreground text-base">{feature}</span>
                         </li>
                       ))}
                     </ul>
                     <Link to={role.link}>
                       <HeroButton 
                         variant="primary" 
-                        size="default"
-                        className="w-full group-hover:shadow-floating"
+                        size="lg"
+                        className="w-full group-hover:shadow-floating text-lg py-4"
                       >
                         Comenzar
                       </HeroButton>
