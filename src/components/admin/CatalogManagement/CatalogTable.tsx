@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -34,12 +34,14 @@ import { CatalogItem, CatalogType } from '../../../types/catalog';
 import { useCatalogStore } from '../../../store/catalogStore';
 import { useToast } from "@/components/ui/use-toast";
 
+// Propiedades del componente CatalogTable
 interface CatalogTableProps {
   type: CatalogType;
   onEdit: (item: CatalogItem) => void;
   onDelete: (item: CatalogItem) => void;
 }
 
+// Componente de tabla para mostrar catálogos con columnas dinámicas y búsqueda
 const CatalogTable: React.FC<CatalogTableProps> = ({
   type,
   onEdit,
@@ -47,20 +49,32 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [itemToDelete, setItemToDelete] = useState<CatalogItem | null>(null);
-  const items = useCatalogStore(state => state.getItems(type));
 
-  const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const allItems = useCatalogStore(state => state.items);
+
+  // Filtrar elementos según el término de búsqueda
+  const items = useMemo(() => 
+    allItems.filter(item => item.type === type), 
+    [allItems, type]
   );
 
+  const filteredItems = useMemo(() =>
+    items.filter(item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) // Añadimos una comprobación para description
+    ),
+    [items, searchTerm] // Se recalcula si la lista base o el término de búsqueda cambian
+  );
+
+  // Manejar clic en botón eliminar
   const handleDeleteClick = (item: CatalogItem) => {
     setItemToDelete(item);
   };
 
   const { toast } = useToast();
-  const { updateItem } = useCatalogStore();
+  const updateItemStatus = useCatalogStore(state => state.updateItemStatus)
 
+  // Confirmar eliminación del elemento
   const handleConfirmDelete = () => {
     if (itemToDelete) {
       onDelete(itemToDelete);
@@ -68,15 +82,27 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
     }
   };
 
-  const handleStatusChange = (item: CatalogItem, checked: boolean) => {
+  // Manejar cambio de estado activo/inactivo
+  const handleStatusChange = async (item: CatalogItem, checked: boolean) => {
     const newStatus = checked ? 'active' : 'inactive';
-    updateItem(type, item.id, { ...item, status: newStatus });
-    toast({
-      title: "Estado actualizado",
-      description: `${item.name} ahora está ${newStatus === 'active' ? 'activo' : 'inactivo'}.`,
-    });
+    console.log(`[handleStatusChange] Intentando cambiar estado para item ID: ${item.id} a '${newStatus}'`);
+    try {
+      await updateItemStatus(item, newStatus);
+      toast({
+        title: "Estado actualizado",
+        description: `${item.name} ahora está ${newStatus === 'active' ? 'activo' : 'inactivo'}.`,
+      });
+    } catch (error) {
+      console.error("Error al actualizar el estado:", error);
+      toast({
+        title: "Error",
+        description: `No se pudo actualizar el estado de ${item.name}. Inténtalo de nuevo.`,
+        variant: "destructive",
+      });
+    }
   };
 
+  // Obtener badge de estado según el estado del elemento
   const getStatusBadge = (status: 'active' | 'inactive') => {
     return (
       <Badge variant={status === 'active' ? 'success' : 'secondary'}>
@@ -87,6 +113,7 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Barra de búsqueda */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Search className="h-4 w-4 text-muted-foreground" />
@@ -99,29 +126,64 @@ const CatalogTable: React.FC<CatalogTableProps> = ({
         </div>
       </div>
 
+      {/* Tabla con columnas dinámicas según tipo de catálogo */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Descripción</TableHead>
-              {type === 'technology' && <TableHead>Categoría</TableHead>}
+              {/* Columnas dinámicas según el tipo de catálogo */}
+              {type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableHead>Nombre</TableHead>}
+              {type !== 'technology' && type !== 'skill' && type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableHead>Descripción</TableHead>}
               {type === 'skill' && <TableHead>Nivel</TableHead>}
+              {type === 'duration' && <TableHead>Meses</TableHead>}
+              {type === 'location' && <TableHead>Ciudad</TableHead>}
+              {type === 'location' && <TableHead>Provincia</TableHead>}
+              {type === 'location' && <TableHead>País</TableHead>}
+              {type === 'modality' && <TableHead>Modalidad</TableHead>}
+              {type === 'language' && <TableHead>Nombre</TableHead>}
+              {type === 'language' && <TableHead>Código ISO</TableHead>}
+              {type === 'language' && <TableHead>Nivel</TableHead>}
+              {type === 'role' && <TableHead>Nombre</TableHead>}
+              {type === 'role' && <TableHead>Descripción</TableHead>}
               <TableHead>Estado</TableHead>
               <TableHead>Fecha Creación</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
+            {/* Renderizado de filas con datos específicos por tipo */}
             {filteredItems.map((item) => (
               <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>{item.description}</TableCell>
-                {type === 'technology' && (
-                  <TableCell>{(item as any).category}</TableCell>
-                )}
+                {type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableCell className="font-medium">{item.name}</TableCell>}
+                {type !== 'technology' && type !== 'skill' && type !== 'duration' && type !== 'location' && type !== 'modality' && type !== 'language' && type !== 'role' && <TableCell>{item.description}</TableCell>}
                 {type === 'skill' && (
                   <TableCell>{(item as any).level}</TableCell>
+                )}
+                {type === 'duration' && (
+                  <TableCell>{(item as any).months}</TableCell>
+                )}
+                {type === 'location' && (
+                  <>
+                    <TableCell>{(item as any).city}</TableCell>
+                    <TableCell>{(item as any).province}</TableCell>
+                    <TableCell>{(item as any).country}</TableCell>
+                  </>
+                )}
+                {type === 'modality' && (
+                  <TableCell>{(item as any).type}</TableCell>
+                )}
+                {type === 'language' && (
+                  <>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>{(item as any).isoCode}</TableCell>
+                    <TableCell>{(item as any).level}</TableCell>
+                  </>
+                )}
+                {type === 'role' && (
+                  <>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>{item.description}</TableCell>
+                  </>
                 )}
                 <TableCell>
                   <div className="flex items-center gap-2">
