@@ -1,4 +1,7 @@
-import axios from 'axios';
+import { apiClient } from '@/lib/api/apiClient';
+import { API_CONFIG } from '@/config/api.config';
+import { handleApiResponse } from '@/lib/api/apiResponseHandler';
+import { ApiHandlerResult } from '@/types/api';
 import { 
   Organization, 
   OrganizationFilters, 
@@ -7,15 +10,48 @@ import {
   StatusChangeRequest, 
   OrganizationObservation 
 } from '../types/user';
+import axios from 'axios';
 
+// Legacy Organization interface for backward compatibility
+export interface LegacyOrganization {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  website?: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateOrganizationRequest {
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  website?: string;
+  description?: string;
+}
+
+export interface UpdateOrganizationRequest {
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  website?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
+// Create axios instance for admin operations (temporary until full migration to apiClient)
 const api = axios.create({
   baseURL: 'https://api.example.com', // Cambia esto a la URL de tu API
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
-export default api;
 
 // Función para manejar errores de la API
 const handleError = (error: any) => {
@@ -31,29 +67,14 @@ const handleError = (error: any) => {
   }
 };
 
-// Función para obtener datos de la API
-export const getData = async (endpoint: string) => {
-  try {
-    const response = await api.get(endpoint);
-    return response.data;
-  } catch (error) {
-    handleError(error);
-    throw error;
+const organizationServiceInternal = {
+  async register(data: CreateOrganizationRequest): Promise<ApiHandlerResult<LegacyOrganization>> {
+    const responsePromise = apiClient.post(API_CONFIG.ENDPOINTS.ORGANIZATIONS.REGISTER, data);
+    return handleApiResponse<LegacyOrganization>(responsePromise);
   }
 };
 
-// Función para enviar datos a la API
-export const postData = async (endpoint: string, data: any) => {
-  try {
-    const response = await api.post(endpoint, data);
-    return response.data;
-  } catch (error) {
-    handleError(error);
-    throw error;
-  }
-};
-
-// ===== FUNCIONES ESPECÍFICAS PARA GESTIÓN DE ORGANIZACIONES =====
+// ===== FUNCIONES ESPECÍFICAS PARA GESTIÓN DE ORGANIZACIONES (ADMIN) =====
 
 // Obtener lista paginada de organizaciones con filtros
 export const getOrganizations = async (
@@ -167,4 +188,18 @@ export const validateAdminPermissions = async (userId: string): Promise<boolean>
   }
 };
 
-// Otras funciones para PUT, DELETE, etc. pueden ser añadidas aquí
+export const organizationService = {
+  async register(data: CreateOrganizationRequest): Promise<LegacyOrganization> {
+    const result = await organizationServiceInternal.register(data);
+    
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+    
+    if (!result.data) {
+      throw new Error('No data returned from registration');
+    }
+    
+    return result.data;
+  }
+};

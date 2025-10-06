@@ -15,6 +15,7 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import OrganizationManagementPage from "./pages/admin/OrganizationManagementPage";
 import NotFound from "./pages/NotFound";
+import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
 
 const queryClient = new QueryClient();
 
@@ -55,7 +56,7 @@ const App = () => (
               - Redirección post-registro
               - Mensajes de confirmación */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
-          
+
           {/* Student Routes */}
           <Route path="/student/*" element={
             <AuthGuard allowedRoles={['student']}>

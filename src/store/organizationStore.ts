@@ -15,7 +15,7 @@ import {
   addOrganizationObservation,
   getOrganizationDetails,
   getOrganizationsStats
-} from '../services/api';
+} from '../services/organizationService';
 
 interface OrganizationStore {
   // Estado

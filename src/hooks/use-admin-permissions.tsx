@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { validateAdminPermissions } from '../services/api';
+import { validateAdminPermissions } from '../services/organizationService';
 
 export interface AdminPermissions {
   canManageOrganizations: boolean;
