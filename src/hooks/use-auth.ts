@@ -1,13 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-interface User {
-  id: string;
-  email: string;
-  role: 'student' | 'organization' | 'admin';
-  name: string;
-  imageUrl?: string;
-}
+import { User } from '@/types/user';
 
 interface AuthState {
   user: User | null;
@@ -29,7 +22,8 @@ export const useAuth = create<AuthState>()(
             id: '1',
             email: 'estudiante@universidad.edu',
             role: 'student',
-            name: 'María González'
+            first_name: 'María',
+            last_name: 'González'
           },
           'empresa@org.com': {
             id: '2',

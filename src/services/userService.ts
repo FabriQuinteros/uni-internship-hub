@@ -1,26 +1,26 @@
-import api from './api';
+import { apiClient } from '@/lib/api/apiClient';
 import { User } from '../types/user';
 
 export const getUsers = async (): Promise<User[]> => {
-    const response = await api.get('/users');
+    const response = await apiClient.get('/users');
     return response.data;
 };
 
 export const getUserById = async (id: string): Promise<User> => {
-    const response = await api.get(`/users/${id}`);
+    const response = await apiClient.get(`/users/${id}`);
     return response.data;
 };
 
 export const createUser = async (user: User): Promise<User> => {
-    const response = await api.post('/users', user);
+    const response = await apiClient.post('/users', user);
     return response.data;
 };
 
 export const updateUser = async (id: string, user: User): Promise<User> => {
-    const response = await api.put(`/users/${id}`, user);
+    const response = await apiClient.put(`/users/${id}`, user);
     return response.data;
 };
 
 export const deleteUser = async (id: string): Promise<void> => {
-    await api.delete(`/users/${id}`);
+    await apiClient.delete(`/users/${id}`);
 };
