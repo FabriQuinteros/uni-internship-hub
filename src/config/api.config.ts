@@ -39,5 +39,8 @@ export const API_CONFIG = {
         ORGANIZATIONS: {
             REGISTER: '/api/v1/organizations/register',
         },
+        STUDENTS: {
+            REGISTER: '/api/students/register',
+        },
     }
 } as const;
