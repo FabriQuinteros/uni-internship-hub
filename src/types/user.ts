@@ -9,7 +9,7 @@ export interface User {
 }
 
 // Interfaz específica para el registro de estudiantes
-// Estructura plana que espera el backend
+// Solo campos obligatorios para el registro inicial
 export interface StudentRegisterData {
   email: string;
   password: string;
@@ -17,11 +17,18 @@ export interface StudentRegisterData {
   first_name: string;
   last_name: string;
   phone: string;
+}
+
+// Interfaz completa del perfil del estudiante (para futuras funcionalidades)
+export interface StudentProfile extends StudentRegisterData {
+  id?: string;
   preferred_contact?: string;
   location?: string;
   academic_formation?: string;
   previous_experience?: string;
   availability_hours?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Interfaz para las respuestas de la API de registro
