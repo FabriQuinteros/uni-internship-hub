@@ -15,14 +15,12 @@ const LandingPage = () => {
       title: "Estudiantes",
       description: "Encuentra pasantías que impulsen tu carrera profesional",
       features: ["Perfil académico completo", "Postulación a ofertas", "Seguimiento de aplicaciones"],
-      link: "/auth/login"
     },
     {
       icon: Building,
       title: "Organizaciones",
       description: "Conecta con el mejor talento universitario",
       features: ["Publicación de ofertas", "Gestión de candidatos", "Proceso de selección"],
-      link: "/auth/login"
     }
   ];
 
@@ -113,7 +111,7 @@ const LandingPage = () => {
               return (
                 <Card
                   key={index}
-                  className={`relative overflow-hidden transition-all duration-500 cursor-pointer group h-full ${
+                  className={`relative overflow-hidden transition-all duration-500 group h-full ${
                     hoveredCard === index ? 'scale-105 shadow-hero' : 'shadow-card'
                   }`}
                   onMouseEnter={() => setHoveredCard(index)}
@@ -125,9 +123,6 @@ const LandingPage = () => {
                       <Icon className={`h-16 w-16 transition-colors duration-300 ${
                         hoveredCard === index ? 'text-primary' : 'text-muted-foreground'
                       }`} />
-                      <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-sm px-3 py-1">
-                        Acceso Directo
-                      </Badge>
                     </div>
                     <CardTitle className="text-3xl text-foreground mb-3">{role.title}</CardTitle>
                     <CardDescription className="text-lg leading-relaxed">{role.description}</CardDescription>
@@ -141,15 +136,6 @@ const LandingPage = () => {
                         </li>
                       ))}
                     </ul>
-                    <Link to={role.link}>
-                      <HeroButton 
-                        variant="primary" 
-                        size="lg"
-                        className="w-full group-hover:shadow-floating text-lg py-4"
-                      >
-                        Comenzar
-                      </HeroButton>
-                    </Link>
                   </CardContent>
                 </Card>
               );
