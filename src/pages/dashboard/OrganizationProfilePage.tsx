@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrganizationProfileForm, type OrganizationProfileFormProps } from '@/components/forms/OrganizationProfileForm';
-import { DashboardLayout } from '@/components/layouts/DashboardLayout';
 import { type UploadedFile } from '@/components/upload/FileUploadManager';
 
 /**
@@ -67,13 +66,13 @@ export const OrganizationProfilePage: React.FC = () => {
    * Maneja la navegación de vuelta al dashboard
    */
   const handleBackToDashboard = () => {
-    navigate('/dashboard/organization');
+    navigate('/organization/dashboard');
   };
 
   return (
-    <DashboardLayout userRole="organization">
-      <div className="container mx-auto p-6 space-y-6">
-        {/* Navegación */}
+    <div className="container mx-auto p-6 space-y-6 flex flex-col items-center">
+      {/* Navegación */}
+      <div className="w-full max-w-4xl">
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <button
             onClick={handleBackToDashboard}
@@ -84,46 +83,46 @@ export const OrganizationProfilePage: React.FC = () => {
           <span>/</span>
           <span className="text-foreground font-medium">Perfil de Organización</span>
         </div>
+      </div>
 
-        {/* Contenido principal */}
-        <div className="max-w-4xl">
-          {!isEditing ? (
-            /* Vista de solo lectura con opción de editar */
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Perfil de Organización</h1>
-                  <p className="text-muted-foreground">
-                    Información actual de tu organización
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  Editar Perfil
-                </button>
+      {/* Contenido principal */}
+      <div className="w-full max-w-4xl">
+        {!isEditing ? (
+          /* Vista de solo lectura con opción de editar */
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Perfil de Organización</h1>
+                <p className="text-muted-foreground">
+                  Información actual de tu organización
+                </p>
               </div>
-
-              <OrganizationProfileForm
-                initialData={MOCK_ORGANIZATION_DATA}
-                readOnly={true}
-                className="max-w-none"
-              />
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Editar Perfil
+              </button>
             </div>
-          ) : (
-            /* Vista de edición */
+
             <OrganizationProfileForm
               initialData={MOCK_ORGANIZATION_DATA}
-              onSave={handleSave}
-              onCancel={handleCancel}
-              readOnly={false}
+              readOnly={true}
               className="max-w-none"
             />
-          )}
-        </div>
+          </div>
+        ) : (
+          /* Vista de edición */
+          <OrganizationProfileForm
+            initialData={MOCK_ORGANIZATION_DATA}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            readOnly={false}
+            className="max-w-none"
+          />
+        )}
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
