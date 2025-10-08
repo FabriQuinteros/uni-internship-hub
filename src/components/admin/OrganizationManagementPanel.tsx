@@ -38,13 +38,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 import { useAdminPermissions } from '../../hooks/use-admin-permissions';
 import { useOrganizationStore } from '../../store/organizationStore';
 import { useDebounce } from '../../hooks/use-debounce';
-import NavigationTest from '../debug/NavigationTest';
 import OrganizationDetailsModal from './OrganizationDetailsModal';
 import { 
   OrganizationListItem as Organization, 
@@ -277,7 +275,6 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-6 py-8 max-w-7xl">
         <div className="space-y-8">
-          <NavigationTest />
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-tight mb-4">Gestión de Organizaciones</h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
