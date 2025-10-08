@@ -3,6 +3,12 @@ export const API_CONFIG = {
     TIMEOUT: 15000,
     ENDPOINTS: {
         PING: '/ping',
+        AUTH: {
+            LOGIN: '/api/auth/login',
+            LOGOUT: '/api/auth/logout',
+            FORGOT_PASSWORD: '/api/user/forgot-password',
+            RESET_PASSWORD: '/api/user/reset-password',
+        },
         CATALOG: {
             BASE: '/api/catalog',
             TECHNOLOGIES: {
@@ -37,7 +43,18 @@ export const API_CONFIG = {
             },
         },
         ORGANIZATIONS: {
-            REGISTER: '/api/v1/organizations/register',
+            REGISTER: '/api/organizations/register',
+            ADMIN: {
+                LIST: '/api/admin/organizations',
+                DETAILS: (id: string) => `/api/admin/organizations/${id}/details`,
+                SUMMARY: (id: string) => `/api/admin/organizations/${id}/summary`,
+                STATUS: (id: string) => `/api/admin/organizations/${id}/status`,
+                STATS: '/api/admin/organizations/stats',
+            },
+            PROFILE: {
+                GET: '/api/organizations/profile',
+                UPDATE: '/api/organizations/profile',
+            },
         },
         STUDENTS: {
             REGISTER: '/api/students/register',

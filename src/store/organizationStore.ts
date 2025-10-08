@@ -1,19 +1,16 @@
 import { create } from 'zustand';
 import { 
-  Organization, 
+  OrganizationListItem as Organization, 
   OrganizationFilters, 
   PaginationParams, 
-  PaginatedResponse,
+  ListOrganizationsResponse,
   OrganizationStatus,
   StatusChangeRequest,
-  OrganizationObservation
+  OrganizationStats
 } from '../types/user';
 import { 
   getOrganizations, 
-  changeOrganizationStatus, 
-  getOrganizationObservations,
-  addOrganizationObservation,
-  getOrganizationDetails,
+  changeOrganizationStatus,
   getOrganizationsStats
 } from '../services/organizationService';
 
@@ -27,14 +24,7 @@ interface OrganizationStore {
   totalPages: number;
   totalOrganizations: number;
   selectedOrganization: Organization | null;
-  observations: OrganizationObservation[];
-  stats: {
-    total: number;
-    pending: number;
-    approved: number;
-    rejected: number;
-    suspended: number;
-  };
+  stats: OrganizationStats;
 
   // Acciones para gestión de lista
   setFilters: (filters: OrganizationFilters) => void;
@@ -47,14 +37,15 @@ interface OrganizationStore {
   clearSelection: () => void;
   updateOrganizationStatus: (request: StatusChangeRequest) => Promise<void>;
   
-  // Acciones para observaciones
-  fetchObservations: (organizationId: string) => Promise<void>;
-  addObservation: (organizationId: string, observation: string, adminId: string) => Promise<void>;
+  // Acciones para observaciones (futuras implementaciones)
+  // fetchObservations: (organizationId: string) => Promise<void>;
+  // addObservation: (organizationId: string, observation: string, adminId: string) => Promise<void>;
   
   // Acciones para estadísticas
   fetchStats: () => Promise<void>;
   
   // Utilidades
+  updateStatsOptimistically: (newStatus: OrganizationStatus) => void;
   refreshCurrentPage: () => Promise<void>;
   resetStore: () => void;
 }
@@ -69,7 +60,6 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
   totalPages: 0,
   totalOrganizations: 0,
   selectedOrganization: null,
-  observations: [],
   stats: {
     total: 0,
     pending: 0,
@@ -95,8 +85,10 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
   fetchOrganizations: async () => {
     set({ loading: true, error: null });
     try {
-      const { filters, pagination } = get();
-      const response: PaginatedResponse<Organization> = await getOrganizations(filters, pagination);
+      const { filters } = get();
+      const response: ListOrganizationsResponse = await getOrganizations(filters);
+      
+      console.log('🔍 Response en store:', response); // Debug temporal
       
       set({
         organizations: response.data,
@@ -106,6 +98,7 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
       });
     } catch (error: any) {
       set({
+        organizations: [], // Asegurar que siempre sea un array vacío en caso de error
         error: error.message || 'Error al cargar las organizaciones',
         loading: false,
       });
@@ -115,25 +108,48 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
   // Gestión de organización seleccionada
   selectOrganization: (organization: Organization) => {
     set({ selectedOrganization: organization });
-    get().fetchObservations(organization.id);
   },
 
   clearSelection: () => {
-    set({ selectedOrganization: null, observations: [] });
+    set({ selectedOrganization: null });
   },
 
-  // Cambiar estado de organización
+  // Cambiar estado de organización con actualización optimista
   updateOrganizationStatus: async (request: StatusChangeRequest) => {
-    set({ loading: true, error: null });
+    const currentState = get();
+    
+    // Actualización optimista
+    const optimisticOrganizations = currentState.organizations.map(org => {
+      if (org.id === request.organizationId) {
+        return {
+          ...org,
+          status: request.newStatus,
+          lastStatusChange: new Date().toISOString()
+        };
+      }
+      return org;
+    });
+
+    const optimisticSelectedOrg = currentState.selectedOrganization?.id === request.organizationId
+      ? { ...currentState.selectedOrganization, status: request.newStatus }
+      : currentState.selectedOrganization;
+
+    // Aplicar actualización optimista
+    set({
+      organizations: optimisticOrganizations,
+      selectedOrganization: optimisticSelectedOrg,
+      loading: false
+    });
+
     try {
+      // Llamada real al API
       const updatedOrganization = await changeOrganizationStatus(request);
       
-      // Actualizar la organización en la lista
+      // Actualizar con datos reales del servidor
       const organizations = get().organizations.map(org =>
         org.id === request.organizationId ? updatedOrganization : org
       );
       
-      // Actualizar organización seleccionada si es la misma
       const selectedOrganization = get().selectedOrganization?.id === request.organizationId
         ? updatedOrganization
         : get().selectedOrganization;
@@ -141,52 +157,54 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
       set({
         organizations,
         selectedOrganization,
-        loading: false,
+        error: null
       });
 
-      // Refrescar observaciones si hay una organización seleccionada
-      if (selectedOrganization) {
-        get().fetchObservations(selectedOrganization.id);
-      }
-
-      // Refrescar estadísticas
-      get().fetchStats();
+      // Actualizar estadísticas de forma optimista
+      get().updateStatsOptimistically(request.newStatus);
+      
     } catch (error: any) {
+      // Revertir actualización optimista en caso de error
       set({
-        error: error.message || 'Error al cambiar el estado de la organización',
-        loading: false,
+        organizations: currentState.organizations,
+        selectedOrganization: currentState.selectedOrganization,
+        error: error.message || 'Error al cambiar el estado de la organización'
       });
-    }
-  },
-
-  // Gestión de observaciones
-  fetchObservations: async (organizationId: string) => {
-    try {
-      const observations = await getOrganizationObservations(organizationId);
-      set({ observations });
-    } catch (error: any) {
-      console.error('Error al cargar observaciones:', error);
-    }
-  },
-
-  addObservation: async (organizationId: string, observation: string, adminId: string) => {
-    try {
-      const newObservation = await addOrganizationObservation(organizationId, observation, adminId);
-      const observations = [newObservation, ...get().observations];
-      set({ observations });
-    } catch (error: any) {
-      set({ error: error.message || 'Error al agregar observación' });
     }
   },
 
   // Estadísticas
   fetchStats: async () => {
     try {
-      const stats = await getOrganizationsStats();
-      set({ stats });
+      const response = await getOrganizationsStats();
+      set({ stats: response.data });
     } catch (error: any) {
       console.error('Error al cargar estadísticas:', error);
     }
+  },
+
+  // Actualización optimista de estadísticas
+  updateStatsOptimistically: (newStatus: OrganizationStatus) => {
+    const currentStats = get().stats;
+    const updatedStats = { ...currentStats };
+    
+    // Incrementar el contador del nuevo estado
+    switch (newStatus) {
+      case OrganizationStatus.PENDING:
+        updatedStats.pending += 1;
+        break;
+      case OrganizationStatus.ACTIVE:
+        updatedStats.approved += 1;
+        break;
+      case OrganizationStatus.REJECTED:
+        updatedStats.rejected += 1;
+        break;
+      case OrganizationStatus.SUSPENDED:
+        updatedStats.suspended += 1;
+        break;
+    }
+    
+    set({ stats: updatedStats });
   },
 
   // Utilidades
@@ -204,7 +222,6 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
       totalPages: 0,
       totalOrganizations: 0,
       selectedOrganization: null,
-      observations: [],
       stats: {
         total: 0,
         pending: 0,

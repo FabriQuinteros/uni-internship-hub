@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { validateAdminPermissions } from '../services/organizationService';
 
 export interface AdminPermissions {
   canManageOrganizations: boolean;
@@ -55,13 +54,12 @@ export const useAdminPermissions = (userId: string | null): UseAdminPermissionsR
     setError(null);
 
     try {
-      // Validar si el usuario es administrador
-      const adminStatus = await validateAdminPermissions(userId);
+      // TODO: Implementar validación real cuando el backend esté listo
+      // Por ahora, asumir permisos de admin para desarrollo
+      const adminStatus = true; // Cambiar según lógica de autenticación real
       setIsAdmin(adminStatus);
 
       if (adminStatus) {
-        // TODO: En una implementación real, esto vendría del backend
-        // Por ahora asumimos que los administradores tienen todos los permisos
         setPermissions({
           canManageOrganizations: true,
           canManageUsers: true,

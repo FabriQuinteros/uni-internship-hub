@@ -8,8 +8,6 @@ import {
   XCircle, 
   Pause, 
   Play,
-  Eye,
-  MessageSquare,
   Shield
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,8 +43,11 @@ import { useToast } from "@/hooks/use-toast";
 import { ConfirmationModal } from "@/components/common/ConfirmationModal";
 import { useAdminPermissions } from '../../hooks/use-admin-permissions';
 import { useOrganizationStore } from '../../store/organizationStore';
+import { useDebounce } from '../../hooks/use-debounce';
+import NavigationTest from '../debug/NavigationTest';
+import OrganizationDetailsModal from './OrganizationDetailsModal';
 import { 
-  Organization, 
+  OrganizationListItem as Organization, 
   OrganizationStatus, 
   OrganizationAction,
   OrganizationFilters 
@@ -69,13 +70,10 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
     pagination,
     totalPages,
     totalOrganizations,
-    selectedOrganization,
-    observations,
     stats,
     setFilters,
     setPagination,
     fetchOrganizations,
-    selectOrganization,
     updateOrganizationStatus,
     fetchStats,
     clearError
@@ -83,20 +81,31 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
 
   const [showActionDialog, setShowActionDialog] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [showObservations, setShowObservations] = useState(false);
   const [currentAction, setCurrentAction] = useState<{
     organization: Organization;
     action: OrganizationAction;
     newStatus: OrganizationStatus;
   } | null>(null);
-  const [observation, setObservation] = useState('');
+  const [localSearchTerm, setLocalSearchTerm] = useState(filters.search || '');
+  const debouncedSearchTerm = useDebounce(localSearchTerm, 500);
+  const [updatingOrganizations, setUpdatingOrganizations] = useState<Set<string>>(new Set());
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<string | null>(null);
 
+  // Efecto inicial para cargar datos
   useEffect(() => {
     if (hasPermissions) {
       fetchOrganizations();
       fetchStats();
     }
   }, [hasPermissions]);
+
+  // Efecto para manejar búsqueda con debounce
+  useEffect(() => {
+    if (debouncedSearchTerm !== filters.search) {
+      setFilters({ ...filters, search: debouncedSearchTerm });
+    }
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
     if (error) {
@@ -115,23 +124,22 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
     if (status === 'all') {
       delete newFilters.status;
     } else {
-      newFilters.status = [status as OrganizationStatus];
+      newFilters.status = status as OrganizationStatus;
     }
     
     setFilters(newFilters);
   };
 
   const handlePageChange = (newPage: number) => {
-    setPagination({ page: newPage });
+    setFilters({ ...filters, page: newPage });
   };
 
   const handlePageSizeChange = (newSize: string) => {
-    setPagination({ page: 1, limit: parseInt(newSize) });
+    setFilters({ ...filters, page: 1, limit: parseInt(newSize) });
   };
 
   const initiateAction = (organization: Organization, action: OrganizationAction, newStatus: OrganizationStatus) => {
     setCurrentAction({ organization, action, newStatus });
-    setObservation('');
     setShowActionDialog(true);
   };
 
@@ -143,11 +151,15 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
   const executeAction = async () => {
     if (!currentAction) return;
 
+    const orgId = currentAction.organization.id;
+    
+    // Agregar organización a la lista de actualizaciones
+    setUpdatingOrganizations(prev => new Set(prev).add(orgId));
+    
     try {
       await updateOrganizationStatus({
-        organizationId: currentAction.organization.id,
+        organizationId: orgId,
         newStatus: currentAction.newStatus,
-        observation,
         adminId: userId
       });
 
@@ -158,14 +170,30 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
 
       setShowConfirmation(false);
       setCurrentAction(null);
-      setObservation('');
     } catch (error) {
       toast({
         title: "Error",
         description: "No se pudo completar la acción. Por favor intenta nuevamente.",
         variant: "destructive",
       });
+    } finally {
+      // Remover organización de la lista de actualizaciones
+      setUpdatingOrganizations(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(orgId);
+        return newSet;
+      });
     }
+  };
+
+  const handleViewDetails = (organizationId: string) => {
+    setSelectedOrganizationId(organizationId);
+    setShowDetailsModal(true);
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedOrganizationId(null);
   };
 
   const getActionDescription = (action: OrganizationAction): string => {
@@ -173,25 +201,17 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
       [OrganizationAction.APPROVE]: 'aprobada',
       [OrganizationAction.REJECT]: 'rechazada',
       [OrganizationAction.SUSPEND]: 'suspendida',
-      [OrganizationAction.REACTIVATE]: 'reactivada',
-      [OrganizationAction.DISABLE]: 'deshabilitada',
-      [OrganizationAction.UPDATE_PROFILE]: 'actualizada'
+      [OrganizationAction.REACTIVATE]: 'reactivada'
     };
     return descriptions[action];
-  };
-
-  const showOrganizationObservations = (organization: Organization) => {
-    selectOrganization(organization);
-    setShowObservations(true);
   };
 
   const getStatusBadge = (status: OrganizationStatus) => {
     const statusConfig = {
       [OrganizationStatus.PENDING]: { label: 'Pendiente', variant: 'secondary' as const },
-      [OrganizationStatus.APPROVED]: { label: 'Aprobada', variant: 'default' as const },
+      [OrganizationStatus.ACTIVE]: { label: 'Activa', variant: 'default' as const },
       [OrganizationStatus.REJECTED]: { label: 'Rechazada', variant: 'destructive' as const },
-      [OrganizationStatus.SUSPENDED]: { label: 'Suspendida', variant: 'outline' as const },
-      [OrganizationStatus.DISABLED]: { label: 'Deshabilitada', variant: 'outline' as const }
+      [OrganizationStatus.SUSPENDED]: { label: 'Suspendida', variant: 'outline' as const }
     };
 
     const config = statusConfig[status];
@@ -201,21 +221,21 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
   const getAvailableActions = (organization: Organization) => {
     const actions = [];
 
-    switch (organization.status) {
+      switch (organization.status) {
       case OrganizationStatus.PENDING:
         actions.push(
-          { action: OrganizationAction.APPROVE, newStatus: OrganizationStatus.APPROVED, label: 'Aprobar', icon: CheckCircle, variant: 'default' as const },
+          { action: OrganizationAction.APPROVE, newStatus: OrganizationStatus.ACTIVE, label: 'Aprobar', icon: CheckCircle, variant: 'default' as const },
           { action: OrganizationAction.REJECT, newStatus: OrganizationStatus.REJECTED, label: 'Rechazar', icon: XCircle, variant: 'destructive' as const }
         );
         break;
-      case OrganizationStatus.APPROVED:
+      case OrganizationStatus.ACTIVE:
         actions.push(
           { action: OrganizationAction.SUSPEND, newStatus: OrganizationStatus.SUSPENDED, label: 'Suspender', icon: Pause, variant: 'outline' as const }
         );
         break;
       case OrganizationStatus.SUSPENDED:
         actions.push(
-          { action: OrganizationAction.REACTIVATE, newStatus: OrganizationStatus.APPROVED, label: 'Reactivar', icon: Play, variant: 'default' as const }
+          { action: OrganizationAction.REACTIVATE, newStatus: OrganizationStatus.ACTIVE, label: 'Reactivar', icon: Play, variant: 'default' as const }
         );
         break;
       case OrganizationStatus.REJECTED:
@@ -223,9 +243,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
           { action: OrganizationAction.REACTIVATE, newStatus: OrganizationStatus.PENDING, label: 'Revisar', icon: Play, variant: 'secondary' as const }
         );
         break;
-    }
-
-    return actions;
+    }    return actions;
   };
 
   // Early returns para estados de carga y sin permisos
@@ -259,6 +277,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-6 py-8 max-w-7xl">
         <div className="space-y-8">
+          <NavigationTest />
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-tight mb-4">Gestión de Organizaciones</h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -275,7 +294,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{stats.total}</div>
+                <div className="text-3xl font-bold text-foreground">{stats?.total || 0}</div>
                 <p className="text-xs text-muted-foreground mt-1">Organizaciones</p>
               </CardContent>
             </Card>
@@ -285,7 +304,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-orange-600">{stats.pending}</div>
+                <div className="text-3xl font-bold text-orange-600">{stats?.pending || 0}</div>
                 <p className="text-xs text-muted-foreground mt-1">Por revisar</p>
               </CardContent>
             </Card>
@@ -295,7 +314,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Aprobadas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600">{stats.approved}</div>
+                <div className="text-3xl font-bold text-green-600">{stats?.approved || 0}</div>
                 <p className="text-xs text-muted-foreground mt-1">Activas</p>
               </CardContent>
             </Card>
@@ -305,7 +324,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Rechazadas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-red-600">{stats.rejected}</div>
+                <div className="text-3xl font-bold text-red-600">{stats?.rejected || 0}</div>
                 <p className="text-xs text-muted-foreground mt-1">Denegadas</p>
               </CardContent>
             </Card>
@@ -315,7 +334,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Suspendidas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gray-600">{stats.suspended}</div>
+                <div className="text-3xl font-bold text-gray-600">{stats?.suspended || 0}</div>
                 <p className="text-xs text-muted-foreground mt-1">Bloqueadas</p>
               </CardContent>
             </Card>
@@ -339,25 +358,24 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                     <Input
                       id="search"
                       placeholder="Nombre, email o descripción..."
-                      value={filters.searchTerm || ''}
-                      onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+                      value={localSearchTerm}
+                      onChange={(e) => setLocalSearchTerm(e.target.value)}
                       className="flex-1"
                     />
                   </div>
                 </div>
                 <div className="w-full sm:w-64">
                   <Label htmlFor="status">Filtrar por estado</Label>
-                  <Select value={filters.status?.[0] || 'all'} onValueChange={handleStatusFilter}>
+                  <Select value={filters.status || 'all'} onValueChange={handleStatusFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="Todos los estados" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos los estados</SelectItem>
                       <SelectItem value={OrganizationStatus.PENDING}>Pendientes</SelectItem>
-                      <SelectItem value={OrganizationStatus.APPROVED}>Aprobadas</SelectItem>
+                      <SelectItem value={OrganizationStatus.ACTIVE}>Activas</SelectItem>
                       <SelectItem value={OrganizationStatus.REJECTED}>Rechazadas</SelectItem>
                       <SelectItem value={OrganizationStatus.SUSPENDED}>Suspendidas</SelectItem>
-                      <SelectItem value={OrganizationStatus.DISABLED}>Deshabilitadas</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -380,7 +398,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                   <p className="text-muted-foreground text-lg">Cargando organizaciones...</p>
                 </div>
-              ) : organizations.length === 0 ? (
+              ) : (organizations?.length || 0) === 0 ? (
                 <div className="text-center py-12">
                   <Building2 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2">No hay organizaciones</h3>
@@ -395,66 +413,63 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                       <TableHeader>
                         <TableRow className="bg-muted/50">
                           <TableHead className="font-semibold">Organización</TableHead>
-                          <TableHead className="font-semibold">Email</TableHead>
                           <TableHead className="font-semibold text-center">Estado</TableHead>
-                          <TableHead className="font-semibold text-center">Perfil</TableHead>
-                          <TableHead className="font-semibold text-center">Fecha Registro</TableHead>
-                          <TableHead className="font-semibold text-center">Acciones</TableHead>
+                          <TableHead className="font-semibold text-center w-48">Acciones</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {organizations.map((org) => (
+                        {(organizations || []).map((org) => (
                           <TableRow key={org.id} className="hover:bg-muted/30 transition-colors">
                             <TableCell>
                               <div className="space-y-1">
                                 <div className="font-medium text-foreground">{org.name}</div>
-                                <div className="text-sm text-muted-foreground font-mono">
-                                  ID: {org.id}
+                                <div className="text-sm text-muted-foreground truncate max-w-xs">
+                                  {org.email}
                                 </div>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className="text-sm font-medium">{org.email}</span>
                             </TableCell>
                             <TableCell className="text-center">
                               {getStatusBadge(org.status)}
                             </TableCell>
-                            <TableCell className="text-center">
-                              <Badge variant={org.profileComplete ? "default" : "secondary"}>
-                                {org.profileComplete ? "Completo" : "Incompleto"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <span className="text-sm">
-                                {new Date(org.createdAt).toLocaleDateString('es-ES')}
-                              </span>
-                            </TableCell>
                             <TableCell>
-                              <div className="flex justify-center gap-2 flex-wrap">
-                                {getAvailableActions(org).map((actionConfig) => {
-                                  const Icon = actionConfig.icon;
-                                  return (
-                                    <Button
-                                      key={actionConfig.action}
-                                      size="sm"
-                                      variant={actionConfig.variant}
-                                      onClick={() => initiateAction(org, actionConfig.action, actionConfig.newStatus)}
-                                      className="text-xs"
-                                    >
-                                      <Icon className="h-3 w-3 mr-1" />
-                                      {actionConfig.label}
-                                    </Button>
-                                  );
-                                })}
+                              <div className="flex justify-center gap-1 flex-wrap">
+                                {/* Botón de ver detalles */}
                                 <Button
                                   size="sm"
-                                  variant="outline"
-                                  onClick={() => showOrganizationObservations(org)}
-                                  className="text-xs"
+                                  variant="ghost"
+                                  onClick={() => handleViewDetails(org.id)}
+                                  className="text-xs px-2"
+                                  title="Ver detalles"
                                 >
-                                  <Eye className="h-3 w-3 mr-1" />
-                                  Ver
+                                  👁️
                                 </Button>
+                                
+                                {/* Acciones de estado disponibles */}
+                                {(() => {
+                                  const actions = getAvailableActions(org);
+                                  const isUpdating = updatingOrganizations.has(org.id);
+                                  
+                                  return actions.map((action, index) => {
+                                    const Icon = action.icon;
+                                    return (
+                                      <Button
+                                        key={index}
+                                        size="sm"
+                                        variant={action.variant}
+                                        onClick={() => initiateAction(org, action.action, action.newStatus)}
+                                        disabled={isUpdating}
+                                        className="text-xs px-2"
+                                        title={action.label}
+                                      >
+                                        {isUpdating ? (
+                                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
+                                        ) : (
+                                          <Icon className="h-3 w-3" />
+                                        )}
+                                      </Button>
+                                    );
+                                  });
+                                })()}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -468,7 +483,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>Mostrando</span>
                         <Select 
-                          value={pagination.limit.toString()} 
+                          value={(filters.limit || 25).toString()} 
                           onValueChange={handlePageSizeChange}
                         >
                           <SelectTrigger className="w-20 h-8">
@@ -487,8 +502,8 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={pagination.page === 1}
-                          onClick={() => handlePageChange(pagination.page - 1)}
+                          disabled={(filters.page || 1) === 1}
+                          onClick={() => handlePageChange((filters.page || 1) - 1)}
                         >
                           <ChevronLeft className="h-4 w-4 mr-1" />
                           Anterior
@@ -496,13 +511,14 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                         
                         <div className="flex items-center gap-1">
                           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            const page = pagination.page <= 3 ? i + 1 : pagination.page - 2 + i;
+                            const currentPage = filters.page || 1;
+                            const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
                             if (page > totalPages) return null;
                             
                             return (
                               <Button
                                 key={page}
-                                variant={page === pagination.page ? "default" : "outline"}
+                                variant={page === currentPage ? "default" : "outline"}
                                 size="sm"
                                 className="w-8 h-8 p-0"
                                 onClick={() => handlePageChange(page)}
@@ -516,8 +532,8 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={pagination.page === totalPages}
-                          onClick={() => handlePageChange(pagination.page + 1)}
+                          disabled={(filters.page || 1) === totalPages}
+                          onClick={() => handlePageChange((filters.page || 1) + 1)}
                         >
                           Siguiente
                           <ChevronRight className="h-4 w-4 ml-1" />
@@ -537,22 +553,9 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                   {currentAction && `${getActionDescription(currentAction.action).charAt(0).toUpperCase() + getActionDescription(currentAction.action).slice(1)} Organización`}
                 </DialogTitle>
                 <DialogDescription>
-                  {currentAction && `Estás a punto de ${getActionDescription(currentAction.action)} la organización "${currentAction.organization.name}". Por favor agrega una observación explicando el motivo de esta decisión.`}
+                  {currentAction && `¿Estás seguro de que quieres ${getActionDescription(currentAction.action)} la organización "${currentAction.organization.name}"?`}
                 </DialogDescription>
               </DialogHeader>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="observation">Observación *</Label>
-                  <Textarea
-                    id="observation"
-                    placeholder="Explica el motivo de esta acción..."
-                    value={observation}
-                    onChange={(e) => setObservation(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-              </div>
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowActionDialog(false)}>
@@ -560,9 +563,8 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                 </Button>
                 <Button 
                   onClick={confirmAction}
-                  disabled={!observation.trim()}
                 >
-                  Continuar
+                  Confirmar
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -582,53 +584,12 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
             cancelText="Cancelar"
           />
 
-          <Dialog open={showObservations} onOpenChange={setShowObservations}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Historial de Observaciones
-                </DialogTitle>
-                <DialogDescription>
-                  {selectedOrganization && `Historial completo de acciones para "${selectedOrganization.name}"`}
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {observations.length > 0 ? (
-                  observations.map((obs) => (
-                    <div key={obs.id} className="border rounded-lg p-4 space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex gap-2">
-                          <Badge variant="outline">{obs.action}</Badge>
-                          {obs.previousStatus && (
-                            <span className="text-sm text-muted-foreground">
-                              {obs.previousStatus} → {obs.newStatus}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(obs.createdAt).toLocaleString('es-ES')}
-                        </span>
-                      </div>
-                      <p className="text-sm">{obs.observation}</p>
-                      <p className="text-xs text-muted-foreground">Por: {obs.adminName}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">
-                    No hay observaciones registradas para esta organización.
-                  </p>
-                )}
-              </div>
+          <OrganizationDetailsModal
+            isOpen={showDetailsModal}
+            onClose={closeDetailsModal}
+            organizationId={selectedOrganizationId}
+          />
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setShowObservations(false)}>
-                  Cerrar
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
     </div>

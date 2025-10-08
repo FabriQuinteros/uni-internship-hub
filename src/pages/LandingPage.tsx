@@ -15,14 +15,14 @@ const LandingPage = () => {
       title: "Estudiantes",
       description: "Encuentra pasantías que impulsen tu carrera profesional",
       features: ["Perfil académico completo", "Postulación a ofertas", "Seguimiento de aplicaciones"],
-      link: "/auth/student"
+      link: "/auth/login"
     },
     {
       icon: Building,
       title: "Organizaciones",
       description: "Conecta con el mejor talento universitario",
       features: ["Publicación de ofertas", "Gestión de candidatos", "Proceso de selección"],
-      link: "/auth/organization"
+      link: "/auth/login"
     }
   ];
 
@@ -49,9 +49,11 @@ const LandingPage = () => {
             <a href="#estadisticas" className="text-muted-foreground hover:text-primary transition-colors">
               Estadísticas
             </a>
-            <AcademicButton variant="outline">
-              Iniciar Sesión
-            </AcademicButton>
+            <Link to="/auth/login">
+              <AcademicButton variant="outline">
+                Iniciar Sesión
+              </AcademicButton>
+            </Link>
           </nav>
         </div>
       </header>
@@ -75,16 +77,15 @@ const LandingPage = () => {
             que transforman su futuro académico y laboral
           </p>
           {/* Botones de acción principales */}
-          {/* Estos botones son los CTA (Call To Action) principales de la landing page */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {/* Botón primario para estudiantes */}
-            <HeroButton variant="primary">
-              Explorar Oportunidades
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </HeroButton>
-            {/* Botón de registro de organizaciones
-                Este botón redirige directamente al formulario de registro
-                usando React Router para mantener la navegación SPA */}
+            {/* Botón primario para iniciar sesión */}
+            <Link to="/auth/login">
+              <HeroButton variant="primary">
+                Iniciar Sesión
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </HeroButton>
+            </Link>
+            {/* Botón de registro de organizaciones */}
             <Link to="/auth/register-organization">
               <HeroButton variant="secondary">
                 Registrar Organización

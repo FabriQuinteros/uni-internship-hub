@@ -1,195 +1,252 @@
-import { apiClient } from '@/lib/api/apiClient';
+import { httpClient } from '@/lib/httpInterceptors';
 import { API_CONFIG } from '@/config/api.config';
-import { handleApiResponse } from '@/lib/api/apiResponseHandler';
 import { ApiHandlerResult } from '@/types/api';
 import { 
-  Organization, 
+  OrganizationListItem,
+  OrganizationDetails,
+  OrganizationSummary,
+  OrganizationStats,
   OrganizationFilters, 
-  PaginationParams, 
-  PaginatedResponse, 
-  StatusChangeRequest, 
-  OrganizationObservation 
+  UpdateStatusRequest,
+  UpdateStatusResponse,
+  ListOrganizationsResponse,
+  StatusChangeRequest,
+  OrganizationProfile,
+  UpdateOrganizationProfileRequest,
+  OrganizationRegisterRequest,
+  OrganizationRegisterResponse
 } from '../types/user';
-import axios from 'axios';
 
-// Legacy Organization interface for backward compatibility
-export interface LegacyOrganization {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  website?: string;
-  description?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateOrganizationRequest {
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  website?: string;
-  description?: string;
-}
-
-export interface UpdateOrganizationRequest {
-  name?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  website?: string;
-  description?: string;
-  is_active?: boolean;
-}
-
-// Create axios instance for admin operations (temporary until full migration to apiClient)
-const api = axios.create({
-  baseURL: 'https://api.example.com', // Cambia esto a la URL de tu API
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Función para manejar errores de la API
-const handleError = (error: any) => {
-  if (error.response) {
-    // La solicitud se realizó y el servidor respondió con un código de estado
-    console.error('Error en la respuesta:', error.response.data);
-  } else if (error.request) {
-    // La solicitud se realizó pero no se recibió respuesta
-    console.error('No se recibió respuesta:', error.request);
-  } else {
-    // Algo sucedió al configurar la solicitud
-    console.error('Error al configurar la solicitud:', error.message);
-  }
-};
-
-const organizationServiceInternal = {
-  async register(data: CreateOrganizationRequest): Promise<ApiHandlerResult<LegacyOrganization>> {
-    const responsePromise = apiClient.post(API_CONFIG.ENDPOINTS.ORGANIZATIONS.REGISTER, data);
-    return handleApiResponse<LegacyOrganization>(responsePromise);
-  }
-};
-
-// ===== FUNCIONES ESPECÍFICAS PARA GESTIÓN DE ORGANIZACIONES (ADMIN) =====
-
-// Obtener lista paginada de organizaciones con filtros
+/**
+ * GET /admin/organizations - Listar organizaciones con filtros y paginación
+ */
 export const getOrganizations = async (
-  filters: OrganizationFilters = {},
-  pagination: PaginationParams = { page: 1, limit: 10 }
-): Promise<PaginatedResponse<Organization>> => {
-  try {
-    const queryParams = new URLSearchParams({
-      page: pagination.page.toString(),
-      limit: pagination.limit.toString(),
-      ...(pagination.sortBy && { sortBy: pagination.sortBy }),
-      ...(pagination.sortOrder && { sortOrder: pagination.sortOrder }),
-      ...(filters.searchTerm && { search: filters.searchTerm }),
-      ...(filters.dateFrom && { dateFrom: filters.dateFrom }),
-      ...(filters.dateTo && { dateTo: filters.dateTo }),
-      ...(filters.profileComplete !== undefined && { profileComplete: filters.profileComplete.toString() }),
-    });
-
-    if (filters.status && filters.status.length > 0) {
-      filters.status.forEach(status => queryParams.append('status', status));
-    }
-
-    const response = await api.get(`/admin/organizations?${queryParams}`);
-    return response.data;
-  } catch (error) {
-    handleError(error);
-    throw error;
+  filters: OrganizationFilters = {}
+): Promise<ListOrganizationsResponse> => {
+  const queryParams = new URLSearchParams();
+  
+  queryParams.set('page', (filters.page || 1).toString());
+  queryParams.set('limit', (filters.limit || 25).toString());
+  
+  if (filters.search) {
+    queryParams.set('search', filters.search);
   }
+  
+  if (filters.status) {
+    queryParams.set('status', filters.status);
+  }
+
+  const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.ADMIN.LIST}?${queryParams.toString()}`);
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
+  }
+  
+  const result = await response.json();
+
+  console.log('🔍 Raw backend data:', result); // Debug temporal
+
+  // Vamos a manejar diferentes estructuras de respuesta del backend
+  let transformedData: ListOrganizationsResponse;
+  
+  if (Array.isArray(result)) {
+    // Caso 1: result es directamente un array de organizaciones ya transformadas
+    console.log('📊 Case 1: Direct array detected');
+    transformedData = {
+      data: result,
+      total: result.length,
+      page: 1,
+      totalPages: 1
+    };
+  } else if (result && typeof result === 'object') {
+    // Caso 2: result es un objeto con la estructura {Data, Total, ...}
+    console.log('📊 Case 2: Object structure detected');
+    
+    transformedData = {
+      data: (result.Data || result.data || []).map((org: any) => ({
+        id: (org.ID || org.id)?.toString() || '', 
+        name: org.Name || org.name || '',
+        email: org.Email || org.email || '',
+        status: org.Status || org.status || 'pending',
+        createdAt: org.CreatedAt || org.createdAt || ''
+      })),
+      total: result.Total || result.total || 0,
+      page: result.Page || result.page || 1,
+      totalPages: result.TotalPages || result.totalPages || 1
+    };
+  } else {
+    // Caso 3: Fallback
+    console.log('📊 Case 3: Fallback - no data');
+    transformedData = {
+      data: [],
+      total: 0,
+      page: 1,
+      totalPages: 1
+    };
+  }
+  
+  console.log('🔍 Transformed data:', transformedData); // Debug temporal
+  
+  return transformedData;
 };
 
-// Cambiar estado de una organización
-export const changeOrganizationStatus = async (
-  request: StatusChangeRequest
-): Promise<Organization> => {
-  try {
-    const response = await api.put(`/admin/organizations/${request.organizationId}/status`, {
-      newStatus: request.newStatus,
-      observation: request.observation,
-      adminId: request.adminId
-    });
-    return response.data;
-  } catch (error) {
-    handleError(error);
-    throw error;
-  }
-};
-
-// Obtener historial de observaciones de una organización
-export const getOrganizationObservations = async (
-  organizationId: string
-): Promise<OrganizationObservation[]> => {
-  try {
-    const response = await api.get(`/admin/organizations/${organizationId}/observations`);
-    return response.data;
-  } catch (error) {
-    handleError(error);
-    throw error;
-  }
-};
-
-// Agregar observación a una organización
-export const addOrganizationObservation = async (
+/**
+ * PUT /admin/organizations/:id/status - Actualizar estado de organización
+ */
+export const updateOrganizationStatus = async (
   organizationId: string,
-  observation: string,
-  adminId: string
-): Promise<OrganizationObservation> => {
-  try {
-    const response = await api.post(`/admin/organizations/${organizationId}/observations`, {
-      observation,
-      adminId
-    });
-    return response.data;
-  } catch (error) {
-    handleError(error);
-    throw error;
+  request: UpdateStatusRequest
+): Promise<UpdateStatusResponse> => {
+  const response = await httpClient.put(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.ADMIN.STATUS(organizationId)}`, request);
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
   }
+  
+  const result = await response.json();
+  return result;
 };
 
-// Obtener detalles específicos de una organización
+/**
+ * GET /admin/organizations/:id/details - Obtener detalles completos de organización
+ */
 export const getOrganizationDetails = async (
   organizationId: string
-): Promise<Organization> => {
-  try {
-    const response = await api.get(`/admin/organizations/${organizationId}`);
-    return response.data;
-  } catch (error) {
-    handleError(error);
-    throw error;
+): Promise<{ message: string; data: OrganizationDetails }> => {
+  const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.ADMIN.DETAILS(organizationId)}`);
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
   }
+  
+  const result = await response.json();
+  return result;
 };
 
-// Obtener estadísticas de organizaciones para el dashboard
-export const getOrganizationsStats = async () => {
-  try {
-    const response = await api.get('/admin/organizations/stats');
-    return response.data;
-  } catch (error) {
-    handleError(error);
-    throw error;
+/**
+ * GET /admin/organizations/:id/summary - Obtener resumen de organización
+ */
+export const getOrganizationSummary = async (
+  organizationId: string
+): Promise<{ message: string; data: OrganizationSummary }> => {
+  const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.ADMIN.SUMMARY(organizationId)}`);
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
   }
+  
+  const result = await response.json();
+  return result;
 };
 
-// Validar permisos de administrador
-export const validateAdminPermissions = async (userId: string): Promise<boolean> => {
-  try {
-    const response = await api.get(`/admin/validate-permissions/${userId}`);
-    return response.data.isAdmin;
-  } catch (error) {
-    handleError(error);
-    return false;
+/**
+ * GET /admin/organizations/stats - Obtener estadísticas de organizaciones
+ */
+export const getOrganizationsStats = async (): Promise<{ message: string; data: OrganizationStats }> => {
+  const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.ADMIN.STATS}`);
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
+  }
+  
+  const result = await response.json();
+  return result;
+};
+
+/**
+ * POST /api/organizations/register - Registro de nueva organización
+ */
+export const registerOrganization = async (
+  data: OrganizationRegisterRequest
+): Promise<OrganizationRegisterResponse> => {
+  const response = await httpClient.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.REGISTER}`, data);
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
+  }
+  
+  const result = await response.json();
+  return result;
+};
+
+/**
+ * GET /api/organizations/profile?userID=<uuid> - Obtener perfil de organización
+ */
+export const getOrganizationProfile = async (
+  userID: string
+): Promise<{ message: string; data: OrganizationProfile }> => {
+  const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.PROFILE.GET}?userID=${userID}`);
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
+  }
+  
+  const result = await response.json();
+  return result;
+};
+
+/**
+ * PUT /api/organizations/profile?userID=<uuid> - Actualizar perfil de organización
+ */
+export const updateOrganizationProfile = async (
+  userID: string,
+  data: UpdateOrganizationProfileRequest
+): Promise<{ message: string; data: OrganizationProfile }> => {
+  const response = await httpClient.put(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.PROFILE.UPDATE}?userID=${userID}`, data);
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
+  }
+  
+  const result = await response.json();
+  return result;
+};
+
+/**
+ * Función compatible con el store existente para cambiar estado
+ */
+export const changeOrganizationStatus = async (
+  request: StatusChangeRequest
+): Promise<OrganizationListItem> => {
+  const response = await updateOrganizationStatus(request.organizationId, {
+    newStatus: request.newStatus,
+    adminId: request.adminId
+  });
+  
+  return {
+    id: response.data.id,
+    name: response.data.name,
+    email: response.data.email,
+    status: response.data.status,
+    createdAt: response.data.updatedAt
+  };
+};
+
+// ===== EXPORTACIÓN PARA COMPATIBILIDAD CON API CLIENT EXISTENTE =====
+
+const organizationServiceInternal = {
+  async register(data: OrganizationRegisterRequest): Promise<ApiHandlerResult<OrganizationRegisterResponse>> {
+    try {
+      const result = await registerOrganization(data);
+      return {
+        success: true,
+        data: result,
+        message: result.message,
+        type: 'unknown' as const
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message,
+        data: undefined,
+        type: 'server_error' as const
+      };
+    }
   }
 };
 
 export const organizationService = {
-  async register(data: CreateOrganizationRequest): Promise<LegacyOrganization> {
+  async register(data: OrganizationRegisterRequest): Promise<OrganizationRegisterResponse> {
     const result = await organizationServiceInternal.register(data);
     
     if (!result.success) {
