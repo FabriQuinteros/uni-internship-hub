@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, BriefcaseIcon, TrendingUp, ClockIcon, CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,15 @@ const recentInternships = [
 ];
 
 const OrganizationDashboard = () => {
+  const navigate = useNavigate();
+
+  /**
+   * Navegar al perfil de la organización
+   */
+  const handleUpdateProfile = () => {
+    navigate('/dashboard/organization/profile');
+  };
+
   return (
     <div className="space-y-8">
       {/* Header Section */}
@@ -141,7 +151,11 @@ const OrganizationDashboard = () => {
               <Users className="mr-2 h-4 w-4" />
               Ver Postulaciones
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={handleUpdateProfile}
+            >
               <Building2 className="mr-2 h-4 w-4" />
               Actualizar Perfil
             </Button>
