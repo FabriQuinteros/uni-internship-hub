@@ -118,22 +118,10 @@ const navigationItems = {
       description: "Revisar publicaciones"
     },
     {
-      title: "Catálogos",
-      url: "/admin/catalogs",
-      icon: Database,
-      description: "Tecnologías y habilidades"
-    },
-    {
       title: "Configuración",
-      url: "/admin/settings",
+      url: "/admin/catalogs",
       icon: Settings,
       description: "Parámetros del sistema"
-    },
-    {
-      title: "Reportes",
-      url: "/admin/reports",
-      icon: BarChart3,
-      description: "Estadísticas generales"
     }
   ]
 };
