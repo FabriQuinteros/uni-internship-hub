@@ -4,9 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/auth/LoginPage";
+import UnifiedLoginPage from "./pages/auth/UnifiedLoginPage";
 import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
@@ -43,21 +45,19 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           {/* Rutas de autenticación */}
-          <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/auth/student" element={<LoginPage />} />
-          <Route path="/auth/organization" element={<LoginPage />} />
-          {/* Ruta para el registro de nuevas organizaciones
-              Esta ruta maneja el flujo de registro completo incluyendo:
-              - Formulario con validaciones
-              - Redirección post-registro
-              - Mensajes de confirmación */}
+          <Route path="/auth/login" element={<UnifiedLoginPage />} />
+          {/* Mantener rutas legacy para compatibilidad temporal */}
+          <Route path="/auth/student" element={<UnifiedLoginPage />} />
+          <Route path="/auth/organization" element={<UnifiedLoginPage />} />
+          <Route path="/auth/admin" element={<UnifiedLoginPage />} />
+          {/* Rutas de registro */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
-          <Route path="/auth/admin" element={<LoginPage />} />
-          <Route path="/auth/register/student" element={<RegisterPageStudent />} /> {/* <-- Agrega aquí la ruta */}
+          <Route path="/auth/register/student" element={<RegisterPageStudent />} />
 
           {/* Student Routes */}
           <Route path="/student/*" element={
@@ -106,23 +106,10 @@ const App = () => (
             </AuthGuard>
           } />
           
-          {/* Organization Routes */}
-          <Route 
-            path="/dashboard/organization" 
-            element={
-              <DashboardLayout userRole="organization">
-                <OrganizationDashboard />
-              </DashboardLayout>
-            } 
-          />
-          <Route 
-            path="/dashboard/organization/profile" 
-            element={<OrganizationProfilePage />} 
-          />
-          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
