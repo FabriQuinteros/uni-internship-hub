@@ -1,14 +1,63 @@
 export const API_CONFIG = {
-    // Durante desarrollo, usamos el proxy configurado en Vite
     BASE_URL: import.meta.env.VITE_API_URL,
-    TIMEOUT: 15000, // 15 segundos de timeout por defecto
+    TIMEOUT: 15000,
     ENDPOINTS: {
         PING: '/ping',
-        // Aquí irán otros endpoints
+        AUTH: {
+            LOGIN: '/api/auth/login',
+            LOGOUT: '/api/auth/logout',
+            FORGOT_PASSWORD: '/api/user/forgot-password',
+            RESET_PASSWORD: '/api/user/reset-password',
+        },
+        CATALOG: {
+            BASE: '/api/catalog',
+            TECHNOLOGIES: {
+                LIST: '/api/catalog/technologies',
+                CREATE: '/api/catalog/technologies',
+                UPDATE: (id: number) => `/api/catalog/technologies/${id}`,
+                DELETE: (id: number) => `/api/catalog/technologies/${id}`,
+            },
+            POSITIONS: {
+                LIST: '/api/catalog/positions',
+                CREATE: '/api/catalog/positions',
+                UPDATE: (id: number) => `/api/catalog/positions/${id}`,
+                DELETE: (id: number) => `/api/catalog/positions/${id}`,
+            },
+            DURATIONS: {
+                LIST: '/api/catalog/durations',
+                CREATE: '/api/catalog/durations',
+                UPDATE: (id: number) => `/api/catalog/durations/${id}`,
+                DELETE: (id: number) => `/api/catalog/durations/${id}`,
+            },
+            LOCATIONS: {
+                LIST: '/api/catalog/locations',
+                CREATE: '/api/catalog/locations',
+                UPDATE: (id: number) => `/api/catalog/locations/${id}`,
+                DELETE: (id: number) => `/api/catalog/locations/${id}`,
+            },
+            MODALITIES: {
+                LIST: '/api/catalog/modalities',
+                CREATE: '/api/catalog/modalities',
+                UPDATE: (id: number) => `/api/catalog/modalities/${id}`,
+                DELETE: (id: number) => `/api/catalog/modalities/${id}`,
+            },
+        },
+        ORGANIZATIONS: {
+            REGISTER: '/api/organizations/register',
+            ADMIN: {
+                LIST: '/api/admin/organizations',
+                DETAILS: (id: string) => `/api/admin/organizations/${id}/details`,
+                SUMMARY: (id: string) => `/api/admin/organizations/${id}/summary`,
+                STATUS: (id: string) => `/api/admin/organizations/${id}/status`,
+                STATS: '/api/admin/organizations/stats',
+            },
+            PROFILE: {
+                GET: '/api/organizations/profile',
+                UPDATE: '/api/organizations/profile',
+            },
+        },
+        STUDENTS: {
+            REGISTER: '/api/students/register',
+        },
     }
 } as const;
-
-// Función helper para construir URLs completas
-export const buildApiUrl = (endpoint: string): string => {
-    return `${API_CONFIG.BASE_URL}${endpoint}`;
-};

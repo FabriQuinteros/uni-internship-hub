@@ -1,66 +1,142 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-interface User {
-  id: string;
-  email: string;
-  role: 'student' | 'organization' | 'admin';
-  name: string;
-  imageUrl?: string;
-}
+import { authService, type AuthUser, type LoginResult } from '@/services/authService';
+import { httpClient } from '@/lib/httpInterceptors';
 
 interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<LoginResult>;
+  logout: () => Promise<void>;
+  checkAuth: () => void;
+  clearError: () => void;
+  initialize: () => void;
 }
 
 export const useAuth = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
-      login: async (email: string, password: string) => {
-        // Aquí irá la llamada real a tu API
-        // Por ahora simulamos una autenticación basada en el email
-        const mockUsers: Record<string, User> = {
-          'estudiante@universidad.edu': {
-            id: '1',
-            email: 'estudiante@universidad.edu',
-            role: 'student',
-            name: 'María González'
-          },
-          'empresa@org.com': {
-            id: '2',
-            email: 'empresa@org.com',
-            role: 'organization',
-            name: 'Tech Solutions Inc.'
-          },
-          'admin@uni.edu': {
-            id: '3',
-            email: 'admin@uni.edu',
-            role: 'admin',
-            name: 'Admin'
+      isLoading: false,
+      error: null,
+      
+      login: async (email: string, password: string): Promise<LoginResult> => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const result = await authService.login(email, password);
+          
+          if (result.success && result.user) {
+            set({ 
+              user: result.user, 
+              isAuthenticated: true, 
+              isLoading: false,
+              error: null 
+            });
+          } else {
+            set({ 
+              user: null, 
+              isAuthenticated: false, 
+              isLoading: false,
+              error: result.error || 'Error en el login' 
+            });
           }
-        };
-
-        // Simular delay de red
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const user = mockUsers[email];
-        if (!user) {
-          throw new Error('Usuario no encontrado');
+          
+          return result;
+        } catch (error: any) {
+          const errorMessage = error.message || 'Error de conexión';
+          set({ 
+            user: null, 
+            isAuthenticated: false, 
+            isLoading: false,
+            error: errorMessage 
+          });
+          
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
-
-        set({ user, isAuthenticated: true });
       },
-      logout: () => {
-        set({ user: null, isAuthenticated: false });
+      
+      logout: async () => {
+        set({ isLoading: true });
+        
+        try {
+          await authService.logout();
+        } catch (error) {
+          console.error('Error durante logout:', error);
+        } finally {
+          set({ 
+            user: null, 
+            isAuthenticated: false, 
+            isLoading: false,
+            error: null 
+          });
+        }
+      },
+      
+      checkAuth: () => {
+        try {
+          const isAuthenticated = authService.isAuthenticated();
+          const user = authService.getCurrentUser();
+          
+          if (isAuthenticated && user) {
+            set({ user, isAuthenticated: true, error: null });
+          } else {
+            set({ user: null, isAuthenticated: false, error: null });
+          }
+        } catch (error) {
+          console.error('Error verificando autenticación:', error);
+          set({ user: null, isAuthenticated: false, error: null });
+        }
+      },
+      
+      clearError: () => {
+        set({ error: null });
+      },
+      
+      initialize: () => {
+        // Verificar autenticación al inicializar
+        const { checkAuth } = get();
+        checkAuth();
+        
+        // Verificar periódicamente el estado del token
+        const checkInterval = setInterval(() => {
+          if (!authService.isAuthenticated()) {
+            const { user, isAuthenticated } = get();
+            if (user || isAuthenticated) {
+              // El token expiró, limpiar estado
+              set({ user: null, isAuthenticated: false, error: null });
+            }
+          }
+        }, 60000); // Verificar cada minuto
+        
+        // Limpiar intervalo cuando sea necesario (esto se puede mejorar con cleanup)
+        if (typeof window !== 'undefined') {
+          window.addEventListener('beforeunload', () => {
+            clearInterval(checkInterval);
+          });
+        }
       }
     }),
     {
-      name: 'auth-storage'
+      name: 'auth-storage',
+      // Solo persistir datos básicos, no funciones
+      partialize: (state) => ({ 
+        user: state.user, 
+        isAuthenticated: state.isAuthenticated 
+      }),
+      // Función que se ejecuta cuando se carga el estado persistido
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Verificar que la autenticación persistida siga siendo válida
+          state.initialize();
+        }
+      },
     }
   )
 );

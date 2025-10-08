@@ -1,38 +1,80 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Code2, Brain, Users, Shield, Settings, BarChart3 } from "lucide-react";
+import { Database, Code2, Brain, Users, Shield, Settings, BarChart3, Building2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCatalogStore } from '../../store/catalogStore';
+import { useOrganizationStore } from '../../store/organizationStore';
+import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "react-router-dom";
 
 const AdminDashboard: React.FC = () => {
-  const { technologies, skills } = useCatalogStore();
-  
+  // 1. Obtenemos las funciones y el estado que realmente existen en el store
+  const getItems = useCatalogStore(state => state.getItems);
+  const loadItems = useCatalogStore(state => state.loadItems);
+  const loading = useCatalogStore(state => state.loadingState.isLoading);
+  const items = useCatalogStore(state => state.items); // Para verificar si ya se cargaron
+
+  // 2. Estados del store de organizaciones
+  const organizationStats = useOrganizationStore(state => state.stats);
+  const fetchStats = useOrganizationStore(state => state.fetchStats);
+  const statsLoading = useOrganizationStore(state => state.loading);
+
+  // 3. Cargamos los datos desde la API cuando el componente se monta
+  useEffect(() => {
+    // Solo cargamos si el array de items está vacío, para evitar recargas innecesarias
+    if (items.length === 0) {
+      loadItems();
+    }
+    // Cargar estadísticas de organizaciones
+    fetchStats();
+  }, [loadItems, items.length, fetchStats]);
+
+  // Si está cargando, mostramos una UI de carga para evitar errores
+  if (loading || statsLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Panel de Control</h1>
+          <p className="text-muted-foreground">Cargando estadísticas...</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-[105px] w-full" />
+          <Skeleton className="h-[105px] w-full" />
+          <Skeleton className="h-[105px] w-full" />
+          <Skeleton className="h-[105px] w-full" />
+        </div>
+        {/* Puedes agregar más skeletons para las otras secciones si quieres */}
+      </div>
+    );
+  }
+
+  // Estadísticas usando los datos reales de organizaciones y datos básicos de catálogos
   const stats = [
     {
-      title: "Tecnologías",
-      value: technologies.length.toString(),
-      description: `${technologies.filter(t => t.status === 'active').length} activas`,
-      icon: Code2,
+      title: "Organizaciones Totales",
+      value: (organizationStats?.total || 0).toString(),
+      description: `${organizationStats?.pending || 0} pendientes de aprobación`,
+      icon: Building2,
       color: "text-primary"
     },
     {
-      title: "Habilidades",
-      value: skills.length.toString(),
-      description: `${skills.filter(s => s.status === 'active').length} activas`,
-      icon: Brain,
-      color: "text-secondary"
-    },
-    {
-      title: "Usuarios",
-      value: "124",
-      description: "Estudiantes y organizaciones",
-      icon: Users,
+      title: "Organizaciones Activas",
+      value: (organizationStats?.approved || 0).toString(),
+      description: `${organizationStats?.suspended || 0} suspendidas`,
+      icon: CheckCircle,
       color: "text-success"
     },
     {
-      title: "Ofertas Pendientes",
-      value: "8",
-      description: "Por aprobar",
+      title: "Elementos de Catálogo",
+      value: items.length.toString(),
+      description: "Tecnologías, posiciones, modalidades",
+      icon: Database,
+      color: "text-secondary"
+    },
+    {
+      title: "Organizaciones Rechazadas",
+      value: (organizationStats?.rejected || 0).toString(),
+      description: "Requieren revisión",
       icon: Shield,
       color: "text-warning"
     }
@@ -44,6 +86,12 @@ const AdminDashboard: React.FC = () => {
       description: "Administrar estudiantes y organizaciones",
       icon: Users,
       href: "/admin/users"
+    },
+    {
+      title: "Gestionar Organizaciones",
+      description: "Aprobar, rechazar y gestionar organizaciones",
+      icon: Building2,
+      href: "/admin/organizations"
     },
     {
       title: "Aprobar Ofertas",
@@ -91,7 +139,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {quickActions.map((action, index) => (
           <Card key={index} className="shadow-card hover:shadow-floating transition-all duration-300">
             <CardHeader>
@@ -107,7 +155,7 @@ const AdminDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full" asChild>
-                <a href={action.href}>Acceder</a>
+                <Link to={action.href}>Acceder</Link>
               </Button>
             </CardContent>
           </Card>

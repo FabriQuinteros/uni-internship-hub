@@ -4,16 +4,20 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/auth/LoginPage";
+import UnifiedLoginPage from "./pages/auth/UnifiedLoginPage";
 import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
 import OrganizationProfilePage from "./pages/dashboard/OrganizationProfilePage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
+import OrganizationManagementPage from "./pages/admin/OrganizationManagementPage";
 import NotFound from "./pages/NotFound";
+import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
 
 const queryClient = new QueryClient();
 
@@ -43,22 +47,17 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           
           {/* Rutas de autenticación */}
-          <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/auth/student" element={<LoginPage />} />
-          <Route path="/auth/organization" element={<LoginPage />} />
-          <Route path="/auth/admin" element={<LoginPage />} />
-          {/* Ruta para el registro de nuevas organizaciones
-              Esta ruta maneja el flujo de registro completo incluyendo:
-              - Formulario con validaciones
-              - Redirección post-registro
-              - Mensajes de confirmación */}
+          <Route path="/auth/login" element={<UnifiedLoginPage />} />
+          {/* Rutas de registro */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
-          
+          <Route path="/auth/register/student" element={<RegisterPageStudent />} />
+
           {/* Student Routes */}
           <Route path="/student/*" element={
             <AuthGuard allowedRoles={['student']}>
@@ -98,6 +97,7 @@ const App = () => (
                 <Routes>
                   <Route path="dashboard" element={<AdminDashboardPage />} />
                   <Route path="users" element={<div>Gestión de Usuarios</div>} />
+                  <Route path="organizations" element={<OrganizationManagementPage />} />
                   <Route path="approval" element={<div>Aprobación de Ofertas</div>} />
                   <Route path="catalogs" element={<CatalogsPage />} />
                   <Route path="settings" element={<div>Configuración</div>} />
@@ -108,9 +108,10 @@ const App = () => (
             </AuthGuard>
           } />
           
-          {/* Catch-all route - DEBE IR AL FINAL */}
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
