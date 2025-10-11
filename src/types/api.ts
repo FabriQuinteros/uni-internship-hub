@@ -48,3 +48,30 @@ export interface ServerError extends ApiErrorResponse {
   message: "Error listing items" | "Error deleting item";
   error: string;
 }
+
+// Offer type used by frontend to create/update offers
+export interface Offer {
+  id?: number;
+  organization_id?: number;
+  position_id?: number;
+  duration_id?: number;
+  location_id?: number;
+  modality_id?: number;
+  title?: string;
+  description?: string;
+  requirements?: string;
+  modality?: string;
+  duration_text?: string;
+  location_text?: string;
+  salary?: number;
+  quota?: number;
+  published_start_date?: string | null;
+  application_deadline?: string | null;
+  weekly_hours?: number;
+  shift?: string;
+  status?: string;
+  rejection_reason?: string;
+  technologies?: number[];
+  created_at?: string;
+  updated_at?: string;
+}

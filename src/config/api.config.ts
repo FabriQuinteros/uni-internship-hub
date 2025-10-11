@@ -38,6 +38,14 @@ export const API_CONFIG = {
         },
         ORGANIZATIONS: {
             REGISTER: '/api/v1/organizations/register',
+            OFFERS: {
+                CREATE: '/api/organizations/offers',
+                LIST: '/api/organizations/offers',
+                GET: (id: number) => `/api/organizations/offers/${id}`,
+                UPDATE: (id: number) => `/api/organizations/offers/${id}`,
+                    SEND_TO_APPROVAL: (id: number) => `/api/organizations/offers/${id}/send`,
+                    DELETE: (id: number) => `/api/organizations/offers/${id}`,
+            },
         },
         STUDENTS: {
             REGISTER: '/api/students/register',

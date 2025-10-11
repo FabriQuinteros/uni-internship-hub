@@ -10,6 +10,8 @@ import LoginPage from "./pages/auth/LoginPage";
 import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
+import OrganizationOffersPage from './pages/organization/OrganizationOffersPage';
+import OrganizationOfferForm from './pages/organization/OrganizationOfferForm';
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import NotFound from "./pages/NotFound";
@@ -79,7 +81,9 @@ const App = () => (
                 <Routes>
                   <Route path="dashboard" element={<OrganizationDashboard />} />
                   <Route path="profile" element={<div>Perfil de Organización</div>} />
-                  <Route path="offers" element={<div>Gestión de Ofertas</div>} />
+                  <Route path="offers" element={<OrganizationOffersPage />} />
+                  <Route path="offers/new" element={<OrganizationOfferForm />} />
+                  <Route path="offers/:offerId/edit" element={<OrganizationOfferForm />} />
                   <Route path="applications" element={<div>Postulaciones Recibidas</div>} />
                   <Route path="analytics" element={<div>Estadísticas</div>} />
                 </Routes>

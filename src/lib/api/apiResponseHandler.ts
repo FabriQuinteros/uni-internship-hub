@@ -27,11 +27,24 @@ const handleSuccessResponse = <T>(response: AxiosResponse): ApiHandlerResult<T> 
   switch (status) {
     case 200: // OK
     case 201: // Created
-      const successData = data as ApiSuccessResponse<T>;
+      // Support two backend styles:
+      // 1) { message: string, data: T } (preferred)
+      // 2) direct object T (legacy handlers)
+      const maybeApiSuccess = data as ApiSuccessResponse<T>;
+      if (maybeApiSuccess && typeof maybeApiSuccess.message === 'string' && maybeApiSuccess.data !== undefined) {
+        return {
+          success: true,
+          data: maybeApiSuccess.data,
+          message: maybeApiSuccess.message,
+          type: 'validation'
+        };
+      }
+
+      // Fallback: assume the response body IS the created object
       return {
         success: true,
-        data: successData.data,
-        message: successData.message,
+        data: data as T,
+        message: 'Operación realizada correctamente',
         type: 'validation'
       };
 
