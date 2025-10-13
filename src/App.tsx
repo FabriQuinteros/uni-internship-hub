@@ -11,6 +11,7 @@ import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
 import OrganizationOffersPage from './pages/organization/OrganizationOffersPage';
+import OrganizationProfile from './pages/organization/OrganizationProfile';
 import OrganizationOfferForm from './pages/organization/OrganizationOfferForm';
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
@@ -80,7 +81,7 @@ const App = () => (
               <DashboardLayout userRole="organization">
                 <Routes>
                   <Route path="dashboard" element={<OrganizationDashboard />} />
-                  <Route path="profile" element={<div>Perfil de Organización</div>} />
+                  <Route path="profile" element={<OrganizationProfile />} />
                   <Route path="offers" element={<OrganizationOffersPage />} />
                   <Route path="offers/new" element={<OrganizationOfferForm />} />
                   <Route path="offers/:offerId/edit" element={<OrganizationOfferForm />} />

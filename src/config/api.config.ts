@@ -37,7 +37,11 @@ export const API_CONFIG = {
             },
         },
         ORGANIZATIONS: {
-            REGISTER: '/api/v1/organizations/register',
+            REGISTER: '/api/organizations/register',
+            PROFILE: {
+                GET: '/api/organizations/profile',
+                UPDATE: '/api/organizations/profile'
+            },
             OFFERS: {
                 CREATE: '/api/organizations/offers',
                 LIST: '/api/organizations/offers',

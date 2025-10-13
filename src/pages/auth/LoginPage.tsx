@@ -232,6 +232,10 @@ const LoginPage = () => {
                           {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                         </HeroButton>
 
+                        {error && (
+                          <p className="text-sm text-red-500 mt-2">{error}</p>
+                        )}
+
                         {key === 'student' && (
                           <div className="text-center pt-4">
                             <p className="text-sm text-muted-foreground">

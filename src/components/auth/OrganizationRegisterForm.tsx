@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { organizationService } from '@/services/organizationService';
 import { HeroButton } from '../ui/button-variants';
 
 /**
@@ -141,10 +142,19 @@ export function OrganizationRegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
     try {
-      console.log('Datos del formulario:', data); // Para depuración
-      
-      // Aquí iría la llamada a la API para registrar la organización
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulación de llamada API
+      const payload = {
+        email: data.email,
+        password: data.password,
+        companyName: data.companyName,
+        industry: data.industry,
+        website: data.website,
+        description: data.description,
+        address: data.address,
+        contactName: data.contactName,
+        contactPhone: data.contactPhone,
+      };
+
+      const result = await organizationService.register(payload as any);
 
       toast({
         title: "Registro exitoso",
