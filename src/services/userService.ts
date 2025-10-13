@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/apiClient';
 import { User } from '../types/user';
+import { PasswordResetResponse } from '../types/password-management';
 
 export const getUsers = async (): Promise<User[]> => {
     const response = await apiClient.get('/users');
@@ -23,4 +24,9 @@ export const updateUser = async (id: string, user: User): Promise<User> => {
 
 export const deleteUser = async (id: string): Promise<void> => {
     await apiClient.delete(`/users/${id}`);
+};
+
+export const forcePasswordReset = async (email: string): Promise<PasswordResetResponse> => {
+    const response = await apiClient.post('/users/force-password-reset', { email });
+    return response.data;
 };

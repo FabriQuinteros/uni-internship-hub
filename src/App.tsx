@@ -11,6 +11,7 @@ import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import NotFound from "./pages/NotFound";
 import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
@@ -93,7 +94,7 @@ const App = () => (
               <DashboardLayout userRole="admin">
                 <Routes>
                   <Route path="dashboard" element={<AdminDashboardPage />} />
-                  <Route path="users" element={<div>Gestión de Usuarios</div>} />
+                  <Route path="users" element={<UserManagementPage />} />
                   <Route path="approval" element={<div>Aprobación de Ofertas</div>} />
                   <Route path="catalogs" element={<CatalogsPage />} />
                   <Route path="settings" element={<div>Configuración</div>} />
