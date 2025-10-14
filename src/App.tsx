@@ -7,12 +7,11 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import LandingPage from "./pages/LandingPage";
-import LoginPage from "./pages/auth/LoginPage";
 import UnifiedLoginPage from "./pages/auth/UnifiedLoginPage";
 import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
+import StudentProfilePage from "./pages/dashboard/StudentProfilePage";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
-import OrganizationProfilePage from "./pages/dashboard/OrganizationProfilePage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import OrganizationManagementPage from "./pages/admin/OrganizationManagementPage";
@@ -65,7 +64,7 @@ const App = () => (
               <DashboardLayout userRole="student">
                 <Routes>
                   <Route path="dashboard" element={<StudentDashboard />} />
-                  <Route path="profile" element={<div>Perfil de Estudiante</div>} />
+                  <Route path="profile" element={<StudentProfilePage />} />
                   <Route path="offers" element={<div>Ofertas Disponibles</div>} />
                   <Route path="applications" element={<div>Mis Postulaciones</div>} />
                   <Route path="favorites" element={<div>Favoritos</div>} />

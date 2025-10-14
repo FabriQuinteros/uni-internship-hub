@@ -41,6 +41,12 @@ export const API_CONFIG = {
                 UPDATE: (id: number) => `/api/catalog/modalities/${id}`,
                 DELETE: (id: number) => `/api/catalog/modalities/${id}`,
             },
+            AVAILABILITY: {
+                LIST: '/api/catalog/availability',
+                CREATE: '/api/catalog/availability',
+                UPDATE: (id: number) => `/api/catalog/availability/${id}`,
+                DELETE: (id: number) => `/api/catalog/availability/${id}`,
+            },
         },
         ORGANIZATIONS: {
             REGISTER: '/api/organizations/register',
@@ -58,6 +64,11 @@ export const API_CONFIG = {
         },
         STUDENTS: {
             REGISTER: '/api/students/register',
+            PROFILE: {
+                GET: '/api/students/profile',
+                UPDATE: '/api/students/profile',
+                GET_BY_ID: (id: number) => `/api/students/profile/${id}`,
+            },
         },
     }
 } as const;
