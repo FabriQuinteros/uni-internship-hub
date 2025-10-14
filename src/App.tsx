@@ -15,6 +15,7 @@ import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
 import OrganizationOffersPage from './pages/organization/OrganizationOffersPage';
 import OrganizationOfferForm from './pages/organization/OrganizationOfferForm';
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminOfferApprovalPage from "./pages/admin/AdminOfferApprovalPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import OrganizationManagementPage from "./pages/admin/OrganizationManagementPage";
 import NotFound from "./pages/NotFound";
@@ -100,7 +101,7 @@ const App = () => (
                   <Route path="dashboard" element={<AdminDashboardPage />} />
                   <Route path="users" element={<div>Gestión de Usuarios</div>} />
                   <Route path="organizations" element={<OrganizationManagementPage />} />
-                  <Route path="approval" element={<div>Aprobación de Ofertas</div>} />
+                  <Route path="approval" element={<AdminOfferApprovalPage />} />
                   <Route path="catalogs" element={<CatalogsPage />} />
                   <Route path="settings" element={<div>Configuración</div>} />
                   <Route path="reports" element={<div>Reportes</div>} />

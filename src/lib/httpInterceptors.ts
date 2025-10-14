@@ -41,6 +41,8 @@ class HttpInterceptors {
     '/api/organizations/register',
     '/api/students/register',
     '/ping',
+    '/docs/swagger.yaml',
+    '/swagger/*',
   ];
 
   /**

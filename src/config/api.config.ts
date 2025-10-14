@@ -66,9 +66,21 @@ export const API_CONFIG = {
                 LIST: '/api/organizations/offers',
                 GET: (id: number) => `/api/organizations/offers/${id}`,
                 UPDATE: (id: number) => `/api/organizations/offers/${id}`,
-                    SEND_TO_APPROVAL: (id: number) => `/api/organizations/offers/${id}/send`,
-                    DELETE: (id: number) => `/api/organizations/offers/${id}`,
+                SEND_TO_APPROVAL: (id: number) => `/api/organizations/offers/${id}/send`,
+                DELETE: (id: number) => `/api/organizations/offers/${id}`,
             },
+        },
+        ADMIN: {
+            OFFERS: {
+                PENDING: '/api/admin/offers/pending',
+                DECISION: (id: number) => `/api/admin/offers/${id}/decision`,
+                DETAILS: (id: number) => `/api/admin/offers/${id}`,
+            },
+        },
+        NOTIFICATIONS: {
+            LIST: '/api/notifications',
+            MARK_READ: (id: number) => `/api/notifications/${id}/read`,
+            MARK_ALL_READ: '/api/notifications/read-all',
         },
         STUDENTS: {
             REGISTER: '/api/students/register',
