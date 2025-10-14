@@ -8,8 +8,11 @@ import {
   CatalogType, 
   CatalogItem, 
   Technology,
+  Availability,
   CreateCatalogRequest,
-  UpdateCatalogRequest
+  UpdateCatalogRequest,
+  CreateAvailabilityRequest,
+  UpdateAvailabilityRequest
 } from '@/types/catalog';
 
 // Helper para obtener las URLs correctas
@@ -20,6 +23,7 @@ const getEndpoints = (type: CatalogType) => {
     durations: API_CONFIG.ENDPOINTS.CATALOG.DURATIONS,
     locations: API_CONFIG.ENDPOINTS.CATALOG.LOCATIONS,
     modalities: API_CONFIG.ENDPOINTS.CATALOG.MODALITIES,
+    availability: API_CONFIG.ENDPOINTS.CATALOG.AVAILABILITY,
   };
   return endpoints[type];
 };
@@ -135,5 +139,23 @@ export const technologyService = {
   
   async delete({ id }: { id: number }): Promise<void> {
     return catalogService.delete('technologies', id);
+  }
+};
+
+export const availabilityService = {
+  async list(): Promise<Availability[]> {
+    return catalogService.list<Availability>('availability');
+  },
+  
+  async create(data: CreateAvailabilityRequest): Promise<Availability> {
+    return catalogService.create<Availability>('availability', data);
+  },
+  
+  async update(id: number, data: UpdateAvailabilityRequest): Promise<Availability> {
+    return catalogService.update<Availability>('availability', id, data);
+  },
+  
+  async delete({ id }: { id: number }): Promise<void> {
+    return catalogService.delete('availability', id);
   }
 };

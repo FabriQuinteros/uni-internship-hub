@@ -147,6 +147,32 @@ export const catalogConfigs: Record<CatalogType, CatalogConfig> = {
       { key: 'is_active', label: 'Estado', type: 'badge' },
     ],
   },
+
+  availability: {
+    type: 'availability',
+    label: 'Disponibilidades',
+    singularLabel: 'Disponibilidad',
+    fields: [
+      {
+        name: 'name',
+        label: 'Nombre de Disponibilidad',
+        type: 'text',
+        required: true,
+        placeholder: 'ej. Media jornada - Mañana, Jornada completa',
+      },
+      {
+        name: 'description',
+        label: 'Descripción',
+        type: 'textarea',
+        placeholder: 'Descripción detallada de la disponibilidad...',
+      },
+    ],
+    listFields: [
+      { key: 'name', label: 'Nombre de Disponibilidad' },
+      { key: 'description', label: 'Descripción' },
+      { key: 'is_active', label: 'Estado', type: 'badge' },
+    ],
+  },
 };
 
 /**

@@ -19,16 +19,65 @@ export interface StudentRegisterData {
   phone: string;
 }
 
-// Interfaz completa del perfil del estudiante (para futuras funcionalidades)
-export interface StudentProfile extends StudentRegisterData {
-  id?: string;
-  preferred_contact?: string;
-  location?: string;
-  academic_formation?: string;
-  previous_experience?: string;
-  availability_hours?: string;
-  created_at?: string;
-  updated_at?: string;
+// Interfaces para datos expandidos de catálogos
+export interface LocationCatalog {
+  id: number;
+  name: string;
+  province: string;
+  country: string;
+  is_active: boolean;
+}
+
+export interface AvailabilityCatalog {
+  id: number;
+  name: string;
+  description?: string;
+  is_active: boolean;
+}
+
+// Interfaz completa del perfil del estudiante (con IDs de catálogos)
+export interface StudentProfile {
+  id: number;
+  user_id: number;
+  legajo: string;                    // REQUERIDO - único por estudiante
+  first_name: string;                // REQUERIDO
+  last_name: string;                 // REQUERIDO
+  phone?: string;                    // Opcional - máximo 20 caracteres
+  preferred_contact: 'email' | 'phone'; // CATÁLOGO - valores fijos del backend
+  location_id?: number;              // ID del catálogo de ubicaciones
+  academic_formation?: string;       // Texto libre - formación académica
+  previous_experience?: string;      // Texto libre - experiencia previa
+  availability_id?: number;          // ID del catálogo de disponibilidad
+  created_at: string;               // ISO 8601
+  updated_at: string;               // ISO 8601
+  user?: {                          // Datos del usuario relacionado (opcional en respuestas)
+    id: number;
+    email: string;
+    role: string;
+    status: string;
+  };
+  // Datos expandidos de catálogos (incluidos en responses)
+  location?: LocationCatalog;
+  availability?: AvailabilityCatalog;
+}
+
+// Interfaz para actualización de perfil de estudiante (campos editables)
+export interface UpdateStudentProfileRequest {
+  legajo: string;                    // REQUERIDO - único
+  first_name: string;                // REQUERIDO
+  last_name: string;                 // REQUERIDO
+  phone?: string;                    // Opcional
+  preferred_contact: 'email' | 'phone'; // REQUERIDO - valores del catálogo
+  location_id: number;               // REQUERIDO - ID del catálogo de ubicaciones
+  academic_formation: string;        // REQUERIDO - Texto libre - formación académica
+  previous_experience?: string;      // Opcional - Texto libre - experiencia previa
+  availability_id: number;           // REQUERIDO - ID del catálogo de disponibilidad
+}
+
+// Interfaz para respuesta de API de perfil de estudiante
+export interface StudentProfileResponse {
+  message: string;
+  data: StudentProfile;
 }
 
 // Interfaz para las respuestas de la API de registro

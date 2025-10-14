@@ -49,6 +49,7 @@ const initialCatalogs: Record<CatalogType, CatalogItem[]> = {
   durations: [],
   locations: [],
   modalities: [],
+  availability: [],
 };
 
 export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
