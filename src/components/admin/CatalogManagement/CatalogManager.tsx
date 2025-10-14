@@ -141,7 +141,7 @@ const CatalogManager: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={selectedCatalogType} onValueChange={handleTabChange}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               {catalogTypes.map((type) => {
                 const config = getCatalogConfig(type);
                 return (
