@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   BookOpen,
@@ -26,7 +25,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
 
 interface AppSidebarProps {
@@ -127,10 +125,8 @@ const navigationItems = {
 };
 
 export function AppSidebar({ userRole }: AppSidebarProps) {
-  const { state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
-  const collapsed = state === "collapsed";
 
   const items = navigationItems[userRole];
   const isActive = (path: string) => currentPath === path || currentPath.startsWith(path + '/');
@@ -144,33 +140,26 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
   const RoleIcon = roleInfo[userRole].icon;
 
   return (
-    <Sidebar
-      className={`${collapsed ? "w-16" : "w-64"} transition-all duration-300 border-r bg-sidebar`}
-      collapsible="icon"
-    >
+    <Sidebar collapsible="icon">
       {/* Header */}
-      <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-lg bg-sidebar-accent">
-            <BookOpen className="h-6 w-6 text-sidebar-foreground" />
+      <div className="p-2 border-b border-sidebar-border">
+        <div className="flex items-center gap-2 px-2 py-1">
+          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-sidebar-accent shrink-0">
+            <BookOpen className="h-5 w-5 text-sidebar-foreground" />
           </div>
-          {!collapsed && (
-            <div>
-              <h2 className="font-bold text-sidebar-foreground">PasantíasUNI</h2>
-              <div className="flex items-center space-x-1">
-                <RoleIcon className={`h-3 w-3 ${roleInfo[userRole].color}`} />
-                <span className="text-xs text-sidebar-foreground/70">{roleInfo[userRole].title}</span>
-              </div>
+          <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
+            <span className="font-semibold text-sidebar-foreground">PasantíasUNI</span>
+            <div className="flex items-center gap-1">
+              <RoleIcon className={`h-3 w-3 ${roleInfo[userRole].color}`} />
+              <span className="text-xs text-sidebar-foreground/70">{roleInfo[userRole].title}</span>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
-      <SidebarContent className="px-2">
+      <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/70 px-2">
-            {!collapsed ? "Navegación Principal" : ""}
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Navegación Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
@@ -179,28 +168,18 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
                 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        className={`
-                          flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200
-                          ${active 
-                            ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm' 
-                            : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                          }
-                        `}
-                      >
-                        <Icon className={`h-5 w-5 ${active ? 'text-sidebar-primary-foreground' : 'text-sidebar-foreground'}`} />
-                        {!collapsed && (
-                          <div className="flex-1">
-                            <div className={`font-medium ${active ? 'text-sidebar-primary-foreground' : 'text-sidebar-foreground'}`}>
-                              {item.title}
-                            </div>
-                            <div className={`text-xs ${active ? 'text-sidebar-primary-foreground/70' : 'text-sidebar-foreground/50'}`}>
-                              {item.description}
-                            </div>
-                          </div>
-                        )}
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={active}
+                      tooltip={item.title}
+                      size="lg"
+                    >
+                      <NavLink to={item.url}>
+                        <Icon />
+                        <div className="flex flex-col gap-0.5 leading-none">
+                          <span className="font-medium">{item.title}</span>
+                          <span className="text-xs opacity-70">{item.description}</span>
+                        </div>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -211,9 +190,9 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Collapse trigger */}
-      <div className="p-2 border-t border-sidebar-border">
-        <SidebarTrigger className="w-full text-sidebar-foreground hover:bg-sidebar-accent" />
+      {/* Footer with collapse trigger */}
+      <div className="mt-auto border-t border-sidebar-border p-2">
+        <SidebarTrigger className="w-full" />
       </div>
     </Sidebar>
   );
