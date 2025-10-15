@@ -16,8 +16,8 @@ import {
   SelectValue,
 } from '../ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { HeroButton } from '../ui/button-variants';
 import { organizationService } from '@/services/organizationService';
+import { HeroButton } from '../ui/button-variants';
 
 /**
  * @fileoverview Componente de formulario para el registro de organizaciones

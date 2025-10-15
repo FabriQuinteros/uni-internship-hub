@@ -17,6 +17,19 @@ import {
   OrganizationRegisterResponse
 } from '../types/user';
 
+export interface UpdateOrganizationRequest {
+  // This interface represents fields allowed by the organization profile update endpoint
+  businessName?: string;
+  industry?: string;
+  address?: string;
+  website?: string;
+  description?: string;
+  mainContact?: string;
+  logoUrl?: string;
+  agreementStatus?: 'active' | 'inactive';
+  agreementExpiry?: string; // YYYY-MM-DD
+}
+
 /**
  * GET /admin/organizations - Listar organizaciones con filtros y paginación
  */
@@ -35,6 +48,7 @@ export const getOrganizations = async (
   if (filters.status) {
     queryParams.set('status', filters.status);
   }
+
 
   const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.ADMIN.LIST}?${queryParams.toString()}`);
   
@@ -243,6 +257,64 @@ const organizationServiceInternal = {
       };
     }
   }
+  ,
+  async getProfile(userId?: number) : Promise<ApiHandlerResult<OrganizationProfile>> {
+    try {
+      // The backend accepts userID via query or context; we'll call with userID if provided
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.PROFILE.GET}`;
+      const targetUrl = userId ? `${url}?userID=${userId}` : url;
+      
+      const response = await httpClient.get(targetUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      return {
+        success: true,
+        data: result.data,
+        message: result.message,
+        type: 'unknown' as const
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message,
+        data: undefined,
+        type: 'server_error' as const
+      };
+    }
+  },
+  async update(userId: number | undefined, data: UpdateOrganizationRequest): Promise<ApiHandlerResult<OrganizationProfile>> {
+    try {
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.PROFILE.UPDATE}`;
+      const targetUrl = userId ? `${url}?userID=${userId}` : url;
+      
+      const response = await httpClient.put(targetUrl, data);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      return {
+        success: true,
+        data: result.data,
+        message: result.message,
+        type: 'unknown' as const
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message,
+        data: undefined,
+        type: 'server_error' as const
+      };
+    }
+  }
 };
 
 export const organizationService = {
@@ -257,6 +329,19 @@ export const organizationService = {
       throw new Error('No data returned from registration');
     }
     
+    return result.data;
+  }
+  ,
+  async getProfile(userId?: number): Promise<OrganizationProfile> {
+    const result = await organizationServiceInternal.getProfile(userId);
+    if (!result.success) throw new Error(result.message);
+    if (!result.data) throw new Error('No data returned from getProfile');
+    return result.data;
+  },
+  async update(userId: number | undefined, data: UpdateOrganizationRequest): Promise<OrganizationProfile> {
+    const result = await organizationServiceInternal.update(userId, data);
+    if (!result.success) throw new Error(result.message);
+    if (!result.data) throw new Error('No data returned from update');
     return result.data;
   }
 };

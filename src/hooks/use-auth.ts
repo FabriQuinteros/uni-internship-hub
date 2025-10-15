@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService, type AuthUser, type LoginResult } from '@/services/authService';
-import { httpClient } from '@/lib/httpInterceptors';
 
 interface AuthState {
   user: AuthUser | null;
@@ -13,6 +12,19 @@ interface AuthState {
   checkAuth: () => void;
   clearError: () => void;
   initialize: () => void;
+}
+
+// Helper simple para decodificar payload de JWT (sin verificar) — solo para extraer role/id en cliente
+function decodeJwt(token: string): any | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded);
+  } catch (e) {
+    return null;
+  }
 }
 
 export const useAuth = create<AuthState>()(

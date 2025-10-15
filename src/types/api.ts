@@ -48,3 +48,78 @@ export interface ServerError extends ApiErrorResponse {
   message: "Error listing items" | "Error deleting item";
   error: string;
 }
+
+// Estados de ofertas según el flujo del backend
+export type OfferStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'closed';
+
+// Offer type used by frontend to create/update offers
+export interface Offer {
+  id?: number;
+  organization_id?: number;
+  position_id?: number;
+  duration_id?: number;
+  location_id?: number;
+  modality_id?: number;
+  title?: string;
+  description?: string;
+  requirements?: string;
+  modality?: string;
+  duration_text?: string;
+  location_text?: string;
+  salary?: number;
+  quota?: number;
+  published_start_date?: string | null;
+  application_deadline?: string | null;
+  weekly_hours?: number;
+  shift?: string;
+  status?: OfferStatus; // Usar enum específico del backend
+  rejection_reason?: string; // Motivo de rechazo si aplica
+  technologies?: number[];
+  created_at?: string;
+  updated_at?: string;
+  submitted_at?: string; // Cuándo se envió a aprobación
+}
+
+// Configuración de estados de ofertas para UI
+export const OFFER_STATUS_CONFIG = {
+  draft: { 
+    label: 'Borrador', 
+    variant: 'secondary' as const, 
+    description: 'Oferta en preparación',
+    visibleToStudents: false,
+    canModify: true,
+    canSubmit: true
+  },
+  pending: { 
+    label: 'Pendiente', 
+    variant: 'warning' as const,
+    description: 'Esperando aprobación admin',
+    visibleToStudents: false,
+    canModify: false,
+    canSubmit: false
+  },
+  approved: { 
+    label: 'Aprobada', 
+    variant: 'success' as const,
+    description: 'Publicada y visible',
+    visibleToStudents: true,
+    canModify: false,
+    canSubmit: false
+  },
+  rejected: { 
+    label: 'Rechazada', 
+    variant: 'destructive' as const,
+    description: 'Revisar y reenviar',
+    visibleToStudents: false,
+    canModify: true,
+    canSubmit: true
+  },
+  closed: { 
+    label: 'Cerrada', 
+    variant: 'outline' as const,
+    description: 'Finalizada por organización',
+    visibleToStudents: false,
+    canModify: false,
+    canSubmit: false
+  },
+} as const;

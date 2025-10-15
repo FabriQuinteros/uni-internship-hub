@@ -24,6 +24,7 @@ import { useState, useEffect } from "react";
 import { systemService } from "@/services/systemService";
 import { API_CONFIG } from "@/config/api.config";
 import { toast } from "@/components/ui/use-toast";
+import BackendNotificationCenter from "@/components/notifications/BackendNotificationCenter";
 
 interface DashboardHeaderProps {
   userRole: 'student' | 'organization' | 'admin';
@@ -140,22 +141,14 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
         </TooltipProvider>
 
         {/* Notifications */}
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="h-5 w-5" />
-          <Badge 
-            variant="destructive" 
-            className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-          >
-            3
-          </Badge>
-        </Button>
+        <BackendNotificationCenter />
 
         {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={user?.imageUrl} alt={user?.name} />
+                <AvatarImage src="" alt={user?.name} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {user?.name?.charAt(0) || 'U'}
                 </AvatarFallback>

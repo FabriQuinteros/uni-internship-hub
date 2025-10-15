@@ -41,6 +41,12 @@ export const API_CONFIG = {
                 UPDATE: (id: number) => `/api/catalog/modalities/${id}`,
                 DELETE: (id: number) => `/api/catalog/modalities/${id}`,
             },
+            AVAILABILITY: {
+                LIST: '/api/catalog/availability',
+                CREATE: '/api/catalog/availability',
+                UPDATE: (id: number) => `/api/catalog/availability/${id}`,
+                DELETE: (id: number) => `/api/catalog/availability/${id}`,
+            },
         },
         ORGANIZATIONS: {
             REGISTER: '/api/organizations/register',
@@ -53,11 +59,36 @@ export const API_CONFIG = {
             },
             PROFILE: {
                 GET: '/api/organizations/profile',
-                UPDATE: '/api/organizations/profile',
+                UPDATE: '/api/organizations/profile'
             },
+            OFFERS: {
+                CREATE: '/api/organizations/offers',
+                LIST: '/api/organizations/offers',
+                GET: (id: number) => `/api/organizations/offers/${id}`,
+                UPDATE: (id: number) => `/api/organizations/offers/${id}`,
+                SEND_TO_APPROVAL: (id: number) => `/api/organizations/offers/${id}/send`,
+                DELETE: (id: number) => `/api/organizations/offers/${id}`,
+            },
+        },
+        ADMIN: {
+            OFFERS: {
+                PENDING: '/api/admin/offers/pending',
+                DECISION: (id: number) => `/api/admin/offers/${id}/decision`,
+                DETAILS: (id: number) => `/api/admin/offers/${id}`,
+            },
+        },
+        NOTIFICATIONS: {
+            LIST: '/api/notifications',
+            MARK_READ: (id: number) => `/api/notifications/${id}/read`,
+            MARK_ALL_READ: '/api/notifications/read-all',
         },
         STUDENTS: {
             REGISTER: '/api/students/register',
+            PROFILE: {
+                GET: '/api/students/profile',
+                UPDATE: '/api/students/profile',
+                GET_BY_ID: (id: number) => `/api/students/profile/${id}`,
+            },
         },
     }
 } as const;
