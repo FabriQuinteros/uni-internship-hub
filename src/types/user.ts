@@ -98,8 +98,9 @@ export interface OrganizationProfile {
   website?: string; // optional, valid URL, max 255 chars
   description?: string; // optional, max 1000 chars
   mainContact: string; // required, max 255 chars
+  phone?: string; // optional, contact phone number
+  email?: string; // optional, contact email (from user table)
   logoUrl?: string; // optional, max 500 chars
-  agreementStatus: 'active' | 'inactive'; // default: "inactive"
   agreementExpiry?: string; // optional, format: "YYYY-MM-DD"
   createdAt: string; // ISO 8601, auto-generated
 }
@@ -112,8 +113,9 @@ export interface UpdateOrganizationProfileRequest {
   website?: string; // optional, valid URL, max 255 chars
   description?: string; // optional, max 1000 chars
   mainContact: string; // required, max 255 chars
+  phone?: string; // optional, contact phone number
+  email?: string; // optional, contact email
   logoUrl?: string; // optional, max 500 chars
-  agreementStatus?: 'active' | 'inactive'; // optional
   agreementExpiry?: string; // optional, formato YYYY-MM-DD
 }
 
@@ -176,6 +178,7 @@ export interface OrganizationListItem {
   email: string;
   status: OrganizationStatus;
   createdAt: string; // ISO 8601
+  agreementExpiry?: string; // YYYY-MM-DD - fecha de expiración del convenio
 }
 
 // Interface para detalles completos de organización (GET /admin/organizations/:id/details)
@@ -192,6 +195,7 @@ export interface OrganizationDetails {
   updatedAt: string; // ISO 8601
   profileComplete: boolean;
   lastStatusChange?: string; // ISO 8601
+  agreementExpiry?: string; // YYYY-MM-DD - fecha de expiración del convenio
 }
 
 // Interface para resumen de organización (GET /admin/organizations/:id/summary)
@@ -207,6 +211,7 @@ export interface OrganizationSummary {
 export interface UpdateStatusRequest {
   newStatus: OrganizationStatus;
   adminId: string; // UUID del admin
+  agreementExpiry?: string; // YYYY-MM-DD - requerido solo cuando newStatus = 'active'
 }
 
 // Interface para respuesta de cambio de estado
@@ -253,7 +258,8 @@ export interface OrganizationFilters {
   page?: number; // min: 1, default: 1
   limit?: number; // min: 5, max: 100, default: 25
   search?: string; // texto de búsqueda
-  status?: OrganizationStatus; // filtrar por estado
+  status?: OrganizationStatus; // filtrar por estado de cuenta
+  agreementStatus?: 'valid' | 'expired' | 'no_expiry'; // 🆕 filtro derivado para convenio
 }
 
 // Interface para paginación
@@ -283,4 +289,18 @@ export interface StatusChangeRequest {
   organizationId: string;
   newStatus: OrganizationStatus;
   adminId: string;
+  agreementExpiry?: string; // YYYY-MM-DD - requerido cuando newStatus = 'active'
+}
+
+// Interface para datos del modal de eliminación (frontend interno)
+export interface DeleteOrganizationModalData {
+  reason?: string; // Motivo de eliminación para logging interno
+  confirmedName: string; // Nombre confirmado por el usuario
+}
+
+// Interface para respuesta de eliminación (backend)
+export interface DeleteOrganizationResponse {
+  success: boolean;
+  message: string;
+  deletedId: string;
 }

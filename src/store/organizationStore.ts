@@ -11,6 +11,7 @@ import {
 import { 
   getOrganizations, 
   changeOrganizationStatus,
+  deleteOrganization,
   getOrganizationsStats
 } from '../services/organizationService';
 
@@ -36,6 +37,7 @@ interface OrganizationStore {
   selectOrganization: (organization: Organization) => void;
   clearSelection: () => void;
   updateOrganizationStatus: (request: StatusChangeRequest) => Promise<void>;
+  deleteOrganization: (organizationId: string) => Promise<void>;
   
   // Acciones para observaciones (futuras implementaciones)
   // fetchObservations: (organizationId: string) => Promise<void>;
@@ -124,7 +126,8 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
         return {
           ...org,
           status: request.newStatus,
-          lastStatusChange: new Date().toISOString()
+          lastStatusChange: new Date().toISOString(),
+          agreementExpiry: request.agreementExpiry
         };
       }
       return org;
@@ -205,6 +208,39 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
     }
     
     set({ stats: updatedStats });
+  },
+
+  // Eliminar organización con actualización optimista
+  deleteOrganization: async (organizationId: string) => {
+    const currentState = get();
+    
+    // Actualización optimista - remover de la lista
+    const optimisticOrganizations = currentState.organizations.filter(org => org.id !== organizationId);
+    
+    set({ 
+      organizations: optimisticOrganizations,
+      totalOrganizations: currentState.totalOrganizations - 1
+    });
+
+    try {
+      await deleteOrganization(organizationId);
+      
+      // Actualizar estadísticas también
+      await get().fetchStats();
+      
+      set({ error: null });
+    } catch (error) {
+      console.error('Error deleting organization:', error);
+      
+      // Revertir cambio optimista en caso de error
+      set({ 
+        organizations: currentState.organizations,
+        totalOrganizations: currentState.totalOrganizations,
+        error: error instanceof Error ? error.message : 'Error al eliminar la organización'
+      });
+      
+      throw error;
+    }
   },
 
   // Utilidades

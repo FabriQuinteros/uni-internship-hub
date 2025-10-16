@@ -55,6 +55,7 @@ export const API_CONFIG = {
                 DETAILS: (id: string) => `/api/admin/organizations/${id}/details`,
                 SUMMARY: (id: string) => `/api/admin/organizations/${id}/summary`,
                 STATUS: (id: string) => `/api/admin/organizations/${id}/status`,
+                DELETE: (id: string) => `/api/admin/organizations/${id}`,
                 STATS: '/api/admin/organizations/stats',
             },
             PROFILE: {

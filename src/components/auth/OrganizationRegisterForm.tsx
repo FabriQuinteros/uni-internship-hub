@@ -8,13 +8,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+
 import { useToast } from '@/hooks/use-toast';
 import { organizationService } from '@/services/organizationService';
 import { HeroButton } from '../ui/button-variants';
@@ -87,17 +81,7 @@ const registerSchema = z.object({
 // Tipos inferidos del esquema
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-// Lista de industrias predefinidas
-const industries = [
-  'Tecnología',
-  'Salud',
-  'Educación',
-  'Finanzas',
-  'Manufactura',
-  'Comercio',
-  'Servicios',
-  'Otro'
-];
+
 
 /**
  * Componente principal del formulario de registro de organizaciones
@@ -150,7 +134,7 @@ export function OrganizationRegisterForm(): JSX.Element {
     setValue('password', 'TestPass123');
     setValue('confirmPassword', 'TestPass123');
     setValue('companyName', 'TechCorp Solutions');
-    setValue('industry', 'Tecnología');
+    setValue('industry', 'Tecnología y Desarrollo de Software');
     setValue('website', 'https://www.techcorp.com');
     setValue('description', 'Empresa líder en desarrollo de software con más de 10 años de experiencia en el mercado, especializada en soluciones tecnológicas innovadoras.');
     setValue('address', 'Av. Corrientes 1234, CABA, Buenos Aires, Argentina');
@@ -192,7 +176,8 @@ export function OrganizationRegisterForm(): JSX.Element {
         description: "Tu cuenta ha sido creada exitosamente. Será revisada por un administrador.",
       });
       
-      navigate('/auth/confirmation');
+      // Redirigir a login después del registro exitoso
+      navigate('/auth/login');
     } catch (error: any) {
       console.error('Error en el registro:', error);
       toast({
@@ -301,26 +286,12 @@ export function OrganizationRegisterForm(): JSX.Element {
         <Label htmlFor="industry">
           Industria <span className="text-red-500">*</span>
         </Label>
-        <Select 
-          defaultValue={watch('industry')}
-          onValueChange={(value) => {
-            setValue('industry', value, {
-              shouldValidate: true,
-              shouldDirty: true
-            });
-          }}
-        >
-          <SelectTrigger className={errors.industry ? 'border-red-500' : ''}>
-            <SelectValue placeholder="Selecciona una industria" />
-          </SelectTrigger>
-          <SelectContent>
-            {industries.map((industry) => (
-              <SelectItem key={industry} value={industry}>
-                {industry}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Input
+          id="industry"
+          {...register('industry')}
+          className={errors.industry ? 'border-red-500' : ''}
+          placeholder="Ej: Tecnología, Salud, Educación, Finanzas..."
+        />
         {errors.industry && (
           <p className="text-sm text-red-500">{errors.industry.message}</p>
         )}

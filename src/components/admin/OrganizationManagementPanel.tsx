@@ -8,7 +8,9 @@ import {
   XCircle, 
   Pause, 
   Play,
-  Shield
+  Shield,
+  Calendar,
+  Trash2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,13 @@ import { useAdminPermissions } from '../../hooks/use-admin-permissions';
 import { useOrganizationStore } from '../../store/organizationStore';
 import { useDebounce } from '../../hooks/use-debounce';
 import OrganizationDetailsModal from './OrganizationDetailsModal';
+import AgreementExpiryDatePicker from './AgreementExpiryDatePicker';
+import DeleteOrganizationModal from './DeleteOrganizationModal';
+import { 
+  getAgreementStatusInfo, 
+  getDaysUntilExpiry, 
+  canOrganizationOperate 
+} from '../../utils/organizationValidation';
 import { 
   OrganizationListItem as Organization, 
   OrganizationStatus, 
@@ -73,6 +82,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
     setPagination,
     fetchOrganizations,
     updateOrganizationStatus,
+    deleteOrganization,
     fetchStats,
     clearError
   } = useOrganizationStore();
@@ -89,6 +99,15 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
   const [updatingOrganizations, setUpdatingOrganizations] = useState<Set<string>>(new Set());
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<string | null>(null);
+  const [showExpiryDatePicker, setShowExpiryDatePicker] = useState(false);
+  const [pendingActivation, setPendingActivation] = useState<{
+    organization: Organization;
+    action: OrganizationAction;
+    newStatus: OrganizationStatus;
+  } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [organizationToDelete, setOrganizationToDelete] = useState<Organization | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Efecto inicial para cargar datos
   useEffect(() => {
@@ -128,6 +147,18 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
     setFilters(newFilters);
   };
 
+  const handleAgreementFilter = (agreementStatus: string) => {
+    const newFilters: OrganizationFilters = { ...filters };
+    
+    if (agreementStatus === 'all') {
+      delete newFilters.agreementStatus;
+    } else {
+      newFilters.agreementStatus = agreementStatus as 'valid' | 'expired' | 'no_expiry';
+    }
+    
+    setFilters(newFilters);
+  };
+
   const handlePageChange = (newPage: number) => {
     setFilters({ ...filters, page: newPage });
   };
@@ -137,8 +168,15 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
   };
 
   const initiateAction = (organization: Organization, action: OrganizationAction, newStatus: OrganizationStatus) => {
-    setCurrentAction({ organization, action, newStatus });
-    setShowActionDialog(true);
+    // Si la acción es activar (aprobar o reactivar), mostrar el selector de fecha
+    if (newStatus === OrganizationStatus.ACTIVE) {
+      setPendingActivation({ organization, action, newStatus });
+      setShowExpiryDatePicker(true);
+    } else {
+      // Para otras acciones, seguir el flujo normal
+      setCurrentAction({ organization, action, newStatus });
+      setShowActionDialog(true);
+    }
   };
 
   const confirmAction = () => {
@@ -146,29 +184,45 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
     setShowConfirmation(true);
   };
 
-  const executeAction = async () => {
-    if (!currentAction) return;
+  const executeAction = async (agreementExpiry?: string, actionData?: typeof currentAction) => {
+    console.log('🎯 executeAction called with expiry:', agreementExpiry);
+    
+    const actionToUse = actionData || currentAction;
+    
+    if (!actionToUse) {
+      console.log('❌ No action data found in executeAction');
+      return;
+    }
 
-    const orgId = currentAction.organization.id;
+    console.log('✅ Action found:', actionToUse);
+    const orgId = actionToUse.organization.id;
     
     // Agregar organización a la lista de actualizaciones
     setUpdatingOrganizations(prev => new Set(prev).add(orgId));
     
     try {
-      await updateOrganizationStatus({
+      const requestData = {
         organizationId: orgId,
-        newStatus: currentAction.newStatus,
-        adminId: userId
-      });
+        newStatus: actionToUse.newStatus,
+        adminId: userId,
+        agreementExpiry: agreementExpiry
+      };
+      
+      console.log('📤 Sending request to updateOrganizationStatus:', requestData);
+      
+      await updateOrganizationStatus(requestData);
+
+      console.log('✅ updateOrganizationStatus completed successfully');
 
       toast({
         title: "Acción completada",
-        description: `La organización ha sido ${getActionDescription(currentAction.action)} exitosamente.`,
+        description: `La organización ha sido ${getActionDescription(actionToUse.action)} exitosamente.`,
       });
 
       setShowConfirmation(false);
       setCurrentAction(null);
     } catch (error) {
+      console.error('❌ Error in executeAction:', error);
       toast({
         title: "Error",
         description: "No se pudo completar la acción. Por favor intenta nuevamente.",
@@ -182,6 +236,71 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
         return newSet;
       });
     }
+  };
+
+  const handleExpiryDateConfirm = async (expiryDate: string) => {
+    console.log('🔄 handleExpiryDateConfirm called with date:', expiryDate);
+    if (!pendingActivation) {
+      console.log('❌ No pendingActivation found');
+      return;
+    }
+
+    console.log('✅ pendingActivation found:', pendingActivation);
+    
+    // Ejecutar la acción directamente con los datos pendientes
+    console.log('🚀 About to execute action...');
+    await executeAction(expiryDate, pendingActivation);
+    
+    // Limpiar estados
+    setPendingActivation(null);
+    setShowExpiryDatePicker(false);
+    console.log('✨ Cleanup completed');
+  };
+
+  const handleExpiryDateCancel = () => {
+    setPendingActivation(null);
+    setShowExpiryDatePicker(false);
+  };
+
+  const handleDeleteOrganization = (organization: Organization) => {
+    setOrganizationToDelete(organization);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!organizationToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      // Llamada simple al backend (solo ID)
+      await deleteOrganization(organizationToDelete.id);
+
+      toast({
+        title: "Organización eliminada",
+        description: `La organización "${organizationToDelete.name}" ha sido eliminada exitosamente.`,
+      });
+
+      setShowDeleteModal(false);
+      setOrganizationToDelete(null);
+      
+      // Refrescar estadísticas después de eliminar
+      await fetchStats();
+      
+    } catch (error) {
+      console.error('Error deleting organization:', error);
+      toast({
+        title: "Error al eliminar",
+        description: "No se pudo eliminar la organización. Por favor intenta nuevamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setOrganizationToDelete(null);
   };
 
   const handleViewDetails = (organizationId: string) => {
@@ -214,6 +333,68 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
 
     const config = statusConfig[status];
     return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const getConvenioInfo = (org: Organization) => {
+    // Si la organización no está activa, mostrar N/A
+    if (org.status !== OrganizationStatus.ACTIVE) {
+      return (
+        <div className="text-center text-muted-foreground">
+          <span className="text-xs">N/A</span>
+        </div>
+      );
+    }
+
+    const agreementInfo = getAgreementStatusInfo(org);
+    const daysUntilExpiry = getDaysUntilExpiry(org);
+    const canOperate = canOrganizationOperate(org);
+
+    return (
+      <div className="text-center space-y-1">
+        {/* Fecha de expiración */}
+        <div className="flex items-center justify-center gap-1">
+          <Calendar className="h-3 w-3" />
+          <span className="text-xs font-mono">
+            {org.agreementExpiry 
+              ? new Date(org.agreementExpiry).toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: '2-digit', 
+                  day: '2-digit'
+                })
+              : 'Sin fecha'
+            }
+          </span>
+        </div>
+        
+        {/* Estado del convenio */}
+        <div>
+          <Badge 
+            variant={
+              agreementInfo.status === 'expired' ? 'destructive' :
+              agreementInfo.status === 'valid' ? 'default' : 'outline'
+            }
+            className={`text-xs ${
+              agreementInfo.status === 'valid' ? 'bg-green-600' :
+              agreementInfo.status === 'expired' ? '' :
+              daysUntilExpiry && daysUntilExpiry <= 30 && daysUntilExpiry > 0 ? 'text-orange-600 border-orange-600' : ''
+            }`}
+          >
+            {agreementInfo.status === 'expired' ? 'Vencido' :
+             agreementInfo.status === 'valid' && daysUntilExpiry && daysUntilExpiry <= 30 && daysUntilExpiry > 0 ? 
+               `${daysUntilExpiry}d restantes` :
+             agreementInfo.label
+            }
+          </Badge>
+        </div>
+
+        {/* Indicador de si puede operar */}
+        {!canOperate && (
+          <div className="text-xs text-red-600 font-medium">
+            No puede operar
+          </div>
+        )}
+      </div>
+    );
   };
 
   const getAvailableActions = (organization: Organization) => {
@@ -361,18 +542,32 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                     />
                   </div>
                 </div>
-                <div className="w-full sm:w-64">
-                  <Label htmlFor="status">Filtrar por estado</Label>
+                <div className="w-full sm:w-48">
+                  <Label htmlFor="status">Estado de Cuenta</Label>
                   <Select value={filters.status || 'all'} onValueChange={handleStatusFilter}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Todos los estados" />
+                      <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos los estados</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value={OrganizationStatus.PENDING}>Pendientes</SelectItem>
                       <SelectItem value={OrganizationStatus.ACTIVE}>Activas</SelectItem>
                       <SelectItem value={OrganizationStatus.REJECTED}>Rechazadas</SelectItem>
                       <SelectItem value={OrganizationStatus.SUSPENDED}>Suspendidas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-full sm:w-48">
+                  <Label htmlFor="agreement">Estado de Convenio</Label>
+                  <Select value={filters.agreementStatus || 'all'} onValueChange={handleAgreementFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="valid">Vigente</SelectItem>
+                      <SelectItem value="expired">Expirado</SelectItem>
+                      <SelectItem value="no_expiry">Sin vencimiento</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -411,6 +606,7 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                         <TableRow className="bg-muted/50">
                           <TableHead className="font-semibold">Organización</TableHead>
                           <TableHead className="font-semibold text-center">Estado</TableHead>
+                          <TableHead className="font-semibold text-center">Convenio</TableHead>
                           <TableHead className="font-semibold text-center w-48">Acciones</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -427,6 +623,9 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                             </TableCell>
                             <TableCell className="text-center">
                               {getStatusBadge(org.status)}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {getConvenioInfo(org)}
                             </TableCell>
                             <TableCell>
                               <div className="flex justify-center gap-1 flex-wrap">
@@ -467,6 +666,18 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
                                     );
                                   });
                                 })()}
+
+                                {/* Botón de eliminar - siempre disponible para admin */}
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteOrganization(org)}
+                                  className="text-xs px-2"
+                                  title="Eliminar organización"
+                                  disabled={updatingOrganizations.has(org.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -585,6 +796,21 @@ const OrganizationManagementPanel: React.FC = (): JSX.Element => {
             isOpen={showDetailsModal}
             onClose={closeDetailsModal}
             organizationId={selectedOrganizationId}
+          />
+
+          <AgreementExpiryDatePicker
+            isOpen={showExpiryDatePicker}
+            onClose={handleExpiryDateCancel}
+            onConfirm={handleExpiryDateConfirm}
+            organizationName={pendingActivation?.organization.name || ''}
+          />
+
+          <DeleteOrganizationModal
+            isOpen={showDeleteModal}
+            onClose={handleDeleteCancel}
+            onConfirm={handleDeleteConfirm}
+            organization={organizationToDelete}
+            isDeleting={isDeleting}
           />
 
         </div>
