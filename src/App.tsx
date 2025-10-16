@@ -12,8 +12,9 @@ import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import StudentProfilePage from "./pages/dashboard/StudentProfilePage";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
+import OrganizationProfilePage from "./pages/dashboard/OrganizationProfilePage";
 import OrganizationOffersPage from './pages/organization/OrganizationOffersPage';
-import OrganizationProfile from './pages/organization/OrganizationProfile';
+
 import OrganizationOfferForm from './pages/organization/OrganizationOfferForm';
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminOffersManagementPage from "./pages/admin/AdminOffersManagementPage";
@@ -34,7 +35,9 @@ const queryClient = new QueryClient();
  * /auth/organization -> Login específico de organizaciones
  * /auth/register-organization -> Registro de nuevas organizaciones
  * /auth/admin -> Login de administradores
- * /dashboard -> Dashboard principal (requiere autenticación)
+ * /student/* -> Rutas protegidas de estudiantes
+ * /organization/* -> Rutas protegidas de organizaciones
+ * /admin/* -> Rutas protegidas de administradores
  * 
  * Configuración global:
  * - React Query para manejo de estado del servidor
@@ -52,12 +55,9 @@ const App = () => (
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          
           {/* Rutas de autenticación */}
           <Route path="/auth/login" element={<UnifiedLoginPage />} />
-          {/* Mantener rutas legacy para compatibilidad temporal */}
-          <Route path="/auth/student" element={<UnifiedLoginPage />} />
-          <Route path="/auth/organization" element={<UnifiedLoginPage />} />
-          <Route path="/auth/admin" element={<UnifiedLoginPage />} />
           {/* Rutas de registro */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
           <Route path="/auth/register/student" element={<RegisterPageStudent />} />
@@ -72,6 +72,7 @@ const App = () => (
                   <Route path="offers" element={<div>Ofertas Disponibles</div>} />
                   <Route path="applications" element={<div>Mis Postulaciones</div>} />
                   <Route path="favorites" element={<div>Favoritos</div>} />
+                  <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>
             </AuthGuard>
@@ -83,12 +84,13 @@ const App = () => (
               <DashboardLayout userRole="organization">
                 <Routes>
                   <Route path="dashboard" element={<OrganizationDashboard />} />
-                  <Route path="profile" element={<OrganizationProfile />} />
+                  <Route path="profile" element={<OrganizationProfilePage />} />
                   <Route path="offers" element={<OrganizationOffersPage />} />
                   <Route path="offers/new" element={<OrganizationOfferForm />} />
                   <Route path="offers/:offerId/edit" element={<OrganizationOfferForm />} />
                   <Route path="applications" element={<div>Postulaciones Recibidas</div>} />
                   <Route path="analytics" element={<div>Estadísticas</div>} />
+                  <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>
             </AuthGuard>
@@ -106,6 +108,7 @@ const App = () => (
                   <Route path="catalogs" element={<CatalogsPage />} />
                   <Route path="settings" element={<div>Configuración</div>} />
                   <Route path="reports" element={<div>Reportes</div>} />
+                  <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>
             </AuthGuard>

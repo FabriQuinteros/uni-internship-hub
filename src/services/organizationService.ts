@@ -11,6 +11,7 @@ import {
   UpdateStatusResponse,
   ListOrganizationsResponse,
   StatusChangeRequest,
+  DeleteOrganizationResponse,
   OrganizationProfile,
   UpdateOrganizationProfileRequest,
   OrganizationRegisterRequest,
@@ -25,8 +26,9 @@ export interface UpdateOrganizationRequest {
   website?: string;
   description?: string;
   mainContact?: string;
+  phone?: string;
+  email?: string;
   logoUrl?: string;
-  agreementStatus?: 'active' | 'inactive';
   agreementExpiry?: string; // YYYY-MM-DD
 }
 
@@ -82,7 +84,8 @@ export const getOrganizations = async (
         name: org.Name || org.name || '',
         email: org.Email || org.email || '',
         status: org.Status || org.status || 'pending',
-        createdAt: org.CreatedAt || org.createdAt || ''
+        createdAt: org.CreatedAt || org.createdAt || '',
+        agreementExpiry: org.agreementExpiry || org.AgreementExpiry || undefined
       })),
       total: result.Total || result.total || 0,
       page: result.Page || result.page || 1,
@@ -224,7 +227,8 @@ export const changeOrganizationStatus = async (
 ): Promise<OrganizationListItem> => {
   const response = await updateOrganizationStatus(request.organizationId, {
     newStatus: request.newStatus,
-    adminId: request.adminId
+    adminId: request.adminId,
+    agreementExpiry: request.agreementExpiry
   });
   
   return {
@@ -232,8 +236,28 @@ export const changeOrganizationStatus = async (
     name: response.data.name,
     email: response.data.email,
     status: response.data.status,
-    createdAt: response.data.updatedAt
+    createdAt: response.data.updatedAt,
+    agreementExpiry: request.agreementExpiry // Incluir la fecha en la respuesta
   };
+};
+
+/**
+ * DELETE /admin/organizations/:id - Eliminar organización permanentemente
+ * Endpoint simplificado - Solo requiere el ID en la URL
+ */
+export const deleteOrganization = async (
+  organizationId: string
+): Promise<DeleteOrganizationResponse> => {
+  const response = await httpClient.delete(
+    `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.ADMIN.DELETE(organizationId)}`
+  );
+  
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
+  }
+  
+  const result = await response.json();
+  return result;
 };
 
 // ===== EXPORTACIÓN PARA COMPATIBILIDAD CON API CLIENT EXISTENTE =====
