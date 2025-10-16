@@ -24,19 +24,24 @@ import {
  */
 const adminOfferServiceInternal = {
   /**
-   * Lista las ofertas pendientes de aprobación
+   * Lista las ofertas con filtros opcionales (incluyendo por estado)
    * @param filters - Filtros de búsqueda y paginación
-   * @returns Lista paginada de ofertas pendientes
+   * @returns Lista paginada de ofertas
    */
   async listPendingOffers(filters?: PendingOffersFilters): Promise<ApiHandlerResult<PendingOffersResponse['data']>> {
     try {
-      const url = new URL(API_CONFIG.ENDPOINTS.ADMIN.OFFERS.PENDING, API_CONFIG.BASE_URL);
+      const url = new URL(API_CONFIG.ENDPOINTS.ADMIN.OFFERS.LIST, API_CONFIG.BASE_URL);
       
       // Agregar parámetros de query
       if (filters?.page) url.searchParams.append('page', String(filters.page));
       if (filters?.limit) url.searchParams.append('limit', String(filters.limit));
       if (filters?.search) url.searchParams.append('search', filters.search);
-      if (filters?.status) url.searchParams.append('status', filters.status);
+      
+      // Solo filtrar por estado "pending" si se especifica en filters.status
+      // Si no se especifica, mostrar todas las ofertas
+      if (filters?.status) {
+        url.searchParams.append('status', filters.status);
+      }
 
       const response = await httpClient.get(url.toString());
       
@@ -44,7 +49,7 @@ const adminOfferServiceInternal = {
         return {
           success: false,
           message: `Error ${response.status}: ${response.statusText}`,
-          error: `Error al obtener ofertas pendientes`,
+          error: `Error al obtener ofertas`,
           type: 'server_error' as const,
           data: undefined
         };
@@ -54,14 +59,14 @@ const adminOfferServiceInternal = {
       
       return {
         success: true,
-        message: 'Ofertas pendientes obtenidas exitosamente',
+        message: 'Ofertas obtenidas exitosamente',
         data: result.data,
         type: 'unknown' as const
       };
     } catch (error) {
       return {
         success: false,
-        message: 'Error al obtener ofertas pendientes',
+        message: 'Error al obtener ofertas',
         error: error instanceof Error ? error.message : 'Error desconocido',
         type: 'server_error' as const,
         data: undefined
@@ -156,24 +161,15 @@ const adminOfferServiceInternal = {
    */
   async listAllOffers(filters?: AllOffersFilters): Promise<ApiHandlerResult<AllOffersResponse['data']>> {
     try {
-      // Por ahora usamos el mismo endpoint de pending pero sin filtro de estado
-      // En el futuro el backend debería tener un endpoint específico para todas las ofertas
-      const url = new URL(API_CONFIG.ENDPOINTS.ADMIN.OFFERS.PENDING, API_CONFIG.BASE_URL);
+      const url = new URL(API_CONFIG.ENDPOINTS.ADMIN.OFFERS.LIST, API_CONFIG.BASE_URL);
       
       // Agregar parámetros de query
       if (filters?.page) url.searchParams.append('page', String(filters.page));
       if (filters?.limit) url.searchParams.append('limit', String(filters.limit));
       if (filters?.search) url.searchParams.append('search', filters.search);
       if (filters?.status) url.searchParams.append('status', filters.status);
-      if (filters?.modality) url.searchParams.append('modality', filters.modality);
-      if (filters?.location) url.searchParams.append('location', filters.location);
-      if (filters?.duration) url.searchParams.append('duration', filters.duration);
-      if (filters?.organization_id) url.searchParams.append('organization_id', String(filters.organization_id));
       if (filters?.date_from) url.searchParams.append('date_from', filters.date_from);
       if (filters?.date_to) url.searchParams.append('date_to', filters.date_to);
-      if (filters?.technologies && filters.technologies.length > 0) {
-        filters.technologies.forEach(tech => url.searchParams.append('technologies', String(tech)));
-      }
 
       const response = await httpClient.get(url.toString());
       
@@ -287,12 +283,13 @@ const adminOfferServiceInternal = {
  */
 export const adminOfferService = {
   /**
-   * Lista ofertas pendientes (lanza excepción en error)
+   * Lista ofertas con filtros opcionales (lanza excepción en error)
+   * Si no se especifica status en filters, muestra todas las ofertas
    */
   async listPendingOffers(filters?: PendingOffersFilters) {
     const result = await adminOfferServiceInternal.listPendingOffers(filters);
     if (!result.success) {
-      throw new Error(result.message || 'Error al obtener ofertas pendientes');
+      throw new Error(result.message || 'Error al obtener ofertas');
     }
     return result.data;
   },

@@ -1,13 +1,12 @@
 /**
- * Panel de filtros avanzados para la gestión de ofertas del administrador
- * Permite filtrar por múltiples criterios de manera combinada
+ * Panel de filtros simplificado para la gestión de ofertas del administrador
+ * Solo incluye: estado, búsqueda, fecha desde y fecha hasta
  */
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -20,10 +19,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, X, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 import { AllOffersFilters, OfferStatus, OFFER_STATUS_CONFIG } from '@/types/admin-offers';
-import { catalogService } from '@/services/catalogService';
-import { CatalogItem } from '@/types/catalog';
 
 interface AllOffersFilterPanelProps {
   filters: AllOffersFilters;
@@ -37,330 +34,175 @@ export const AllOffersFilterPanel: React.FC<AllOffersFilterPanelProps> = ({
   onClearFilters,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [modalities, setModalities] = useState<CatalogItem[]>([]);
-  const [locations, setLocations] = useState<CatalogItem[]>([]);
-  const [durations, setDurations] = useState<CatalogItem[]>([]);
-  const [technologies, setTechnologies] = useState<CatalogItem[]>([]);
-  const [loadingCatalogs, setLoadingCatalogs] = useState(false);
 
-  // Cargar catálogos al montar
+  // Estados locales para los filtros
+  const [localFilters, setLocalFilters] = useState<AllOffersFilters>(() => ({
+    ...filters,
+    // Asegurar que tenemos valores válidos para el Select
+  }));
+
+  // Sincronizar filtros locales cuando cambien los filtros externos
   useEffect(() => {
-    loadCatalogs();
-  }, []);
+    setLocalFilters(filters);
+  }, [filters]);
 
-  const loadCatalogs = async () => {
-    setLoadingCatalogs(true);
-    try {
-      const [modalitiesData, locationsData, durationsData, technologiesData] = await Promise.all([
-        catalogService.list('modalities'),
-        catalogService.list('locations'),
-        catalogService.list('durations'),
-        catalogService.list('technologies'),
-      ]);
-      
-      setModalities(modalitiesData);
-      setLocations(locationsData);
-      setDurations(durationsData);
-      setTechnologies(technologiesData);
-    } catch (error) {
-      console.error('Error al cargar catálogos:', error);
-    } finally {
-      setLoadingCatalogs(false);
-    }
+  /**
+   * Actualiza un filtro específico
+   */
+  const updateFilter = (key: keyof AllOffersFilters, value: any) => {
+    const newFilters = { ...localFilters, [key]: value };
+    setLocalFilters(newFilters);
   };
 
-  // Contar filtros activos
-  const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
-    if (key === 'page' || key === 'limit') return false;
-    if (Array.isArray(value)) return value.length > 0;
-    return value !== undefined && value !== null && value !== '';
-  }).length;
-
-  const handleFilterChange = (key: keyof AllOffersFilters, value: any) => {
-    onFiltersChange({
-      ...filters,
-      [key]: value,
-      page: 1, // Reset page when filters change
-    });
+  /**
+   * Aplica los filtros
+   */
+  const applyFilters = () => {
+    onFiltersChange(localFilters);
+    setIsOpen(false);
   };
 
-  const removeFilter = (key: keyof AllOffersFilters) => {
-    const newFilters = { ...filters };
-    delete newFilters[key];
-    onFiltersChange({ ...newFilters, page: 1 });
+  /**
+   * Limpia todos los filtros
+   */
+  const clearAllFilters = () => {
+    const clearedFilters = {
+      page: 1,
+      limit: filters.limit || 10
+    };
+    setLocalFilters(clearedFilters);
+    onClearFilters();
+    setIsOpen(false);
   };
 
-  const offerStatuses: OfferStatus[] = ['draft', 'pending', 'approved', 'rejected', 'closed'];
+  /**
+   * Cuenta la cantidad de filtros activos
+   */
+  const activeFiltersCount = () => {
+    let count = 0;
+    if (filters.status) count++;
+    if (filters.date_from) count++;
+    if (filters.date_to) count++;
+    return count;
+  };
+
+  const activeCount = activeFiltersCount();
 
   return (
-    <div className="space-y-3">
-      {/* Botón para expandir/colapsar y contador de filtros */}
-      <div className="flex items-center justify-between gap-2">
-        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="flex-1">
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-between"
-            >
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                <span>Filtros Avanzados</span>
-                {activeFiltersCount > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {activeFiltersCount}
-                  </Badge>
-                )}
-              </div>
-              {isOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          </CollapsibleTrigger>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="outline"
+          className="w-full justify-between"
+        >
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filtros avanzados
+            {activeCount > 0 && (
+              <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+                {activeCount}
+              </span>
+            )}
+          </div>
+          {isOpen ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </Button>
+      </CollapsibleTrigger>
 
-          <CollapsibleContent className="mt-3">
-            <div className="border rounded-lg p-4 bg-muted/30 space-y-4">
-              {/* Grid de filtros */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Estado */}
-                <div className="space-y-2">
-                  <Label>Estado</Label>
-                  <Select
-                    value={filters.status || 'all'}
-                    onValueChange={(value) => 
-                      handleFilterChange('status', value === 'all' ? undefined : value as OfferStatus)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos los estados" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los estados</SelectItem>
-                      {offerStatuses.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {OFFER_STATUS_CONFIG[status].label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Modalidad */}
-                <div className="space-y-2">
-                  <Label>Modalidad</Label>
-                  <Select
-                    value={filters.modality || 'all'}
-                    onValueChange={(value) => 
-                      handleFilterChange('modality', value === 'all' ? undefined : value)
-                    }
-                    disabled={loadingCatalogs}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas las modalidades" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las modalidades</SelectItem>
-                      {modalities.map((modality) => (
-                        <SelectItem key={modality.id} value={modality.name}>
-                          {modality.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Ubicación */}
-                <div className="space-y-2">
-                  <Label>Ubicación</Label>
-                  <Select
-                    value={filters.location || 'all'}
-                    onValueChange={(value) => 
-                      handleFilterChange('location', value === 'all' ? undefined : value)
-                    }
-                    disabled={loadingCatalogs}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas las ubicaciones" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las ubicaciones</SelectItem>
-                      {locations.map((location) => (
-                        <SelectItem key={location.id} value={location.name}>
-                          {location.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Duración */}
-                <div className="space-y-2">
-                  <Label>Duración</Label>
-                  <Select
-                    value={filters.duration || 'all'}
-                    onValueChange={(value) => 
-                      handleFilterChange('duration', value === 'all' ? undefined : value)
-                    }
-                    disabled={loadingCatalogs}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas las duraciones" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las duraciones</SelectItem>
-                      {durations.map((duration) => (
-                        <SelectItem key={duration.id} value={duration.name}>
-                          {duration.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Fecha desde */}
-                <div className="space-y-2">
-                  <Label>Fecha publicación desde</Label>
-                  <Input
-                    type="date"
-                    value={filters.date_from || ''}
-                    onChange={(e) => handleFilterChange('date_from', e.target.value || undefined)}
-                  />
-                </div>
-
-                {/* Fecha hasta */}
-                <div className="space-y-2">
-                  <Label>Fecha publicación hasta</Label>
-                  <Input
-                    type="date"
-                    value={filters.date_to || ''}
-                    onChange={(e) => handleFilterChange('date_to', e.target.value || undefined)}
-                  />
-                </div>
-              </div>
-
-              {/* Tecnologías (select múltiple simplificado por ahora) */}
-              {technologies.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Tecnologías</Label>
-                  <Select
-                    value={filters.technologies?.[0]?.toString() || 'all'}
-                    onValueChange={(value) => 
-                      handleFilterChange('technologies', value === 'all' ? undefined : [parseInt(value)])
-                    }
-                    disabled={loadingCatalogs}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas las tecnologías" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las tecnologías</SelectItem>
-                      {technologies.map((tech) => (
-                        <SelectItem key={tech.id} value={tech.id.toString()}>
-                          {tech.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {/* Botón para limpiar filtros */}
-              {activeFiltersCount > 0 && (
-                <div className="flex justify-end pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onClearFilters}
-                    className="flex items-center gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    Limpiar todos los filtros
-                  </Button>
-                </div>
-              )}
+      <CollapsibleContent className="space-y-4 pt-4">
+        <div className="grid gap-4 p-4 border rounded-lg bg-muted/50">
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Filtro por Estado */}
+            <div className="space-y-2">
+              <Label htmlFor="status-filter">Estado</Label>
+              <Select
+                value={localFilters.status || 'all'}
+                onValueChange={(value) => 
+                  updateFilter('status', value === 'all' ? undefined : value)
+                }
+              >
+                <SelectTrigger id="status-filter">
+                  <SelectValue placeholder="Todos los estados" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  {Object.entries(OFFER_STATUS_CONFIG).map(([status, config]) => (
+                    <SelectItem key={status} value={status}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className={`w-2 h-2 rounded-full ${
+                            config.variant === 'secondary' ? 'bg-gray-500' :
+                            config.variant === 'destructive' ? 'bg-red-500' :
+                            config.variant === 'outline' ? 'bg-green-500' :
+                            config.variant === 'success' ? 'bg-green-500' :
+                            config.variant === 'warning' ? 'bg-yellow-500' :
+                            'bg-blue-500'
+                          }`} 
+                        />
+                        {config.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
 
-      {/* Badges de filtros activos */}
-      {activeFiltersCount > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {filters.status && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Estado: {OFFER_STATUS_CONFIG[filters.status].label}
-              <button
-                onClick={() => removeFilter('status')}
-                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          
-          {filters.modality && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Modalidad: {filters.modality}
-              <button
-                onClick={() => removeFilter('modality')}
-                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          
-          {filters.location && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Ubicación: {filters.location}
-              <button
-                onClick={() => removeFilter('location')}
-                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          
-          {filters.duration && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Duración: {filters.duration}
-              <button
-                onClick={() => removeFilter('duration')}
-                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          
-          {filters.date_from && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Desde: {filters.date_from}
-              <button
-                onClick={() => removeFilter('date_from')}
-                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          
-          {filters.date_to && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              Hasta: {filters.date_to}
-              <button
-                onClick={() => removeFilter('date_to')}
-                className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
+            {/* Placeholder para mantener el grid */}
+            <div></div>
+          </div>
+
+          {/* Filtros de Fecha */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="date-from">Fecha desde</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="date-from"
+                  type="date"
+                  value={localFilters.date_from || ''}
+                  onChange={(e) => updateFilter('date_from', e.target.value || undefined)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date-to">Fecha hasta</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="date-to"
+                  type="date"
+                  value={localFilters.date_to || ''}
+                  onChange={(e) => updateFilter('date_to', e.target.value || undefined)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex justify-between pt-4">
+            <Button 
+              variant="outline" 
+              onClick={clearAllFilters}
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Limpiar filtros
+            </Button>
+            
+            <Button onClick={applyFilters}>
+              Aplicar filtros
+            </Button>
+          </div>
         </div>
-      )}
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };
 

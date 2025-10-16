@@ -73,7 +73,7 @@ export const API_CONFIG = {
         },
         ADMIN: {
             OFFERS: {
-                PENDING: '/api/admin/offers/pending',
+                LIST: '/api/admin/offers',
                 DECISION: (id: number) => `/api/admin/offers/${id}/decision`,
                 DETAILS: (id: number) => `/api/admin/offers/${id}`,
             },

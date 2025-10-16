@@ -74,18 +74,13 @@ export interface PendingOffersFilters {
 }
 
 /**
- * Interface para filtros avanzados de todas las ofertas (admin)
+ * Interface para filtros simplificados de todas las ofertas (admin)
  */
 export interface AllOffersFilters {
   page?: number; // min: 1, default: 1
   limit?: number; // min: 5, max: 100, default: 10
   search?: string; // búsqueda por título/descripción
   status?: OfferStatus; // filtrar por cualquier estado
-  organization_id?: number; // filtrar por organización
-  modality?: string; // filtrar por modalidad (presencial/remoto/híbrido)
-  location?: string; // filtrar por ubicación
-  duration?: string; // filtrar por duración
-  technologies?: number[]; // filtrar por tecnologías
   date_from?: string; // fecha de publicación desde (YYYY-MM-DD)
   date_to?: string; // fecha de publicación hasta (YYYY-MM-DD)
 }
