@@ -12,7 +12,11 @@ import {
   PendingOffersFilters,
   ApproveRejectRequest,
   ApproveRejectResponse,
-  OfferDetails
+  OfferDetails,
+  AllOffersFilters,
+  AllOffersResponse,
+  AdminOffer,
+  OfferStatistics
 } from '@/types/admin-offers';
 
 /**
@@ -144,6 +148,137 @@ const adminOfferServiceInternal = {
       };
     }
   },
+
+  /**
+   * Lista TODAS las ofertas con filtros avanzados
+   * @param filters - Filtros avanzados de búsqueda y paginación
+   * @returns Lista paginada de todas las ofertas
+   */
+  async listAllOffers(filters?: AllOffersFilters): Promise<ApiHandlerResult<AllOffersResponse['data']>> {
+    try {
+      // Por ahora usamos el mismo endpoint de pending pero sin filtro de estado
+      // En el futuro el backend debería tener un endpoint específico para todas las ofertas
+      const url = new URL(API_CONFIG.ENDPOINTS.ADMIN.OFFERS.PENDING, API_CONFIG.BASE_URL);
+      
+      // Agregar parámetros de query
+      if (filters?.page) url.searchParams.append('page', String(filters.page));
+      if (filters?.limit) url.searchParams.append('limit', String(filters.limit));
+      if (filters?.search) url.searchParams.append('search', filters.search);
+      if (filters?.status) url.searchParams.append('status', filters.status);
+      if (filters?.modality) url.searchParams.append('modality', filters.modality);
+      if (filters?.location) url.searchParams.append('location', filters.location);
+      if (filters?.duration) url.searchParams.append('duration', filters.duration);
+      if (filters?.organization_id) url.searchParams.append('organization_id', String(filters.organization_id));
+      if (filters?.date_from) url.searchParams.append('date_from', filters.date_from);
+      if (filters?.date_to) url.searchParams.append('date_to', filters.date_to);
+      if (filters?.technologies && filters.technologies.length > 0) {
+        filters.technologies.forEach(tech => url.searchParams.append('technologies', String(tech)));
+      }
+
+      const response = await httpClient.get(url.toString());
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          message: `Error ${response.status}: ${response.statusText}`,
+          error: `Error al obtener ofertas`,
+          type: 'server_error' as const,
+          data: undefined
+        };
+      }
+      
+      const result = await response.json() as AllOffersResponse;
+      
+      return {
+        success: true,
+        message: 'Ofertas obtenidas exitosamente',
+        data: result.data,
+        type: 'unknown' as const
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al obtener ofertas',
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        type: 'server_error' as const,
+        data: undefined
+      };
+    }
+  },
+
+  /**
+   * Obtiene estadísticas de ofertas
+   * @returns Estadísticas generales de ofertas
+   */
+  async getOfferStatistics(): Promise<ApiHandlerResult<OfferStatistics>> {
+    try {
+      // Por ahora calculamos estadísticas básicas desde el listado
+      // En el futuro el backend debería tener un endpoint específico
+      const allOffers = await this.listAllOffers({ limit: 1000 });
+      
+      if (!allOffers.success || !allOffers.data) {
+        return {
+          success: false,
+          message: 'Error al obtener estadísticas',
+          error: 'No se pudieron obtener las ofertas',
+          type: 'server_error' as const,
+          data: undefined
+        };
+      }
+
+      const offers = allOffers.data.offers;
+      const stats: OfferStatistics = {
+        total: allOffers.data.total,
+        by_status: {
+          draft: 0,
+          pending: 0,
+          approved: 0,
+          rejected: 0,
+          closed: 0
+        },
+        recent_approvals: 0,
+        recent_rejections: 0,
+        pending_review: 0
+      };
+
+      const now = new Date();
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      offers.forEach(offer => {
+        // Contar por estado
+        stats.by_status[offer.status]++;
+        
+        // Contar pendientes de revisión
+        if (offer.status === 'pending') {
+          stats.pending_review++;
+        }
+        
+        // Contar aprobaciones/rechazos recientes (últimas 24h)
+        if (offer.updated_at) {
+          const updatedAt = new Date(offer.updated_at);
+          if (updatedAt >= yesterday) {
+            if (offer.status === 'approved') stats.recent_approvals++;
+            if (offer.status === 'rejected') stats.recent_rejections++;
+          }
+        }
+      });
+
+      return {
+        success: true,
+        message: 'Estadísticas obtenidas exitosamente',
+        data: stats,
+        type: 'unknown' as const
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al obtener estadísticas',
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        type: 'server_error' as const,
+        data: undefined
+      };
+    }
+  },
 };
 
 /**
@@ -230,6 +365,43 @@ export const adminOfferService = {
     }
 
     return this.listPendingOffers({
+      search: searchTerm.trim(),
+      page,
+      limit
+    });
+  },
+
+  /**
+   * Lista todas las ofertas con filtros avanzados (lanza excepción en error)
+   */
+  async listAllOffers(filters?: AllOffersFilters) {
+    const result = await adminOfferServiceInternal.listAllOffers(filters);
+    if (!result.success) {
+      throw new Error(result.message || 'Error al obtener ofertas');
+    }
+    return result.data;
+  },
+
+  /**
+   * Obtiene estadísticas de ofertas (lanza excepción en error)
+   */
+  async getOfferStatistics() {
+    const result = await adminOfferServiceInternal.getOfferStatistics();
+    if (!result.success) {
+      throw new Error(result.message || 'Error al obtener estadísticas');
+    }
+    return result.data;
+  },
+
+  /**
+   * Buscar todas las ofertas por término
+   */
+  async searchAllOffers(searchTerm: string, page = 1, limit = 10) {
+    if (!searchTerm || searchTerm.trim().length < 2) {
+      throw new Error('El término de búsqueda debe tener al menos 2 caracteres');
+    }
+
+    return this.listAllOffers({
       search: searchTerm.trim(),
       page,
       limit
