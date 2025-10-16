@@ -74,6 +74,74 @@ export interface PendingOffersFilters {
 }
 
 /**
+ * Interface para filtros simplificados de todas las ofertas (admin)
+ */
+export interface AllOffersFilters {
+  page?: number; // min: 1, default: 1
+  limit?: number; // min: 5, max: 100, default: 10
+  search?: string; // búsqueda por título/descripción
+  status?: OfferStatus; // filtrar por cualquier estado
+  date_from?: string; // fecha de publicación desde (YYYY-MM-DD)
+  date_to?: string; // fecha de publicación hasta (YYYY-MM-DD)
+}
+
+/**
+ * Interface para oferta completa en listado de admin
+ */
+export interface AdminOffer {
+  id: number;
+  title: string;
+  organization_id: number;
+  organization_name: string;
+  description: string;
+  status: OfferStatus;
+  created_at: string; // ISO 8601
+  submitted_at?: string; // ISO 8601
+  updated_at?: string; // ISO 8601
+  published_start_date?: string | null; // YYYY-MM-DD
+  salary?: number;
+  quota: number;
+  application_deadline?: string; // YYYY-MM-DD
+  modality?: string;
+  location?: string;
+  duration?: string;
+  technologies?: number[];
+  rejection_reason?: string; // Solo si fue rechazada
+  applications_count?: number; // Cantidad de postulaciones
+}
+
+/**
+ * Interface para la respuesta de lista de todas las ofertas (admin)
+ */
+export interface AllOffersResponse {
+  message: string;
+  data: {
+    offers: AdminOffer[];
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+}
+
+/**
+ * Interface para estadísticas de ofertas (admin)
+ */
+export interface OfferStatistics {
+  total: number;
+  by_status: {
+    draft: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+    closed: number;
+  };
+  recent_approvals: number; // Últimas 24h
+  recent_rejections: number; // Últimas 24h
+  pending_review: number; // Pendientes de revisión
+}
+
+/**
  * Interface para detalles completos de una oferta (para revisión admin)
  */
 export interface OfferDetails extends PendingOffer {

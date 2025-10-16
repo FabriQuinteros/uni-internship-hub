@@ -94,10 +94,10 @@ const AdminDashboard: React.FC = () => {
       href: "/admin/organizations"
     },
     {
-      title: "Aprobar Ofertas",
-      description: "Revisar y aprobar nuevas ofertas",
-      icon: Shield,
-      href: "/admin/approval"
+      title: "Gestionar Ofertas",
+      description: "Supervisar, aprobar y gestionar todas las ofertas",
+      icon: BarChart3,
+      href: "/admin/offers"
     },
     {
       title: "Configuración",
