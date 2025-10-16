@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +22,8 @@ const profileSchema = z.object({
     .min(2, 'La razón social debe tener al menos 2 caracteres')
     .max(100, 'La razón social no puede exceder 100 caracteres'),
   industry: z.string()
-    .min(1, 'Debe seleccionar un rubro/industria'),
+    .min(1, 'Debe especificar el rubro/industria')
+    .max(100, 'El rubro/industria no puede exceder 100 caracteres'),
   website: z.string()
     .url('Debe ser una URL válida')
     .optional()
@@ -34,10 +35,14 @@ const profileSchema = z.object({
     .min(2, 'El nombre de contacto debe tener al menos 2 caracteres')
     .max(100, 'El nombre de contacto no puede exceder 100 caracteres'),
   contactEmail: z.string()
-    .email('Debe ser un email válido'),
+    .email('Debe ser un email válido')
+    .optional()
+    .or(z.literal('')),
   contactPhone: z.string()
     .min(8, 'El teléfono debe tener al menos 8 caracteres')
-    .regex(/^[\d\s\-\+\(\)]+$/, 'Formato de teléfono inválido'),
+    .regex(/^[\d\s\-\+\(\)]+$/, 'Formato de teléfono inválido')
+    .optional()
+    .or(z.literal('')),
   description: z.string()
     .min(20, 'La descripción debe tener al menos 20 caracteres')
     .max(1000, 'La descripción no puede exceder 1000 caracteres'),
@@ -48,27 +53,7 @@ const profileSchema = z.object({
  */
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-/**
- * Opciones de industrias/rubros disponibles
- */
-const INDUSTRY_OPTIONS = [
-  { value: 'technology', label: 'Tecnología e Informática' },
-  { value: 'finance', label: 'Finanzas y Banca' },
-  { value: 'healthcare', label: 'Salud y Medicina' },
-  { value: 'education', label: 'Educación' },
-  { value: 'manufacturing', label: 'Manufactura e Industria' },
-  { value: 'retail', label: 'Comercio y Retail' },
-  { value: 'consulting', label: 'Consultoría' },
-  { value: 'marketing', label: 'Marketing y Publicidad' },
-  { value: 'construction', label: 'Construcción' },
-  { value: 'transportation', label: 'Transporte y Logística' },
-  { value: 'energy', label: 'Energía y Servicios Públicos' },
-  { value: 'entertainment', label: 'Entretenimiento y Medios' },
-  { value: 'agriculture', label: 'Agricultura' },
-  { value: 'nonprofit', label: 'Organizaciones sin fines de lucro' },
-  { value: 'government', label: 'Sector Público' },
-  { value: 'other', label: 'Otro' },
-];
+
 
 /**
  * Props del componente OrganizationProfileForm
@@ -229,22 +214,13 @@ export const OrganizationProfileForm: React.FC<OrganizationProfileFormProps> = (
                 <Label htmlFor="industry">
                   Rubro/Industria <span className="text-destructive">*</span>
                 </Label>
-                <Select
-                  value={watch('industry')}
-                  onValueChange={(value) => setValue('industry', value, { shouldValidate: true })}
+                <Input
+                  id="industry"
+                  {...register('industry')}
+                  placeholder="Ej: Tecnología, Finanzas, Salud, etc."
+                  className={errors.industry ? 'border-destructive' : ''}
                   disabled={readOnly}
-                >
-                  <SelectTrigger className={errors.industry ? 'border-destructive' : ''}>
-                    <SelectValue placeholder="Seleccionar rubro" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INDUSTRY_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
                 {errors.industry && (
                   <p className="text-sm text-destructive">{errors.industry.message}</p>
                 )}
@@ -322,7 +298,7 @@ export const OrganizationProfileForm: React.FC<OrganizationProfileFormProps> = (
               {/* Email de Contacto */}
               <div className="space-y-2">
                 <Label htmlFor="contactEmail">
-                  Email de Contacto <span className="text-destructive">*</span>
+                  Email de Contacto
                 </Label>
                 <Input
                   id="contactEmail"
@@ -340,7 +316,7 @@ export const OrganizationProfileForm: React.FC<OrganizationProfileFormProps> = (
               {/* Teléfono */}
               <div className="space-y-2">
                 <Label htmlFor="contactPhone">
-                  Teléfono <span className="text-destructive">*</span>
+                  Teléfono
                 </Label>
                 <Input
                   id="contactPhone"

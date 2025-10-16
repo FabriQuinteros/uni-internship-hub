@@ -58,8 +58,8 @@ export const OrganizationProfilePage: React.FC = () => {
       website: profile.website || '',
       address: profile.address || '',
       contactName: profile.mainContact || '',
-      contactEmail: '', // Este campo no está en el backend, mantenemos vacío por ahora
-      contactPhone: '', // Este campo no está en el backend, mantenemos vacío por ahora
+      contactEmail: profile.email || '',
+      contactPhone: profile.phone || '',
       description: profile.description || '',
       logo: profile.logoUrl ? {
         id: 'current-logo',
@@ -87,6 +87,8 @@ export const OrganizationProfilePage: React.FC = () => {
         website: data.website,
         address: data.address,
         mainContact: data.contactName,
+        phone: data.contactPhone,
+        email: data.contactEmail,
         description: data.description,
         logoUrl: data.logo?.url || data.logo?.preview || '',
       };
