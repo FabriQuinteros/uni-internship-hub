@@ -53,7 +53,6 @@ export const API_CONFIG = {
             ADMIN: {
                 LIST: '/api/admin/organizations',
                 DETAILS: (id: string) => `/api/admin/organizations/${id}/details`,
-                SUMMARY: (id: string) => `/api/admin/organizations/${id}/summary`,
                 STATUS: (id: string) => `/api/admin/organizations/${id}/status`,
                 STATS: '/api/admin/organizations/stats',
             },
@@ -89,6 +88,12 @@ export const API_CONFIG = {
                 UPDATE: '/api/students/profile',
                 GET_BY_ID: (id: number) => `/api/students/profile/${id}`,
             },
+            ADMIN:{
+                LIST: '/api/admin/students',
+                DETAILS: (id: string) => `/api/admin/students/${id}/details`,
+                STATUS: (id: string) => `/api/admin/students/${id}/status`,
+                STATS: '/api/admin/students/stats'
+            }
         },
     }
 } as const;

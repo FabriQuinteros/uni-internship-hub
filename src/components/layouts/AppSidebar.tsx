@@ -13,7 +13,8 @@ import {
   BarChart3,
   Shield,
   Database,
-  GraduationCap
+  GraduationCap,
+  Building2
 } from "lucide-react";
 
 import {
@@ -106,10 +107,16 @@ const navigationItems = {
       description: "Vista general del sistema"
     },
     {
-      title: "Gestión de Usuarios",
+      title: "Gestión Estudiantes",
       url: "/admin/users",
       icon: Users,
-      description: "Estudiantes y organizaciones"
+      description: "Estudiantes"
+    },
+    {
+      title: "Gestión Organizaciones", 
+      url: "/admin/organizations",        
+      icon: Building2,     
+      description: "Organizaciones"
     },
     {
       title: "Aprobación de Ofertas",
