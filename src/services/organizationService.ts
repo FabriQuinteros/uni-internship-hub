@@ -141,22 +141,6 @@ export const getOrganizationDetails = async (
 };
 
 /**
- * GET /admin/organizations/:id/summary - Obtener resumen de organización
- */
-export const getOrganizationSummary = async (
-  organizationId: string
-): Promise<{ message: string; data: OrganizationSummary }> => {
-  const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.ADMIN.SUMMARY(organizationId)}`);
-  
-  if (!response.ok) {
-    throw new Error(`Error ${response.status}: ${response.statusText}`);
-  }
-  
-  const result = await response.json();
-  return result;
-};
-
-/**
  * GET /admin/organizations/stats - Obtener estadísticas de organizaciones
  */
 export const getOrganizationsStats = async (): Promise<{ message: string; data: OrganizationStats }> => {

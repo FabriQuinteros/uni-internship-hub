@@ -194,6 +194,17 @@ class HttpInterceptors {
   }
 
   /**
+   * Método de conveniencia para peticiones PATCH
+   */
+  public async patch(url: string, body?: any, options: RequestInit = {}): Promise<Response> {
+    return this.fetch(url, {
+      ...options,
+      method: 'PATCH',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  /**
    * Método de conveniencia para peticiones DELETE
    */
   public async delete(url: string, options: RequestInit = {}): Promise<Response> {

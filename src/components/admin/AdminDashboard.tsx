@@ -82,8 +82,8 @@ const AdminDashboard: React.FC = () => {
 
   const quickActions = [
     {
-      title: "Gestionar Usuarios",
-      description: "Administrar estudiantes y organizaciones",
+      title: "Gestionar Estudiantes",
+      description: "Administrar estudiantes",
       icon: Users,
       href: "/admin/users"
     },

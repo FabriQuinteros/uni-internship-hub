@@ -5,7 +5,9 @@ import {
   RegisterResponse, 
   StudentProfile, 
   UpdateStudentProfileRequest, 
-  StudentProfileResponse 
+  StudentProfileResponse,
+  StudentStats,
+  Student
 } from '@/types/user';
 
 /**
@@ -126,6 +128,89 @@ export class StudentService {
     } catch (error: any) {
       console.error('Error al obtener perfil de estudiante por ID:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Obtiene estadísticas de estudiantes (solo para admin)
+   */
+  static async getStudentStats(): Promise<StudentStats> {
+    try {
+      const response = await httpClient.get(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STUDENTS.ADMIN.STATS}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      // El backend puede devolver { message, data: { total, active, ... } }
+      // O directamente { total, active, ... }
+      return result.data || result;
+    } catch (error: any) {
+      console.error('Error fetching student stats:', error);
+      throw new Error('No se pudieron obtener las estadísticas de estudiantes');
+    }
+  }
+
+  /**
+   * Obtiene lista paginada de estudiantes (solo para admin)
+   */
+  static async getStudents(filters = {}, page = 1, limit = 25) {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...Object.fromEntries(
+          Object.entries(filters).filter(([_, value]) => value && value !== 'all')
+        )
+      });
+
+      const response = await httpClient.get(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STUDENTS.ADMIN.LIST}?${params}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      // El backend devuelve { message, data: { data, total, page, totalPages } }
+      // Extraemos la estructura correcta
+      return {
+        students: result.data.data || [],
+        total: result.data.total || 0,
+        page: result.data.page || 1,
+        totalPages: result.data.totalPages || 1
+      };
+    } catch (error: any) {
+      console.error('Error fetching students:', error);
+      throw new Error('No se pudieron obtener los estudiantes');
+    }
+  }
+
+  /**
+   * Actualiza el estado de un estudiante (solo para admin)
+   */
+  static async updateStudentStatus(studentId: string, newStatus: string, adminId: string) {
+    try {
+      const response = await httpClient.put(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STUDENTS.ADMIN.STATUS(studentId)}`,
+        { newStatus, adminId }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('Error updating student status:', error);
+      throw new Error('No se pudo actualizar el estado del estudiante');
     }
   }
 }

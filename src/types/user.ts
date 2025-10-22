@@ -304,3 +304,34 @@ export interface DeleteOrganizationResponse {
   message: string;
   deletedId: string;
 }
+
+// Interface para item de estudiantes en listado (GET /admin/students)
+export interface StudentListItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  legajo: string;
+  status: 'active' | 'suspended' | 'pending' | 'rejected'; 
+}
+
+// Interface completa para estudiante (usado en administración)
+export interface Student {
+  id: string;
+  email: string;
+  legajo: string;
+  firstName: string;
+  lastName: string;
+  status: 'active' | 'inactive' | 'suspended';
+  createdAt: string;
+  phone?: string;
+  updatedAt?: string;
+}
+
+export interface StudentStats {
+  total: number;
+  active: number;
+  inactive: number;
+  suspended: number;
+  byUniversity?: { [key: string]: number };
+  byCareer?: { [key: string]: number };
+}

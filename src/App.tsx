@@ -20,6 +20,7 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminOffersManagementPage from "./pages/admin/AdminOffersManagementPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import OrganizationManagementPage from "./pages/admin/OrganizationManagementPage";
+import StudentManagement from "./pages/admin/StudentManagement";
 import NotFound from "./pages/NotFound";
 import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
 
@@ -102,7 +103,8 @@ const App = () => (
               <DashboardLayout userRole="admin">
                 <Routes>
                   <Route path="dashboard" element={<AdminDashboardPage />} />
-                  <Route path="users" element={<div>Gestión de Usuarios</div>} />
+                  <Route path="users" element={<StudentManagement />} />
+                  <Route path="students" element={<StudentManagement />} />
                   <Route path="organizations" element={<OrganizationManagementPage />} />
                   <Route path="offers" element={<AdminOffersManagementPage />} />
                   <Route path="catalogs" element={<CatalogsPage />} />
