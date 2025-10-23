@@ -18,7 +18,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Pause,
-  Play
+  Play,
+  CheckCircle
 } from 'lucide-react';
 import { StudentDetailsModal } from './StudentDetailsModal';
 import { ConfirmationModal } from '../common/ConfirmationModal';
@@ -31,7 +32,8 @@ import { useDebounce } from '../../hooks/use-debounce';
 enum StudentAction {
   ACTIVATE = 'activate',
   DEACTIVATE = 'deactivate', 
-  SUSPEND = 'suspend'
+  SUSPEND = 'suspend',
+  APPROVE = 'approve'
 }
 
 export const StudentManagementPanel: React.FC = (): JSX.Element => {
@@ -121,7 +123,8 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
     const descriptions = {
       [StudentAction.ACTIVATE]: 'activado',
       [StudentAction.DEACTIVATE]: 'desactivado',
-      [StudentAction.SUSPEND]: 'suspendido'
+      [StudentAction.SUSPEND]: 'suspendido',
+      [StudentAction.APPROVE]: 'aprobado'
     };
     return descriptions[action];
   };
@@ -130,7 +133,8 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
     const verbs = {
       [StudentAction.ACTIVATE]: 'activar',
       [StudentAction.DEACTIVATE]: 'desactivar',
-      [StudentAction.SUSPEND]: 'suspender'
+      [StudentAction.SUSPEND]: 'suspender',
+      [StudentAction.APPROVE]: 'aprobar'
     };
     return verbs[action];
   };
@@ -139,7 +143,9 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
     const statusConfig = {
       'active': { label: 'Activo', variant: 'default' as const },
       'inactive': { label: 'Inactivo', variant: 'secondary' as const },
-      'suspended': { label: 'Suspendido', variant: 'destructive' as const }
+      'suspended': { label: 'Suspendido', variant: 'destructive' as const },
+      'pending': { label: 'Pendiente', variant: 'outline' as const },
+      'rejected': { label: 'Rechazado', variant: 'destructive' as const }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.inactive;
@@ -152,7 +158,8 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
     
     switch (status) {
       case 'active':
-        action = StudentAction.ACTIVATE;
+        // Determinar si es una aprobación o una reactivación
+        action = student.status === 'pending' ? StudentAction.APPROVE : StudentAction.ACTIVATE;
         break;
       case 'inactive':
         action = StudentAction.DEACTIVATE;
@@ -267,8 +274,18 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
     const actions = [];
     const isUpdating = updatingStudents.has(student.id);
 
+    // Si está pendiente, mostrar botón de aprobar (CheckCircle)
+    if (student.status === 'pending') {
+      actions.push({
+        action: StudentAction.APPROVE,
+        newStatus: 'active',
+        label: 'Aprobar',
+        icon: CheckCircle,
+        variant: 'default' as const
+      });
+    }
     // Si está suspendido, mostrar botón de reactivar (Play)
-    if (student.status === 'suspended') {
+    else if (student.status === 'suspended') {
       actions.push({
         action: StudentAction.ACTIVATE,
         newStatus: 'active',
@@ -276,8 +293,8 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
         icon: Play,
         variant: 'default' as const
       });
-    } else {
-      // Si no está suspendido, mostrar botón de suspender (Pause)
+    } else if (student.status === 'active') {
+      // Si está activo, mostrar botón de suspender (Pause)
       actions.push({
         action: StudentAction.SUSPEND,
         newStatus: 'suspended',
@@ -379,8 +396,10 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos los estados</SelectItem>
+                      <SelectItem value="pending">Pendientes</SelectItem>
                       <SelectItem value="active">Activos</SelectItem>
                       <SelectItem value="suspended">Suspendidos</SelectItem>
+                      <SelectItem value="rejected">Rechazados</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

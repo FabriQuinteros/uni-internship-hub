@@ -11,6 +11,7 @@ import UnifiedLoginPage from "./pages/auth/UnifiedLoginPage";
 import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import StudentProfilePage from "./pages/dashboard/StudentProfilePage";
+import StudentOffersPage from "./pages/dashboard/StudentOffersPage";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
 import OrganizationProfilePage from "./pages/dashboard/OrganizationProfilePage";
 import OrganizationOffersPage from './pages/organization/OrganizationOffersPage';
@@ -70,7 +71,7 @@ const App = () => (
                 <Routes>
                   <Route path="dashboard" element={<StudentDashboard />} />
                   <Route path="profile" element={<StudentProfilePage />} />
-                  <Route path="offers" element={<div>Ofertas Disponibles</div>} />
+                  <Route path="offers" element={<StudentOffersPage />} />
                   <Route path="applications" element={<div>Mis Postulaciones</div>} />
                   <Route path="favorites" element={<div>Favoritos</div>} />
                   <Route path="" element={<Navigate to="dashboard" replace />} />

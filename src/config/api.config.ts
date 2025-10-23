@@ -89,6 +89,10 @@ export const API_CONFIG = {
                 UPDATE: '/api/students/profile',
                 GET_BY_ID: (id: number) => `/api/students/profile/${id}`,
             },
+            OFFERS: {
+                LIST: '/api/students/offers',
+                DETAILS: (id: number) => `/api/students/offers/${id}`,
+            },
             ADMIN:{
                 LIST: '/api/admin/students',
                 DETAILS: (id: string) => `/api/admin/students/${id}/details`,

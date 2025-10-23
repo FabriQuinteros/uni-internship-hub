@@ -321,7 +321,7 @@ export interface Student {
   legajo: string;
   firstName: string;
   lastName: string;
-  status: 'active' | 'inactive' | 'suspended';
+  status: 'active' | 'inactive' | 'suspended' | 'pending' | 'rejected';
   createdAt: string;
   phone?: string;
   updatedAt?: string;

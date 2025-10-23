@@ -9,6 +9,13 @@ export default defineConfig(({ mode }) => ({
     host: "localhost",
     port: 8082,
     strictPort: true,
+    // Configuración para SPA routing - redirige todas las rutas a index.html
+    proxy: {},
+  },
+  // Configuración para producción - asegura que funcione con React Router
+  preview: {
+    port: 8082,
+    strictPort: true,
   },
   plugins: [
     react(),
