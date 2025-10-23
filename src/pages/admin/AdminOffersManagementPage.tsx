@@ -661,7 +661,7 @@ const AdminOffersManagementPage: React.FC = () => {
                   <div className="flex items-start gap-3">
                     <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium">Salario</p>
+                      <p className="text-sm font-medium">Incentivo económico</p>
                       <p className="text-sm text-muted-foreground">
                         ${selectedOffer.salary.toLocaleString()}
                       </p>

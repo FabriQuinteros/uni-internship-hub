@@ -122,7 +122,7 @@ export const AdminOfferCard: React.FC<AdminOfferCardProps> = ({
               <DollarSign className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold truncate">${offer.salary.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">Salario</p>
+                <p className="text-xs text-muted-foreground">Incentivo económico</p>
               </div>
             </div>
           )}
