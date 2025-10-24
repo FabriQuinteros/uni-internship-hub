@@ -106,7 +106,7 @@ const navigationItems = {
     },
     {
       title: "Gestión Estudiantes",
-      url: "/admin/users",
+      url: "/admin/students",
       icon: Users,
       description: "Estudiantes"
     },
@@ -147,10 +147,10 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
   const RoleIcon = roleInfo[userRole].icon;
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="h-full">
       {/* Header */}
       <div className="p-2 border-b border-sidebar-border">
-        <div className="flex items-center gap-2 px-2 py-1">
+        <div className="flex items-center gap-2 px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-sidebar-accent shrink-0">
             <BookOpen className="h-5 w-5 text-sidebar-foreground" />
           </div>
@@ -166,7 +166,7 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navegación Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Navegación Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
@@ -181,9 +181,9 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
                       tooltip={item.title}
                       size="lg"
                     >
-                      <NavLink to={item.url}>
-                        <Icon />
-                        <div className="flex flex-col gap-0.5 leading-none">
+                      <NavLink to={item.url} className="group-data-[collapsible=icon]:justify-center">
+                        <Icon className="shrink-0" />
+                        <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
                           <span className="font-medium">{item.title}</span>
                           <span className="text-xs opacity-70">{item.description}</span>
                         </div>

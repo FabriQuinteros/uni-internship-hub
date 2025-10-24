@@ -1,91 +1,104 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Code2, Brain, Users, Shield, Settings, BarChart3, Building2, CheckCircle } from "lucide-react";
+import { Users, Shield, Settings, BarChart3, Building2, CheckCircle, AlertCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCatalogStore } from '../../store/catalogStore';
 import { useOrganizationStore } from '../../store/organizationStore';
+import { useAdminStudentsStats } from '@/hooks/use-admin-students-stats';
+import { useAdminOffersStats } from '@/hooks/use-admin-offers-stats';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AdminDashboard: React.FC = () => {
-  // 1. Obtenemos las funciones y el estado que realmente existen en el store
-  const getItems = useCatalogStore(state => state.getItems);
-  const loadItems = useCatalogStore(state => state.loadItems);
-  const loading = useCatalogStore(state => state.loadingState.isLoading);
-  const items = useCatalogStore(state => state.items); // Para verificar si ya se cargaron
-
-  // 2. Estados del store de organizaciones
+  // Estados del store de organizaciones
   const organizationStats = useOrganizationStore(state => state.stats);
-  const fetchStats = useOrganizationStore(state => state.fetchStats);
-  const statsLoading = useOrganizationStore(state => state.loading);
+  const fetchOrgStats = useOrganizationStore(state => state.fetchStats);
+  const orgStatsLoading = useOrganizationStore(state => state.loading);
 
-  // 3. Cargamos los datos desde la API cuando el componente se monta
+  // Hook para estadísticas de estudiantes
+  const {
+    stats: studentStats,
+    loading: studentStatsLoading,
+    error: studentStatsError,
+    fetchStats: fetchStudentStats
+  } = useAdminStudentsStats();
+
+  // Hook para estadísticas de ofertas
+  const {
+    stats: offerStats,
+    loading: offerStatsLoading,
+    error: offerStatsError,
+    fetchStats: fetchOfferStats
+  } = useAdminOffersStats();
+
+  // Cargar estadísticas al montar el componente
   useEffect(() => {
-    // Solo cargamos si el array de items está vacío, para evitar recargas innecesarias
-    if (items.length === 0) {
-      loadItems();
-    }
-    // Cargar estadísticas de organizaciones
-    fetchStats();
-  }, [loadItems, items.length, fetchStats]);
+    fetchOrgStats();
+    fetchStudentStats();
+    fetchOfferStats();
+  }, [fetchOrgStats, fetchStudentStats, fetchOfferStats]);
 
-  // Si está cargando, mostramos una UI de carga para evitar errores
-  if (loading || statsLoading) {
+  // Si está cargando, mostramos una UI de carga
+  const isLoading = orgStatsLoading || studentStatsLoading || offerStatsLoading;
+  
+  if (isLoading) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Panel de Control</h1>
-          <p className="text-muted-foreground">Cargando estadísticas...</p>
+        <div className="bg-gradient-hero rounded-lg p-6 text-white">
+          <h1 className="text-2xl font-bold mb-2">Panel de Control - Administrador</h1>
+          <p className="text-white/80">Cargando estadísticas...</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Skeleton className="h-[105px] w-full" />
-          <Skeleton className="h-[105px] w-full" />
-          <Skeleton className="h-[105px] w-full" />
-          <Skeleton className="h-[105px] w-full" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Skeleton className="h-[125px] w-full" />
+          <Skeleton className="h-[125px] w-full" />
+          <Skeleton className="h-[125px] w-full" />
         </div>
-        {/* Puedes agregar más skeletons para las otras secciones si quieres */}
       </div>
     );
   }
 
-  // Estadísticas usando los datos reales de organizaciones y datos básicos de catálogos
+  // Estadísticas usando los datos reales
   const stats = [
     {
       title: "Organizaciones Totales",
       value: (organizationStats?.total || 0).toString(),
       description: `${organizationStats?.pending || 0} pendientes de aprobación`,
       icon: Building2,
-      color: "text-primary"
+      color: "text-primary",
+      link: "/admin/organizations"
     },
     {
-      title: "Organizaciones Activas",
-      value: (organizationStats?.approved || 0).toString(),
-      description: `${organizationStats?.suspended || 0} suspendidas`,
+      title: "Estudiantes Activos",
+      value: (studentStats?.active || 0).toString(),
+      description: `${studentStats?.total || 0} registrados en total`,
+      icon: Users,
+      color: "text-success",
+      link: "/admin/students"
+    },
+    {
+      title: "Ofertas Pendientes",
+      value: (offerStats?.pending || 0).toString(),
+      description: `${offerStats?.active || 0} ofertas activas`,
+      icon: FileText,
+      color: "text-warning",
+      link: "/admin/offers"
+    },
+    {
+      title: "Ofertas Aprobadas",
+      value: (offerStats?.approved || 0).toString(),
+      description: `${offerStats?.total || 0} ofertas en total`,
       icon: CheckCircle,
-      color: "text-success"
-    },
-    {
-      title: "Elementos de Catálogo",
-      value: items.length.toString(),
-      description: "Tecnologías, posiciones, modalidades",
-      icon: Database,
-      color: "text-secondary"
-    },
-    {
-      title: "Organizaciones Rechazadas",
-      value: (organizationStats?.rejected || 0).toString(),
-      description: "Requieren revisión",
-      icon: Shield,
-      color: "text-warning"
+      color: "text-success",
+      link: "/admin/offers"
     }
   ];
 
   const quickActions = [
     {
       title: "Gestionar Estudiantes",
-      description: "Administrar estudiantes",
+      description: "Administrar estudiantes registrados",
       icon: Users,
-      href: "/admin/users"
+      href: "/admin/students"
     },
     {
       title: "Gestionar Organizaciones",
@@ -95,71 +108,94 @@ const AdminDashboard: React.FC = () => {
     },
     {
       title: "Gestionar Ofertas",
-      description: "Supervisar, aprobar y gestionar todas las ofertas",
+      description: "Supervisar y aprobar todas las ofertas",
       icon: BarChart3,
       href: "/admin/offers"
     },
     {
       title: "Configuración",
-      description: "Ajustes del sistema",
+      description: "Gestionar catálogos del sistema",
       icon: Settings,
-      href: "/admin/settings"
+      href: "/admin/catalogs"
     }
   ];
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Panel de Control</h1>
-        <p className="text-muted-foreground">
-          Bienvenido al dashboard administrativo
-        </p>
+      <div className="bg-gradient-hero rounded-lg p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Panel de Control - Administrador</h1>
+            <p className="text-white/80">
+              Gestiona organizaciones, estudiantes y ofertas del sistema
+            </p>
+          </div>
+          <div className="hidden md:block">
+            <Shield className="h-16 w-16 text-white/20" />
+          </div>
+        </div>
       </div>
 
+      {/* Error Alerts si hay errores en alguna estadística */}
+      {(studentStatsError || offerStatsError) && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {studentStatsError && <div>• {studentStatsError}</div>}
+            {offerStatsError && <div>• {offerStatsError}</div>}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="shadow-card hover:shadow-floating transition-all duration-300">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <Icon className={`h-5 w-5 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">{stat.description}</p>
-              </CardContent>
-            </Card>
+            <Link key={index} to={stat.link}>
+              <Card className="shadow-card hover:shadow-floating transition-all duration-300 h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <Icon className={`h-5 w-5 ${stat.color}`} />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                  <p className="text-xs text-muted-foreground">{stat.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
           );
         })}
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {quickActions.map((action, index) => (
-          <Card key={index} className="shadow-card hover:shadow-floating transition-all duration-300">
-            <CardHeader>
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-secondary/20 rounded-lg">
-                  <action.icon className="h-5 w-5 text-secondary" />
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Acciones Rápidas</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {quickActions.map((action, index) => (
+            <Card key={index} className="shadow-card hover:shadow-floating transition-all duration-300 flex flex-col">
+              <CardHeader className="flex-1">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <action.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <CardTitle className="text-base">{action.title}</CardTitle>
+                    <CardDescription className="text-xs line-clamp-2">{action.description}</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-lg">{action.title}</CardTitle>
-                  <CardDescription>{action.description}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" asChild>
-                <Link to={action.href}>Acceder</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to={action.href}>Acceder</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );

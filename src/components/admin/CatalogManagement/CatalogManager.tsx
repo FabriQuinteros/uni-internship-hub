@@ -102,7 +102,7 @@ const CatalogManager: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Gestión de Catálogos</h1>
           <p className="text-muted-foreground">
-            Administra todos los tipos de catálogos: tecnologías, puestos, duraciones, ubicaciones y modalidades.
+            Gestiona tecnologías, puestos, duraciones, ubicaciones y modalidades disponibles en la plataforma.
           </p>
         </div>
         
@@ -136,10 +136,7 @@ const CatalogManager: React.FC = () => {
 
       {/* Catalog Tabs */}
       <Card>
-        <CardHeader>
-          <CardTitle>Catálogos</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Tabs value={selectedCatalogType} onValueChange={handleTabChange}>
             <TabsList className="grid w-full grid-cols-6">
               {catalogTypes.map((type) => {

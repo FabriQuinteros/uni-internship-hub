@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -5,99 +6,67 @@ import { HeroButton } from "@/components/ui/button-variants";
 import { 
   User, 
   FileText, 
-  Send, 
-  Heart, 
   CheckCircle, 
-  Clock, 
-  XCircle,
-  TrendingUp,
+  Clock,
   Award,
   BookOpen,
-  WifiOff
+  Search,
+  AlertCircle
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useStudentProfile } from "@/hooks/use-student-profile";
+import { useEffect } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const StudentDashboard = () => {
-  const profileCompleteness = 85;
-  
-  const stats = [
-    {
-      title: "Postulaciones Activas",
-      value: "5",
-      description: "En proceso de revisión",
-      icon: Send,
-      color: "text-primary"
-    },
-    {
-      title: "Ofertas Favoritas",
-      value: "12",
-      description: "Guardadas para postular",
-      icon: Heart,
-      color: "text-destructive"
-    },
-    {
-      title: "Perfil Completado",
-      value: `${profileCompleteness}%`,
-      description: "Faltan algunos datos",
-      icon: User,
-      color: "text-secondary"
-    },
-    {
-      title: "Ofertas Nuevas",
-      value: "8",
-      description: "Esta semana",
-      icon: TrendingUp,
-      color: "text-warning"
-    }
-  ];
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { profile, loading, error, fetchProfile } = useStudentProfile();
 
-  const recentApplications = [
-    {
-      id: 1,
-      company: "TechSolutions Inc.",
-      position: "Desarrollador Frontend",
-      status: "pending",
-      appliedDate: "2024-01-15",
-      type: "Remoto"
-    },
-    {
-      id: 2,
-      company: "InnovaCorp",
-      position: "Analista de Sistemas",
-      status: "accepted",
-      appliedDate: "2024-01-12",
-      type: "Presencial"
-    },
-    {
-      id: 3,
-      company: "DataTech Solutions",
-      position: "Data Science Intern",
-      status: "rejected",
-      appliedDate: "2024-01-10",
-      type: "Híbrido"
-    }
-  ];
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="secondary" className="bg-warning/10 text-warning border-warning/20">
-          <Clock className="w-3 h-3 mr-1" />
-          Pendiente
-        </Badge>;
-      case 'accepted':
-        return <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Aceptada
-        </Badge>;
-      case 'rejected':
-        return <Badge variant="secondary" className="bg-destructive/10 text-destructive border-destructive/20">
-          <XCircle className="w-3 h-3 mr-1" />
-          Rechazada
-        </Badge>;
-      default:
-        return <Badge variant="outline">Desconocido</Badge>;
-    }
+  // Calcular completitud del perfil basado en campos reales
+  const calculateProfileCompleteness = () => {
+    if (!profile) return 0;
+    
+    const fields = [
+      profile.first_name,
+      profile.last_name,
+      profile.legajo,
+      profile.phone,
+      profile.location_id,
+      profile.academic_formation,
+      profile.availability_id
+    ];
+    
+    const completedFields = fields.filter(Boolean).length;
+    return Math.round((completedFields / fields.length) * 100);
   };
+
+  const profileCompleteness = calculateProfileCompleteness();
+  
+  // Determinar campos faltantes
+  const getMissingFields = () => {
+    if (!profile) return [];
+    const missing = [];
+    
+    if (!profile.academic_formation) missing.push("Formación académica");
+    if (!profile.location_id) missing.push("Ubicación");
+    if (!profile.phone) missing.push("Teléfono");
+    if (!profile.availability_id) missing.push("Disponibilidad");
+    
+    return missing;
+  };  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gradient-hero rounded-lg p-6 text-white">
+          <h1 className="text-2xl font-bold mb-2">Cargando...</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -105,9 +74,11 @@ const StudentDashboard = () => {
       <div className="bg-gradient-hero rounded-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-2">¡Bienvenida, María!</h1>
+            <h1 className="text-2xl font-bold mb-2">
+              ¡Bienvenido/a{profile?.first_name ? `, ${profile.first_name}` : ''}!
+            </h1>
             <p className="text-white/80">
-              Tienes 3 nuevas ofertas que podrían interesarte
+              Explora las ofertas disponibles y completa tu perfil para mejorar tu visibilidad
             </p>
           </div>
           <div className="hidden md:block">
@@ -116,28 +87,16 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index} className="shadow-card hover:shadow-floating transition-all duration-300">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <Icon className={`h-5 w-5 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">{stat.description}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      {/* Main Content Grid */}
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* Profile Completion */}
         <Card className="shadow-card">
           <CardHeader>
@@ -159,6 +118,7 @@ const StudentDashboard = () => {
             </div>
             
             <div className="space-y-2">
+              {/* Información básica siempre presente */}
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center space-x-2">
                   <CheckCircle className="h-4 w-4 text-success" />
@@ -167,100 +127,122 @@ const StudentDashboard = () => {
                 <Badge variant="secondary" className="bg-success/10 text-success">Completo</Badge>
               </div>
               
+              {/* Formación académica */}
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-success" />
-                  <span>CV actualizado</span>
+                  {profile?.academic_formation ? (
+                    <CheckCircle className="h-4 w-4 text-success" />
+                  ) : (
+                    <Clock className="h-4 w-4 text-warning" />
+                  )}
+                  <span>Formación académica</span>
                 </span>
-                <Badge variant="secondary" className="bg-success/10 text-success">Completo</Badge>
+                <Badge 
+                  variant="secondary" 
+                  className={profile?.academic_formation ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}
+                >
+                  {profile?.academic_formation ? "Completo" : "Pendiente"}
+                </Badge>
               </div>
               
+              {/* Ubicación */}
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-warning" />
-                  <span>Habilidades técnicas</span>
+                  {profile?.location_id ? (
+                    <CheckCircle className="h-4 w-4 text-success" />
+                  ) : (
+                    <Clock className="h-4 w-4 text-warning" />
+                  )}
+                  <span>Ubicación</span>
                 </span>
-                <Badge variant="secondary" className="bg-warning/10 text-warning">Pendiente</Badge>
+                <Badge 
+                  variant="secondary" 
+                  className={profile?.location_id ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}
+                >
+                  {profile?.location_id ? "Completo" : "Pendiente"}
+                </Badge>
+              </div>
+
+              {/* Disponibilidad */}
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center space-x-2">
+                  {profile?.availability_id ? (
+                    <CheckCircle className="h-4 w-4 text-success" />
+                  ) : (
+                    <Clock className="h-4 w-4 text-warning" />
+                  )}
+                  <span>Disponibilidad</span>
+                </span>
+                <Badge 
+                  variant="secondary" 
+                  className={profile?.availability_id ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}
+                >
+                  {profile?.availability_id ? "Completo" : "Pendiente"}
+                </Badge>
               </div>
             </div>
 
-            <HeroButton variant="primary" size="default" className="w-full">
-              Completar Perfil
+            <HeroButton 
+              variant="primary" 
+              size="default" 
+              className="w-full"
+              onClick={() => navigate('/student/profile')}
+            >
+              {profileCompleteness === 100 ? "Ver Perfil" : "Completar Perfil"}
             </HeroButton>
           </CardContent>
         </Card>
 
-        {/* Recent Applications */}
-        <Card className="lg:col-span-2 shadow-card">
+        {/* Quick Actions */}
+        <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <FileText className="h-5 w-5 text-primary" />
-              <span>Postulaciones Recientes</span>
+              <span>Acciones Rápidas</span>
             </CardTitle>
             <CardDescription>
-              Estado de tus últimas aplicaciones
+              Explora ofertas y gestiona tu perfil
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentApplications.map((application) => (
-                <div
-                  key={application.id}
-                  className="flex items-center justify-between p-4 border rounded-lg bg-gradient-card"
-                >
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground">{application.position}</h4>
-                    <p className="text-sm text-muted-foreground">{application.company}</p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {application.type}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        Aplicado: {new Date(application.appliedDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    {getStatusBadge(application.status)}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-4 pt-4 border-t">
-              <HeroButton variant="secondary" size="default" className="w-full">
-                Ver Todas las Postulaciones
-              </HeroButton>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle>Acciones Rápidas</CardTitle>
-          <CardDescription>
-            Herramientas frecuentemente utilizadas
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <HeroButton variant="primary" className="h-12 flex items-center justify-center">
-              <FileText className="mr-2 h-4 w-4" />
-              Buscar Ofertas
+          <CardContent className="space-y-3">
+            <HeroButton 
+              variant="primary" 
+              className="w-full h-12 flex items-center justify-center"
+              onClick={() => navigate('/student/offers')}
+            >
+              <Search className="mr-2 h-4 w-4" />
+              Explorar Ofertas
             </HeroButton>
-            <HeroButton variant="secondary" className="h-12 flex items-center justify-center">
+            
+            <HeroButton 
+              variant="secondary" 
+              className="w-full h-12 flex items-center justify-center"
+              onClick={() => navigate('/student/profile')}
+            >
               <User className="mr-2 h-4 w-4" />
               Editar Perfil
             </HeroButton>
-            <HeroButton variant="primary" className="h-12 flex items-center justify-center">
-              <Heart className="mr-2 h-4 w-4" />
-              Mis Favoritos
+
+            <HeroButton 
+              variant="primary" 
+              className="w-full h-12 flex items-center justify-center"
+              onClick={() => navigate('/student/applications')}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Mis Postulaciones
             </HeroButton>
-          </div>
-        </CardContent>
-      </Card>
+
+            {profileCompleteness < 100 && (
+              <Alert className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  Completa tu perfil al 100% para aumentar tus posibilidades de ser seleccionado
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

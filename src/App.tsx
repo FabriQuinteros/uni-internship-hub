@@ -12,11 +12,12 @@ import RegisterOrganization from "./pages/auth/RegisterOrganization";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import StudentProfilePage from "./pages/dashboard/StudentProfilePage";
 import StudentOffersPage from "./pages/dashboard/StudentOffersPage";
+import StudentApplicationsPage from "./pages/dashboard/StudentApplicationsPage";
 import OrganizationDashboard from "./pages/dashboard/OrganizationDashboard";
 import OrganizationProfilePage from "./pages/dashboard/OrganizationProfilePage";
 import OrganizationOffersPage from './pages/organization/OrganizationOffersPage';
-
 import OrganizationOfferForm from './pages/organization/OrganizationOfferForm';
+import OfferApplicationsPage from './pages/organization/OfferApplicationsPage';
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminOffersManagementPage from "./pages/admin/AdminOffersManagementPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
@@ -72,8 +73,7 @@ const App = () => (
                   <Route path="dashboard" element={<StudentDashboard />} />
                   <Route path="profile" element={<StudentProfilePage />} />
                   <Route path="offers" element={<StudentOffersPage />} />
-                  <Route path="applications" element={<div>Mis Postulaciones</div>} />
-                  <Route path="favorites" element={<div>Favoritos</div>} />
+                  <Route path="applications" element={<StudentApplicationsPage />} />
                   <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>
@@ -90,8 +90,7 @@ const App = () => (
                   <Route path="offers" element={<OrganizationOffersPage />} />
                   <Route path="offers/new" element={<OrganizationOfferForm />} />
                   <Route path="offers/:offerId/edit" element={<OrganizationOfferForm />} />
-                  <Route path="applications" element={<div>Postulaciones Recibidas</div>} />
-                  <Route path="analytics" element={<div>Estadísticas</div>} />
+                  <Route path="offers/:offerId/applications" element={<OfferApplicationsPage />} />
                   <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>
@@ -104,13 +103,13 @@ const App = () => (
               <DashboardLayout userRole="admin">
                 <Routes>
                   <Route path="dashboard" element={<AdminDashboardPage />} />
-                  <Route path="users" element={<StudentManagement />} />
                   <Route path="students" element={<StudentManagement />} />
                   <Route path="organizations" element={<OrganizationManagementPage />} />
                   <Route path="offers" element={<AdminOffersManagementPage />} />
                   <Route path="catalogs" element={<CatalogsPage />} />
-                  <Route path="settings" element={<div>Configuración</div>} />
-                  <Route path="reports" element={<div>Reportes</div>} />
+                  {/* Rutas deshabilitadas hasta implementar funcionalidad */}
+                  {/* <Route path="settings" element={<div>Configuración</div>} /> */}
+                  {/* <Route path="reports" element={<div>Reportes</div>} /> */}
                   <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>

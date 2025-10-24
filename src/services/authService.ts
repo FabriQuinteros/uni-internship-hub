@@ -130,20 +130,24 @@ class AuthService {
    * Realiza el logout del usuario
    */
   async logout(): Promise<void> {
-    try {
-      // Intentar llamar al endpoint de logout si hay token
-      const token = this.getToken();
-      if (token) {
+    // Limpiar el token INMEDIATAMENTE (sincrónico)
+    const token = this.getToken();
+    localStorage.removeItem(this.TOKEN_KEY);
+    
+    // Intentar llamar al endpoint de logout en segundo plano si había token
+    if (token) {
+      try {
         await fetch(`${this.BASE_URL}/api/auth/logout`, {
           method: 'POST',
-          headers: this.getAuthHeaders(),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
         });
+      } catch (error) {
+        console.log('Error en logout del servidor:', error);
+        // No es crítico si falla, el token ya fue eliminado localmente
       }
-    } catch (error) {
-      console.log('Error en logout:', error);
-    } finally {
-      // SIEMPRE limpiar el token localmente
-      localStorage.removeItem(this.TOKEN_KEY);
     }
   }
 

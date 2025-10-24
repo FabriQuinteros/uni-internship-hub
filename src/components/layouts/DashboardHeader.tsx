@@ -95,9 +95,11 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/auth/login');
+  const handleLogout = async () => {
+    // Redirigir primero para evitar cualquier delay visual
+    navigate('/auth/login', { replace: true });
+    // Luego hacer el logout en segundo plano
+    await logout();
   };
 
   return (
