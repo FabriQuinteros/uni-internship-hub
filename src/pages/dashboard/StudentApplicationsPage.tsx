@@ -75,7 +75,7 @@ const StudentApplicationsPage = () => {
     }
   };
 
-  const getStatusBadge = (status: 'pending' | 'accepted' | 'rejected') => {
+  const getStatusBadge = (status: 'pending' | 'accepted' | 'rejected' | 'finalized') => {
     switch (status) {
       case 'pending':
         return (
@@ -96,6 +96,13 @@ const StudentApplicationsPage = () => {
           <Badge variant="secondary" className="bg-destructive/10 text-destructive border-destructive/20">
             <XCircle className="w-3 h-3 mr-1" />
             Rechazada
+          </Badge>
+        );
+      case 'finalized':
+        return (
+          <Badge variant="secondary" className="bg-muted text-muted-foreground border-muted">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Finalizada
           </Badge>
         );
     }
@@ -204,11 +211,11 @@ const StudentApplicationsPage = () => {
               </div>
 
               {/* Mensaje de rechazo */}
-              {application.status === 'rejected' && application.rejection_reason && (
+              {application.status === 'rejected' && application.rejectionReason && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="text-sm">
-                    <strong>Motivo:</strong> {application.rejection_reason}
+                    <strong>Motivo:</strong> {application.rejectionReason}
                   </AlertDescription>
                 </Alert>
               )}

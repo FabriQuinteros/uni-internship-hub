@@ -15,9 +15,16 @@ export interface OfferApplication {
   student_name: string;
   student_legajo: string;
   student_email: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  student_phone?: string;
+  student_avatar?: string;
+  student_skills?: string[];
+  career?: string;
+  university?: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'finalized';
   applied_at: string;
   message?: string;
+  rejectionReason?: string; // Alineado con backend
+  evaluated_at?: string;
   student_profile?: {
     phone?: string;
     location?: string;
@@ -28,7 +35,7 @@ export interface OfferApplication {
 }
 
 export interface ApplicationsFilters {
-  status?: 'pending' | 'accepted' | 'rejected';
+  status?: 'pending' | 'accepted' | 'rejected' | 'finalized';
   page?: number;
   limit?: number;
 }
@@ -44,8 +51,8 @@ interface ApplicationsResponse {
 }
 
 interface EvaluateApplicationRequest {
-  decision: 'accepted' | 'rejected';
-  message?: string;
+  status: 'accepted' | 'rejected';
+  rejectionReason?: string; // Obligatorio cuando status='rejected'
 }
 
 export const useOrganizationApplications = () => {
@@ -106,8 +113,20 @@ export const useOrganizationApplications = () => {
     data: EvaluateApplicationRequest
   ): Promise<boolean> => {
     try {
+      // Validar que si es rejected, tenga rejectionReason
+      if (data.status === 'rejected' && !data.rejectionReason) {
+        setError('El motivo de rechazo es obligatorio');
+        return false;
+      }
+
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.APPLICATIONS.EVALUATE(applicationId)}`;
-      await httpClient.put(url, data);
+      const response = await httpClient.put(url, data);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al evaluar la postulación');
+      }
+      
       return true;
     } catch (err: any) {
       const errorMessage = err.message || 'Error al evaluar la postulación';

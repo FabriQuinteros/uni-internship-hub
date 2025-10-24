@@ -20,6 +20,7 @@ import OrganizationOfferForm from './pages/organization/OrganizationOfferForm';
 import OfferApplicationsPage from './pages/organization/OfferApplicationsPage';
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminOffersManagementPage from "./pages/admin/AdminOffersManagementPage";
+import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
 import CatalogsPage from "./pages/admin/CatalogsPage";
 import OrganizationManagementPage from "./pages/admin/OrganizationManagementPage";
 import StudentManagement from "./pages/admin/StudentManagement";
@@ -106,6 +107,7 @@ const App = () => (
                   <Route path="students" element={<StudentManagement />} />
                   <Route path="organizations" element={<OrganizationManagementPage />} />
                   <Route path="offers" element={<AdminOffersManagementPage />} />
+                  <Route path="applications" element={<AdminApplicationsPage />} />
                   <Route path="catalogs" element={<CatalogsPage />} />
                   {/* Rutas deshabilitadas hasta implementar funcionalidad */}
                   {/* <Route path="settings" element={<div>Configuración</div>} /> */}

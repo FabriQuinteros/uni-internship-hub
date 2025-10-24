@@ -13,7 +13,8 @@ import {
   Shield,
   Database,
   GraduationCap,
-  Building2
+  Building2,
+  FileCheck
 } from "lucide-react";
 
 import {
@@ -121,6 +122,12 @@ const navigationItems = {
       url: "/admin/offers",
       icon: Database,
       description: "Todas las ofertas del sistema"
+    },
+    {
+      title: "Gestión de Postulaciones",
+      url: "/admin/applications",
+      icon: FileCheck,
+      description: "Revisar y aprobar postulaciones"
     },
     {
       title: "Configuración",

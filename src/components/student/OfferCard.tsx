@@ -15,7 +15,8 @@ import {
   Briefcase,
   Users,
   Eye,
-  AlertCircle
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import { StudentOffer, formatDeadline, getShiftLabel, getShiftIcon } from '@/types/student-offers';
 import { useCatalogStore } from '@/store/unifiedCatalogStore';
@@ -86,12 +87,20 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onViewDetails }) =>
               {offer.organization_name || 'Organización'}
             </CardDescription>
           </div>
-          {isClosingSoon() && (
-            <Badge variant="destructive" className="shrink-0 text-xs">
-              <AlertCircle className="h-3 w-3 mr-1" />
-              Cierra pronto
-            </Badge>
-          )}
+          <div className="flex flex-col gap-2 shrink-0">
+            {offer.has_applied && (
+              <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Ya postulado
+              </Badge>
+            )}
+            {isClosingSoon() && !offer.has_applied && (
+              <Badge variant="destructive" className="text-xs">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Cierra pronto
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -172,10 +181,11 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onViewDetails }) =>
           <Button 
             onClick={() => onViewDetails(offer.id)}
             className="w-full"
-            variant="default"
+            variant={offer.has_applied ? "outline" : "default"}
+            disabled={offer.has_applied}
           >
             <Eye className="h-4 w-4 mr-2" />
-            Ver Detalles
+            {offer.has_applied ? 'Ya postulado' : 'Ver Detalles'}
           </Button>
         </div>
       </CardContent>

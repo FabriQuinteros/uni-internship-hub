@@ -33,6 +33,8 @@ export interface StudentOffer {
   duration_name?: string;
   location_name?: string;
   organization_name?: string;
+  has_applied?: boolean; // Si el estudiante ya se postuló
+  application_status?: 'pending' | 'accepted' | 'rejected' | 'finalized'; // Estado de la postulación
 }
 
 /**

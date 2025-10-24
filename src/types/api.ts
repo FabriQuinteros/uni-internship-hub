@@ -18,7 +18,7 @@ export interface ApiResponse<T = any> {
   type?: 'validation' | 'not_found' | 'server_error' | 'unknown';
 }
 
-export type ErrorType = 'validation' | 'not_found' | 'server_error' | 'unknown';
+export type ErrorType = 'validation' | 'validation_error' | 'not_found' | 'conflict' | 'forbidden' | 'server_error' | 'unknown';
 
 export interface ApiHandlerResult<T = any> {
   success: boolean;

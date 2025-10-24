@@ -19,8 +19,10 @@ import { useStudentOffers } from '@/hooks/use-student-offers';
 import { OffersFilterPanel } from '@/components/student/OffersFilterPanel';
 import { OfferCard } from '@/components/student/OfferCard';
 import { OfferDetailModal } from '@/components/student/OfferDetailModal';
+import { ApplyConfirmationModal } from '@/components/student/ApplyConfirmationModal';
 import { useToast } from '@/hooks/use-toast';
 import { useCatalogStore } from '@/store/unifiedCatalogStore';
+import { useApplyOffer } from '@/hooks/use-apply-offer';
 
 const StudentOffersPage = () => {
   const { toast } = useToast();
@@ -40,9 +42,14 @@ const StudentOffersPage = () => {
     goToPage,
     loadOfferDetail,
     clearSelectedOffer,
+    refreshOffers,
   } = useStudentOffers();
 
+  const { applying, error: applyError, applyToOffer, reset: resetApply } = useApplyOffer();
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [selectedOfferId, setSelectedOfferId] = useState<number | null>(null);
 
   // Cargar catálogos al montar el componente
   const loadAllCatalogs = useCatalogStore(state => state.loadAllCatalogs);
@@ -63,13 +70,37 @@ const StudentOffersPage = () => {
   };
 
   const handleApply = (offerId: number) => {
-    // TODO: Implementar lógica de postulación
-    toast({
-      title: 'Postulación Enviada',
-      description: 'Tu postulación ha sido registrada exitosamente. Recibirás una confirmación por email.',
-      variant: 'default',
-    });
-    handleCloseModal();
+    setSelectedOfferId(offerId);
+    setIsApplyModalOpen(true);
+  };
+
+  const handleConfirmApply = async (message?: string) => {
+    if (!selectedOfferId) return;
+
+    const success = await applyToOffer(selectedOfferId, message ? { message } : undefined);
+    
+    if (success) {
+      toast({
+        title: '¡Postulación Enviada!',
+        description: 'Tu postulación ha sido registrada exitosamente. Recibirás notificaciones sobre su estado.',
+        variant: 'default',
+      });
+      setIsApplyModalOpen(false);
+      setSelectedOfferId(null);
+      handleCloseModal();
+      resetApply();
+      
+      // Refrescar la lista de ofertas para actualizar el estado "has_applied"
+      await refreshOffers();
+    }
+  };
+
+  const handleCloseApplyModal = () => {
+    if (!applying) {
+      setIsApplyModalOpen(false);
+      setSelectedOfferId(null);
+      resetApply();
+    }
   };
 
   return (
@@ -238,6 +269,16 @@ const StudentOffersPage = () => {
         onClose={handleCloseModal}
         loading={loadingDetail}
         onApply={handleApply}
+      />
+
+      {/* Modal de Confirmación de Postulación */}
+      <ApplyConfirmationModal
+        open={isApplyModalOpen}
+        onClose={handleCloseApplyModal}
+        onConfirm={handleConfirmApply}
+        offerTitle={selectedOffer?.title}
+        loading={applying}
+        error={applyError}
       />
     </div>
   );

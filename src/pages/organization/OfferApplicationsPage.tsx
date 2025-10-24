@@ -100,9 +100,19 @@ const OfferApplicationsPage = () => {
   const handleEvaluate = async () => {
     if (!evaluationModal.application || !evaluationModal.decision) return;
 
+    // Validar que si es rejected, tenga mensaje
+    if (evaluationModal.decision === 'rejected' && !evaluationMessage.trim()) {
+      toast({
+        title: "Campo requerido",
+        description: "Debes proporcionar un motivo para rechazar la postulación",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const success = await evaluateApplication(evaluationModal.application.id, {
-      decision: evaluationModal.decision,
-      message: evaluationMessage || undefined
+      status: evaluationModal.decision,
+      rejectionReason: evaluationModal.decision === 'rejected' ? evaluationMessage : undefined
     });
 
     if (success) {
@@ -126,7 +136,7 @@ const OfferApplicationsPage = () => {
     }
   };
 
-  const getStatusBadge = (status: 'pending' | 'accepted' | 'rejected') => {
+  const getStatusBadge = (status: 'pending' | 'accepted' | 'rejected' | 'finalized') => {
     switch (status) {
       case 'pending':
         return (
@@ -147,6 +157,13 @@ const OfferApplicationsPage = () => {
           <Badge variant="secondary" className="bg-destructive/10 text-destructive border-destructive/20">
             <XCircle className="w-3 h-3 mr-1" />
             Rechazada
+          </Badge>
+        );
+      case 'finalized':
+        return (
+          <Badge variant="secondary" className="bg-muted text-muted-foreground border-muted">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Finalizada
           </Badge>
         );
     }
@@ -369,18 +386,30 @@ const OfferApplicationsPage = () => {
           <div className="space-y-4 py-4">
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Mensaje para el estudiante (opcional)
+                {evaluationModal.decision === 'rejected' 
+                  ? 'Motivo del rechazo (obligatorio)' 
+                  : 'Mensaje para el estudiante (opcional)'
+                }
               </label>
               <Textarea
                 placeholder={
                   evaluationModal.decision === 'accepted'
                     ? "¡Felicitaciones! Nos pondremos en contacto contigo..."
-                    : "Gracias por tu interés. En esta ocasión..."
+                    : "Explica brevemente el motivo del rechazo..."
                 }
                 value={evaluationMessage}
                 onChange={(e) => setEvaluationMessage(e.target.value)}
                 rows={4}
+                className={evaluationModal.decision === 'rejected' && !evaluationMessage.trim() 
+                  ? 'border-destructive' 
+                  : ''
+                }
               />
+              {evaluationModal.decision === 'rejected' && !evaluationMessage.trim() && (
+                <p className="text-xs text-destructive mt-1">
+                  * Este campo es obligatorio al rechazar una postulación
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>

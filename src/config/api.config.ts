@@ -71,7 +71,7 @@ export const API_CONFIG = {
                 APPLICATIONS: (id: number) => `/api/organizations/offers/${id}/applications`,
             },
             APPLICATIONS: {
-                EVALUATE: (id: number) => `/api/organizations/applications/${id}/evaluate`,
+                EVALUATE: (id: number) => `/api/organizations/applications/${id}/status`,
             },
         },
         ADMIN: {
@@ -80,6 +80,13 @@ export const API_CONFIG = {
                 DECISION: (id: number) => `/api/admin/offers/${id}/decision`,
                 DETAILS: (id: number) => `/api/admin/offers/${id}`,
                 STATS: '/api/admin/offers/stats',
+            },
+            APPLICATIONS: {
+                LIST: '/api/admin/applications',
+                DETAILS: (id: number) => `/api/admin/applications/${id}`,
+                APPROVE: (id: number) => `/api/admin/applications/${id}/approve`,
+                REJECT: (id: number) => `/api/admin/applications/${id}/reject`,
+                STATS: '/api/admin/applications/stats',
             },
         },
         NOTIFICATIONS: {
@@ -97,6 +104,7 @@ export const API_CONFIG = {
             OFFERS: {
                 LIST: '/api/students/offers',
                 DETAILS: (id: number) => `/api/students/offers/${id}`,
+                APPLY: (id: number) => `/api/students/offers/${id}/apply`,
             },
             APPLICATIONS: {
                 LIST: '/api/students/applications',

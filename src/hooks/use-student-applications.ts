@@ -12,10 +12,12 @@ export interface StudentApplication {
   offer_id: number;
   offer_title: string;
   organization_name: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  organization_logo?: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'finalized';
   applied_at: string;
   message?: string;
-  rejection_reason?: string;
+  rejectionReason?: string; // Alineado con backend (camelCase)
+  evaluated_at?: string;
   offer_details?: {
     position: string;
     modality: string;
@@ -24,7 +26,7 @@ export interface StudentApplication {
 }
 
 export interface ApplicationsFilters {
-  status?: 'pending' | 'accepted' | 'rejected';
+  status?: 'pending' | 'accepted' | 'rejected' | 'finalized';
   page?: number;
   limit?: number;
 }

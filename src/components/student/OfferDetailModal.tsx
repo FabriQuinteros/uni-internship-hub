@@ -270,17 +270,36 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
 
             {/* Botón de postulación */}
             <div className="pt-4 border-t">
-              <Button 
-                onClick={() => onApply && onApply(offer.id)}
-                className="w-full"
-                size="lg"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Postularme a esta Oferta
-              </Button>
-              <p className="text-xs text-center text-muted-foreground mt-2">
-                Recibirás una confirmación por email una vez enviada tu postulación
-              </p>
+              {offer.has_applied ? (
+                <>
+                  <Button 
+                    className="w-full"
+                    size="lg"
+                    variant="outline"
+                    disabled
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Ya te postulaste a esta oferta
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground mt-2">
+                    Puedes ver el estado de tu postulación en "Mis Postulaciones"
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    onClick={() => onApply && onApply(offer.id)}
+                    className="w-full"
+                    size="lg"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Postularme a esta Oferta
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground mt-2">
+                    Recibirás una confirmación por email una vez enviada tu postulación
+                  </p>
+                </>
+              )}
             </div>
           </>
         ) : null}
