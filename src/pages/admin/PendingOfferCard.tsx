@@ -127,7 +127,7 @@ const PendingOfferCard: React.FC<PendingOfferCardProps> = ({
               <DollarSign className="h-4 w-4 text-green-600" />
               <div>
                 <p className="font-medium">${offer.salary.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">Salario</p>
+                <p className="text-xs text-muted-foreground">Incentivo económico</p>
               </div>
             </div>
           )}

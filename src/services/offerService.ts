@@ -11,17 +11,33 @@ const offerServiceInternal = {
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.CREATE}?orgID=${orgID}`,
         offer
       );
-      
+
       if (!response.ok) {
+        // Try to parse backend error body to return a helpful message
+        let serverMsg = response.statusText;
+        try {
+          const errBody = await response.json();
+          if (errBody && (errBody.message || errBody.error)) {
+            serverMsg = errBody.message || errBody.error;
+          } else {
+            serverMsg = JSON.stringify(errBody);
+          }
+        } catch (e) {
+          try {
+            serverMsg = await response.text();
+          } catch {
+            // keep statusText
+          }
+        }
         return {
           success: false,
-          message: `Error ${response.status}: ${response.statusText}`,
-          error: `Error al crear oferta`,
+          message: `Error ${response.status}: ${serverMsg}`,
+          error: serverMsg,
           type: 'server_error' as const,
           data: undefined
         };
       }
-      
+
       const result = await response.json() as Offer;
       
       return {
@@ -47,17 +63,25 @@ const offerServiceInternal = {
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.UPDATE(id)}?orgID=${orgID}`,
         offer
       );
-      
+
       if (!response.ok) {
+        let serverMsg = response.statusText;
+        try {
+          const errBody = await response.json();
+          if (errBody && (errBody.message || errBody.error)) serverMsg = errBody.message || errBody.error;
+          else serverMsg = JSON.stringify(errBody);
+        } catch {
+          try { serverMsg = await response.text(); } catch {}
+        }
         return {
           success: false,
-          message: `Error ${response.status}: ${response.statusText}`,
-          error: `Error al actualizar oferta`,
+          message: `Error ${response.status}: ${serverMsg}`,
+          error: serverMsg,
           type: 'server_error' as const,
           data: undefined
         };
       }
-      
+
       const result = await response.json() as Offer;
       
       return {
@@ -83,17 +107,25 @@ const offerServiceInternal = {
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.SEND_TO_APPROVAL(id)}?orgID=${orgID}`,
         null
       );
-      
+
       if (!response.ok) {
+        let serverMsg = response.statusText;
+        try {
+          const errBody = await response.json();
+          if (errBody && (errBody.message || errBody.error)) serverMsg = errBody.message || errBody.error;
+          else serverMsg = JSON.stringify(errBody);
+        } catch {
+          try { serverMsg = await response.text(); } catch {}
+        }
         return {
           success: false,
-          message: `Error ${response.status}: ${response.statusText}`,
-          error: `Error al enviar oferta a aprobación`,
+          message: `Error ${response.status}: ${serverMsg}`,
+          error: serverMsg,
           type: 'server_error' as const,
           data: undefined
         };
       }
-      
+
       const result = await response.json() as Offer;
       
       return {
@@ -116,17 +148,25 @@ const offerServiceInternal = {
   async get(id: number): Promise<ApiHandlerResult<Offer>> {
     try {
       const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.GET(id)}`);
-      
+
       if (!response.ok) {
+        let serverMsg = response.statusText;
+        try {
+          const errBody = await response.json();
+          if (errBody && (errBody.message || errBody.error)) serverMsg = errBody.message || errBody.error;
+          else serverMsg = JSON.stringify(errBody);
+        } catch {
+          try { serverMsg = await response.text(); } catch {}
+        }
         return {
           success: false,
-          message: `Error ${response.status}: ${response.statusText}`,
-          error: `Error al obtener oferta`,
+          message: `Error ${response.status}: ${serverMsg}`,
+          error: serverMsg,
           type: 'server_error' as const,
           data: undefined
         };
       }
-      
+
       const result = await response.json() as Offer;
       
       return {
@@ -151,17 +191,25 @@ const offerServiceInternal = {
       const response = await httpClient.delete(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.DELETE(id)}?orgID=${orgID}`
       );
-      
+
       if (!response.ok) {
+        let serverMsg = response.statusText;
+        try {
+          const errBody = await response.json();
+          if (errBody && (errBody.message || errBody.error)) serverMsg = errBody.message || errBody.error;
+          else serverMsg = JSON.stringify(errBody);
+        } catch {
+          try { serverMsg = await response.text(); } catch {}
+        }
         return {
           success: false,
-          message: `Error ${response.status}: ${response.statusText}`,
-          error: `Error al eliminar oferta`,
+          message: `Error ${response.status}: ${serverMsg}`,
+          error: serverMsg,
           type: 'server_error' as const,
           data: undefined
         };
       }
-      
+
       return {
         success: true,
         message: 'Oferta eliminada exitosamente',

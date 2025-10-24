@@ -6,8 +6,20 @@ import { organizationService } from '@/services/organizationService';
 import { offerService } from '@/services/offerService';
 import { useAuth } from '@/hooks/use-auth';
 import { Offer } from '@/types/api';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
-export default function OrganizationOfferForm() {
+interface OrganizationOfferFormProps {
+  offerId?: number;
+  readOnly?: boolean;
+  onClose?: () => void;
+  onDeleted?: () => void;
+}
+
+export default function OrganizationOfferForm(props?: OrganizationOfferFormProps) {
   const navigate = useNavigate();
   const [technologies, setTechnologies] = useState<any[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
@@ -18,7 +30,10 @@ export default function OrganizationOfferForm() {
   const [saving, setSaving] = useState(false);
   const [createdOfferId, setCreatedOfferId] = useState<number | null>(null);
   const params = useParams();
-  const editingOfferId = params.offerId ? Number(params.offerId) : null;
+  const routeOfferId = params.offerId ? Number(params.offerId) : null;
+  const propOfferId = props?.offerId;
+  const editingOfferId = propOfferId ?? routeOfferId;
+  const isReadOnly = Boolean(props?.readOnly);
 
   useEffect(() => {
     (async () => {
@@ -79,12 +94,15 @@ export default function OrganizationOfferForm() {
 
     setSaving(true);
       try {
-        console.debug('Creating/updating offer payload:', { orgID, offer: form, editingOfferId });
+  // Ensure payload includes organization_id in snake_case as backend expects
+  const salaryValue = (form.salary == null || String(form.salary).trim() === '') ? 0 : Number(form.salary);
+  const payload = { ...(form || {}), organization_id: orgID, salary: salaryValue } as Partial<Offer>;
+        console.debug('Creating/updating offer payload:', { orgID, offer: payload, editingOfferId });
         let created;
         if (editingOfferId) {
-          created = await offerService.update(editingOfferId, form, orgID);
+          created = await offerService.update(editingOfferId, payload, orgID);
         } else {
-          created = await offerService.create(form, orgID);
+          created = await offerService.create(payload, orgID);
         }
         setCreatedOfferId(created.id || null);
         toast({ title: 'Borrador guardado', description: 'La oferta fue guardada como borrador.' });
@@ -102,7 +120,8 @@ export default function OrganizationOfferForm() {
             toast({ title: 'Usuario no encontrado en DB', description: `Intentando crear organización ${userEmail} en la base de datos...`, variant: 'default' });
             const devPassword = 'DevPass123!';
             await organizationService.register({ name: user?.name || 'Dev Org', email: userEmail, password: devPassword } as any);
-            const retry = await offerService.create(form, Number(user?.id || orgID));
+            const retryPayload = { ...(form || {}), organization_id: Number(user?.id || orgID) } as Partial<Offer>;
+            const retry = await offerService.create(retryPayload, Number(user?.id || orgID));
             setCreatedOfferId(retry.id || null);
             toast({ title: 'Borrador guardado', description: 'La oferta fue guardada como borrador.' });
             navigate('/organization/offers');
@@ -150,7 +169,10 @@ export default function OrganizationOfferForm() {
     try {
       await offerService.delete(idToDelete, orgID);
       toast({ title: 'Eliminada', description: 'La oferta fue eliminada.' });
-      navigate('/organization/offers');
+      // If parent provided an onClose or onDeleted handler, use it so we don't force navigation from a modal
+      if (props?.onDeleted) props.onDeleted();
+      if (props?.onClose) props.onClose();
+      else navigate('/organization/offers');
     } catch (err: any) {
       console.error('Error deleting offer', err);
       toast({ title: 'Error', description: err?.message || String(err), variant: 'destructive' });
@@ -160,159 +182,207 @@ export default function OrganizationOfferForm() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Crear Oferta</h1>
-      {/* Contenedor principal con borde y fondo similar al dashboard */}
-      <div className="space-y-4 max-w-2xl p-6 border rounded-lg bg-card/50">
-        <div>
-          <label className="block text-sm font-medium">Puesto</label>
-          <select className="mt-1 block w-full" value={form.position_id || ''} onChange={e => handleChange('position_id', Number(e.target.value))}>
-            <option value="">-- seleccionar --</option>
-            {positions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </div>
+    <div className="p-6 flex justify-center">
+      <div className="w-full max-w-4xl">
+        <h1 className="text-2xl font-bold mb-4">{isReadOnly ? 'Detalles de la Oferta' : (editingOfferId ? 'Editar Oferta' : 'Crear Oferta')}</h1>
 
-        <div>
-          <label className="block text-sm font-medium">Título</label>
-          <input className="mt-1 block w-full" value={form.title || ''} onChange={e => handleChange('title', e.target.value)} />
-        </div>
+        <div className="space-y-6">
+          {/* Sección: Información básica */}
+          <Card className="bg-card/50">
+            <CardHeader>
+              <CardTitle className="text-primary">Información básica</CardTitle>
+              <CardDescription>Datos principales de la oferta</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Puesto</Label>
+                <select disabled={isReadOnly} className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2" value={form.position_id || ''} onChange={e => handleChange('position_id', Number(e.target.value))}>
+                  <option value="">-- seleccionar --</option>
+                  {positions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
 
-        <div>
-          <label className="block text-sm font-medium">Descripción</label>
-          <textarea className="mt-1 block w-full" value={form.description || ''} onChange={e => handleChange('description', e.target.value)} />
-        </div>
+              <div>
+                <Label>Título</Label>
+                <Input disabled={isReadOnly} value={form.title || ''} onChange={e => handleChange('title', e.target.value)} />
+              </div>
 
-        <div>
-          <label className="block text-sm font-medium">Requisitos</label>
-          <textarea className="mt-1 block w-full" value={form.requirements || ''} onChange={e => handleChange('requirements', e.target.value)} />
-        </div>
+              <div>
+                <Label>Descripción</Label>
+                <Textarea disabled={isReadOnly} value={form.description || ''} onChange={e => handleChange('description', e.target.value)} rows={5} />
+              </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium">Modalidad</label>
-            <select
-              className="mt-1 block w-full"
-              value={form.modality_id || ''}
-              onChange={e => {
-                const id = Number(e.target.value);
-                handleChange('modality_id', id);
-                // map the selected modality name to the backend enum
-                const mod = modalities.find(m => m.id === id);
-                if (mod && mod.name) {
-                  const n = String(mod.name).toLowerCase();
-                  let normalized = '';
-                  if (n.includes('pres') || n.includes('presencial')) normalized = 'presential';
-                  else if (n.includes('hibr') || n.includes('híbr') || n.includes('híbrid') || n.includes('híbrido') || n.includes('hibrido')) normalized = 'hybrid';
-                  else if (n.includes('virt') || n.includes('remot') || n.includes('remote') || n.includes('virtual')) normalized = 'remote';
-                  // only set modality string if we computed a known normalized value
-                  if (normalized) handleChange('modality', normalized);
-                }
-              }}
-            >
-              <option value="">-- seleccionar --</option>
-              {modalities.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
+              <div>
+                <Label>Requisitos</Label>
+                <Textarea disabled={isReadOnly} value={form.requirements || ''} onChange={e => handleChange('requirements', e.target.value)} rows={3} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sección: Contrato y modalidad */}
+          <Card className="bg-card/50">
+            <CardHeader>
+              <CardTitle className="text-primary">Detalles de la oferta</CardTitle>
+              <CardDescription>Modalidad, duración, ubicación y remuneración</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                  <div>
+                  <Label>Modalidad</Label>
+                  <select disabled={isReadOnly} className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2" value={form.modality_id || ''} onChange={e => {
+                    const id = Number(e.target.value);
+                    handleChange('modality_id', id);
+                    const mod = modalities.find(m => m.id === id);
+                    if (mod && mod.name) {
+                      const n = String(mod.name).toLowerCase();
+                      let normalized = '';
+                      if (n.includes('pres') || n.includes('presencial')) normalized = 'presential';
+                      else if (n.includes('hibr') || n.includes('híbr') || n.includes('híbr') || n.includes('hibrido')) normalized = 'hybrid';
+                      else if (n.includes('virt') || n.includes('remot') || n.includes('remote') || n.includes('virtual')) normalized = 'remote';
+                      if (normalized) handleChange('modality', normalized);
+                      else handleChange('modality', String(mod.name));
+                    }
+                  }}>
+                    <option value="">-- seleccionar --</option>
+                    {modalities.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                </div>
+
+                  <div>
+                  <Label>Duración</Label>
+                  <select disabled={isReadOnly} className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2" value={form.duration_id || ''} onChange={e => {
+                    const id = Number(e.target.value);
+                    handleChange('duration_id', id);
+                    const sel = durations.find(d => d.id === id);
+                    if (sel && sel.name) handleChange('duration', String(sel.name));
+                  }}>
+                    <option value="">-- seleccionar --</option>
+                    {durations.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <Label>Ubicación</Label>
+                <select disabled={isReadOnly} className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2" value={form.location_id || ''} onChange={e => {
+                  const id = Number(e.target.value);
+                  handleChange('location_id', id);
+                  const sel = locations.find(l => l.id === id);
+                  if (sel && sel.name) handleChange('location', String(sel.name));
+                }}>
+                  <option value="">-- seleccionar --</option>
+                  {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <Label>Incentivo económico (opcional)</Label>
+                <Input disabled={isReadOnly} type="number" value={form.salary ?? ''} onChange={e => handleChange('salary', e.target.value === '' ? undefined : Number(e.target.value))} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sección: Aptitudes y logística */}
+          <Card className="bg-card/50">
+            <CardHeader>
+              <CardTitle className="text-primary">Tecnologías y logística</CardTitle>
+              <CardDescription>Selecciona tecnologías, cupos y fechas</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="mb-2">Tecnologías / Aptitudes</Label>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-auto p-2 border rounded">
+                  {technologies.map(t => {
+                    const checked = (form.technologies || []).includes(t.id);
+                    return (
+                      <label key={t.id} className="flex items-center space-x-2 p-1 rounded hover:bg-background">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={e => {
+                            const current = Array.isArray(form.technologies) ? [...form.technologies] : [];
+                            if (e.target.checked) {
+                              current.push(t.id);
+                            } else {
+                              const idx = current.indexOf(t.id);
+                              if (idx >= 0) current.splice(idx, 1);
+                            }
+                            handleChange('technologies', current);
+                          }}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm">{t.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label>Cupos</Label>
+                  <Input type="number" value={form.quota || ''} onChange={e => handleChange('quota', Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>Fecha inicio publicación</Label>
+                  <Input type="date" value={form.published_start_date || ''} onChange={e => handleChange('published_start_date', e.target.value)} />
+                </div>
+                <div>
+                  <Label>Fecha límite postulación</Label>
+                  <Input type="date" value={form.application_deadline || ''} onChange={e => handleChange('application_deadline', e.target.value)} />
+                </div>
+              </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Carga horaria semanal</Label>
+                  <Input disabled={isReadOnly} type="number" value={form.weekly_hours || ''} onChange={e => handleChange('weekly_hours', Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>Turno</Label>
+                  <select disabled={isReadOnly} className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2" value={form.shift || ''} onChange={e => handleChange('shift', e.target.value)}>
+                    <option value="">-- seleccionar --</option>
+                    <option value="morning">Mañana</option>
+                    <option value="afternoon">Tarde</option>
+                    <option value="mixed">Mixto</option>
+                  </select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Acciones */}
+          <div className="flex space-x-4 mt-4">
+            {!isReadOnly && (
+              <div className="flex-1">
+                <Button variant="default" className="w-full" disabled={saving} onClick={() => handleCreateDraft()}>Guardar como borrador</Button>
+              </div>
+            )}
+
+            {!isReadOnly && (editingOfferId || createdOfferId) && (
+              <div className="flex-1">
+                <Button variant="secondary" className="w-full" disabled={saving || !createdOfferId} onClick={() => handleSend()}>Enviar a aprobación</Button>
+              </div>
+            )}
+
+            {/* When in read-only (details) mode, show a close and delete action */}
+            {isReadOnly ? (
+              <>
+                <div className="flex-1">
+                  <Button variant="outline" className="w-full" onClick={() => props?.onClose ? props.onClose() : navigate('/organization/offers')}>Cerrar</Button>
+                </div>
+                <div className="flex-1">
+                  <Button variant="destructive" className="w-full" disabled={saving} onClick={() => handleDelete()}>Eliminar</Button>
+                </div>
+              </>
+            ) : (
+              editingOfferId && (form.status === 'draft') && (
+                <div className="flex-1">
+                  <Button variant="destructive" className="w-full" disabled={saving} onClick={() => handleDelete()}>Eliminar</Button>
+                </div>
+              )
+            )}
           </div>
-
-          <div>
-            <label className="block text-sm font-medium">Duración</label>
-            <select className="mt-1 block w-full" value={form.duration_id || ''} onChange={e => handleChange('duration_id', Number(e.target.value))}>
-              <option value="">-- seleccionar --</option>
-              {durations.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Ubicación</label>
-          <select className="mt-1 block w-full" value={form.location_id || ''} onChange={e => handleChange('location_id', Number(e.target.value))}>
-            <option value="">-- seleccionar --</option>
-            {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Remuneración (USD)</label>
-          <input type="number" className="mt-1 block w-full" value={form.salary || ''} onChange={e => handleChange('salary', Number(e.target.value))} />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Tecnologías / Aptitudes</label>
-          <div className="grid grid-cols-2 gap-2 max-h-48 overflow-auto p-2 border rounded">
-            {technologies.map(t => {
-              const checked = (form.technologies || []).includes(t.id);
-              return (
-                <label key={t.id} className="flex items-center space-x-2 p-1 rounded hover:bg-background">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={e => {
-                      const current = Array.isArray(form.technologies) ? [...form.technologies] : [];
-                      if (e.target.checked) {
-                        current.push(t.id);
-                      } else {
-                        const idx = current.indexOf(t.id);
-                        if (idx >= 0) current.splice(idx, 1);
-                      }
-                      handleChange('technologies', current);
-                    }}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm">{t.name}</span>
-                </label>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium">Cupos</label>
-            <input type="number" className="mt-1 block w-full" value={form.quota || ''} onChange={e => handleChange('quota', Number(e.target.value))} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Fecha inicio publicación</label>
-            <input type="date" className="mt-1 block w-full" value={form.published_start_date || ''} onChange={e => handleChange('published_start_date', e.target.value)} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Fecha límite postulación</label>
-            <input type="date" className="mt-1 block w-full" value={form.application_deadline || ''} onChange={e => handleChange('application_deadline', e.target.value)} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium">Carga horaria semanal</label>
-            <input type="number" className="mt-1 block w-full" value={form.weekly_hours || ''} onChange={e => handleChange('weekly_hours', Number(e.target.value))} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Turno</label>
-            <select className="mt-1 block w-full" value={form.shift || ''} onChange={e => handleChange('shift', e.target.value)}>
-              <option value="">-- seleccionar --</option>
-              <option value="morning">Mañana</option>
-              <option value="afternoon">Tarde</option>
-              <option value="mixed">Mixto</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Botones en contenedores con borde para hacerlos más visibles */}
-        <div className="flex space-x-4 mt-4">
-          <div className="p-2 border rounded w-full">
-            <button className="w-full btn btn-primary" disabled={saving} onClick={() => handleCreateDraft()}>Guardar como borrador</button>
-          </div>
-          {/* Mostrar el botón de enviar sólo cuando estamos editando un borrador (o ya tenemos createdOfferId) */}
-          {(editingOfferId || createdOfferId) && (
-            <div className="p-2 border rounded w-full">
-              <button className="w-full btn btn-secondary" disabled={saving || !createdOfferId} onClick={() => handleSend()}>Enviar a aprobación</button>
-            </div>
-          )}
-          {/* Mostrar botón Eliminar sólo si estamos editando un borrador */}
-          {editingOfferId && (form.status === 'draft') && (
-            <div className="p-2 border rounded w-full">
-              <button className="w-full btn btn-destructive" disabled={saving} onClick={() => handleDelete()}>Eliminar</button>
-            </div>
-          )}
         </div>
       </div>
     </div>
