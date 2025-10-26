@@ -20,11 +20,16 @@ export interface OfferApplication {
   student_skills?: string[];
   career?: string;
   university?: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'finalized';
+  student_location?: string;
+  student_availability?: string;
+  status: 'pending' | 'approved' | 'accepted' | 'rejected' | 'finalized';
   applied_at: string;
   message?: string;
-  rejectionReason?: string; // Alineado con backend
-  evaluated_at?: string;
+  rejection_reason?: string; // Nombre correcto del backend
+  rejectionReason?: string; // Mantener para compatibilidad
+  admin_reviewed_at?: string;
+  org_evaluated_at?: string;
+  evaluated_at?: string; // Mantener para compatibilidad
   student_profile?: {
     phone?: string;
     location?: string;
@@ -35,24 +40,22 @@ export interface OfferApplication {
 }
 
 export interface ApplicationsFilters {
-  status?: 'pending' | 'accepted' | 'rejected' | 'finalized';
+  status?: 'pending' | 'approved' | 'accepted' | 'rejected' | 'finalized';
   page?: number;
   limit?: number;
 }
 
 interface ApplicationsResponse {
-  data: OfferApplication[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    total_pages: number;
-  };
+  applications: OfferApplication[];
+  total: number;
+  approvedCount?: number;
+  acceptedCount?: number;
+  rejectedCount?: number;
 }
 
 interface EvaluateApplicationRequest {
   status: 'accepted' | 'rejected';
-  rejectionReason?: string; // Obligatorio cuando status='rejected'
+  reason?: string; // Campo correcto según backend (obligatorio cuando status='rejected')
 }
 
 export const useOrganizationApplications = () => {
@@ -94,8 +97,32 @@ export const useOrganizationApplications = () => {
       
       const data: ApplicationsResponse = await response.json();
 
-      setApplications(data.data);
-      setPagination(data.pagination);
+      // Manejar ambos formatos de respuesta
+      if (Array.isArray(data)) {
+        // Formato antiguo: array directo
+        setApplications(data);
+        setPagination(prev => ({
+          ...prev,
+          total: data.length,
+          total_pages: 1
+        }));
+      } else if (data.applications) {
+        // Formato nuevo: { applications: [], total: X, approvedCount: Y, ... }
+        setApplications(data.applications);
+        setPagination(prev => ({
+          ...prev,
+          total: data.total || data.applications.length,
+          total_pages: Math.ceil((data.total || data.applications.length) / prev.limit)
+        }));
+      } else {
+        // Formato con data wrapper
+        setApplications([]);
+        setPagination(prev => ({
+          ...prev,
+          total: 0,
+          total_pages: 0
+        }));
+      }
     } catch (err: any) {
       const errorMessage = err.message || 'Error al cargar las postulaciones';
       setError(errorMessage);
@@ -113,8 +140,8 @@ export const useOrganizationApplications = () => {
     data: EvaluateApplicationRequest
   ): Promise<boolean> => {
     try {
-      // Validar que si es rejected, tenga rejectionReason
-      if (data.status === 'rejected' && !data.rejectionReason) {
+      // Validar que si es rejected, tenga reason
+      if (data.status === 'rejected' && !data.reason) {
         setError('El motivo de rechazo es obligatorio');
         return false;
       }

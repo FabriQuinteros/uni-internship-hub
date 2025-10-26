@@ -37,11 +37,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { OfferDetailModal } from "@/components/student/OfferDetailModal";
+import { studentOfferService } from "@/services/studentOfferService";
+import { StudentOfferDetail } from "@/types/student-offers";
 
 const StudentApplicationsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'accepted' | 'rejected'>('all');
+  
+  // Estado para el modal de detalle de oferta
+  const [selectedOffer, setSelectedOffer] = useState<StudentOfferDetail | null>(null);
+  const [offerModalOpen, setOfferModalOpen] = useState(false);
+  const [loadingOffer, setLoadingOffer] = useState(false);
+  
+  // Estado para el diálogo de confirmación de cancelación
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [applicationToCancel, setApplicationToCancel] = useState<number | null>(null);
 
   const { 
     applications, 
@@ -75,13 +97,62 @@ const StudentApplicationsPage = () => {
     }
   };
 
-  const getStatusBadge = (status: 'pending' | 'accepted' | 'rejected' | 'finalized') => {
+  const openCancelDialog = (applicationId: number) => {
+    setApplicationToCancel(applicationId);
+    setCancelDialogOpen(true);
+  };
+
+  const confirmCancelApplication = async () => {
+    if (applicationToCancel) {
+      await handleCancelApplication(applicationToCancel);
+      setCancelDialogOpen(false);
+      setApplicationToCancel(null);
+    }
+  };
+
+  const handleViewOfferDetail = async (offerId: number, applicationStatus?: string) => {
+    setLoadingOffer(true);
+    setOfferModalOpen(true);
+    
+    try {
+      const offer = await studentOfferService.getOfferDetail(offerId);
+      // Marcar como ya aplicado y agregar el estado de la aplicación
+      setSelectedOffer({
+        ...offer,
+        has_applied: true,
+        application_status: applicationStatus as any
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cargar el detalle de la oferta",
+        variant: "destructive"
+      });
+      setOfferModalOpen(false);
+    } finally {
+      setLoadingOffer(false);
+    }
+  };
+
+  const handleCloseOfferModal = () => {
+    setOfferModalOpen(false);
+    setSelectedOffer(null);
+  };
+
+  const getStatusBadge = (status: 'pending' | 'approved' | 'accepted' | 'rejected' | 'finalized') => {
     switch (status) {
       case 'pending':
         return (
           <Badge variant="secondary" className="bg-warning/10 text-warning border-warning/20">
             <Clock className="w-3 h-3 mr-1" />
-            Pendiente
+            En Revisión
+          </Badge>
+        );
+      case 'approved':
+        return (
+          <Badge variant="secondary" className="bg-info/10 text-info border-info/20">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Aprobada por la Facultad
           </Badge>
         );
       case 'accepted':
@@ -116,7 +187,7 @@ const StudentApplicationsPage = () => {
           <div>
             <h1 className="text-2xl font-bold mb-2">Mis Postulaciones</h1>
             <p className="text-white/80">
-              {pagination.total > 0 
+              {pagination?.total > 0 
                 ? `Tienes ${pagination.total} ${pagination.total === 1 ? 'postulación' : 'postulaciones'}`
                 : 'Historial de tus postulaciones a ofertas de pasantías'
               }
@@ -139,7 +210,8 @@ const StudentApplicationsPage = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="pending">Pendientes</SelectItem>
+                <SelectItem value="pending">En Revisión</SelectItem>
+                <SelectItem value="approved">Aprobadas por Admin</SelectItem>
                 <SelectItem value="accepted">Aceptadas</SelectItem>
                 <SelectItem value="rejected">Rechazadas</SelectItem>
               </SelectContent>
@@ -147,6 +219,15 @@ const StudentApplicationsPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Info sobre cancelación */}
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription className="text-sm">
+          <strong>💡 Información:</strong> Puedes cancelar tus postulaciones mientras estén <strong>En Revisión</strong> o <strong>Aprobadas por Admin</strong>. 
+          Una vez que la organización las acepta o rechaza, ya no podrás cancelarlas.
+        </AlertDescription>
+      </Alert>
 
       {/* Error Alert */}
       {error && (
@@ -225,17 +306,21 @@ const StudentApplicationsPage = () => {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => navigate(`/student/offers`)}
+                  onClick={() => handleViewOfferDetail(application.offer_id, application.status)}
+                  className="flex-1"
                 >
-                  Ver oferta
+                  Ver detalle
                 </Button>
-                {application.status === 'pending' && (
+                
+                {/* Permitir cancelar solo en estados pending y approved */}
+                {(application.status === 'pending' || application.status === 'approved') && (
                   <Button 
-                    variant="outline" 
+                    variant="destructive" 
                     size="sm"
-                    className="text-destructive hover:bg-destructive/10"
-                    onClick={() => handleCancelApplication(application.id)}
+                    onClick={() => openCancelDialog(application.id)}
+                    className="flex-1"
                   >
+                    <XCircle className="h-4 w-4 mr-2" />
                     Cancelar postulación
                   </Button>
                 )}
@@ -268,6 +353,37 @@ const StudentApplicationsPage = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Modal de detalle de oferta */}
+      <OfferDetailModal
+        offer={selectedOffer}
+        open={offerModalOpen}
+        onClose={handleCloseOfferModal}
+        loading={loadingOffer}
+        onApply={undefined} // No permitir aplicar desde aquí (ya aplicó)
+      />
+
+      {/* Diálogo de confirmación para cancelar postulación */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cancelar postulación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Tu postulación será eliminada y no podrás recuperarla. 
+              Tendrás que volver a postularte si cambias de opinión.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, mantener postulación</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmCancelApplication}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sí, cancelar postulación
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

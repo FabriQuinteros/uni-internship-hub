@@ -13,7 +13,7 @@ export interface StudentApplication {
   offer_title: string;
   organization_name: string;
   organization_logo?: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'finalized';
+  status: 'pending' | 'approved' | 'accepted' | 'rejected' | 'finalized';
   applied_at: string;
   message?: string;
   rejectionReason?: string; // Alineado con backend (camelCase)
@@ -26,7 +26,7 @@ export interface StudentApplication {
 }
 
 export interface ApplicationsFilters {
-  status?: 'pending' | 'accepted' | 'rejected' | 'finalized';
+  status?: 'pending' | 'approved' | 'accepted' | 'rejected' | 'finalized';
   page?: number;
   limit?: number;
 }
@@ -69,10 +69,70 @@ export const useStudentApplications = () => {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       
-      const data: ApplicationsResponse = await response.json();
-
-      setApplications(data.data);
-      setPagination(data.pagination);
+      const result = await response.json();
+      
+      // Transformar campos de camelCase a snake_case si es necesario
+      const transformApplication = (app: any): StudentApplication => ({
+        id: app.id,
+        offer_id: app.offerId || app.offer_id,
+        offer_title: app.offerTitle || app.offer_title,
+        organization_name: app.organizationName || app.organization_name,
+        organization_logo: app.organizationLogo || app.organization_logo,
+        status: app.status,
+        applied_at: app.appliedAt || app.applied_at,
+        message: app.message,
+        rejectionReason: app.rejectionReason || app.rejection_reason,
+        evaluated_at: app.evaluatedAt || app.evaluated_at,
+        offer_details: app.offerDetails || app.offer_details
+      });
+      
+      // Verificar estructura de respuesta del backend
+      if (result.data) {
+        // Nuevo formato: { data: { applications: [...], total: X } }
+        if (result.data.applications && Array.isArray(result.data.applications)) {
+          const transformedApps = result.data.applications.map(transformApplication);
+          setApplications(transformedApps);
+          setPagination(prev => ({
+            ...prev,
+            total: result.data.total || transformedApps.length,
+            total_pages: Math.ceil((result.data.total || transformedApps.length) / prev.limit)
+          }));
+        }
+        // Formato alternativo: { data: [...] }
+        else if (Array.isArray(result.data)) {
+          const transformedApps = result.data.map(transformApplication);
+          setApplications(transformedApps);
+          
+          if (result.pagination) {
+            setPagination(result.pagination);
+          } else {
+            setPagination(prev => ({
+              ...prev,
+              total: transformedApps.length,
+              total_pages: 1
+            }));
+          }
+        }
+      } 
+      // Formato muy antiguo: array directo
+      else if (Array.isArray(result)) {
+        const transformedApps = result.map(transformApplication);
+        setApplications(transformedApps);
+        setPagination(prev => ({
+          ...prev,
+          total: transformedApps.length,
+          total_pages: 1
+        }));
+      }
+      // Sin datos
+      else {
+        setApplications([]);
+        setPagination(prev => ({
+          ...prev,
+          total: 0,
+          total_pages: 0
+        }));
+      }
     } catch (err: any) {
       const errorMessage = err.message || 'Error al cargar las postulaciones';
       setError(errorMessage);

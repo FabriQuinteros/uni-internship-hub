@@ -43,12 +43,12 @@ import {
 } from "lucide-react";
 import { useAdminApplications } from "@/hooks/use-admin-applications";
 import { useToast } from "@/hooks/use-toast";
-import { AdminApplication, ADMIN_STATUS_CONFIG, AdminReviewStatus } from "@/types/admin-applications";
+import { AdminApplication, ADMIN_STATUS_CONFIG, ApplicationStatus } from "@/types/admin-applications";
 
 const AdminApplicationsPage = () => {
   const { toast } = useToast();
   
-  const [statusFilter, setStatusFilter] = useState<AdminReviewStatus | 'all'>('pending_review');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'accepted'>('pending');
   const [searchTerm, setSearchTerm] = useState("");
   const [actionModal, setActionModal] = useState<{
     open: boolean;
@@ -81,7 +81,7 @@ const AdminApplicationsPage = () => {
   // Cargar postulaciones al montar y cuando cambie el filtro
   useEffect(() => {
     fetchApplications({ 
-      admin_status: statusFilter,
+      status: statusFilter === 'all' ? undefined : statusFilter,
       search: searchTerm || undefined,
       page: 1,
       limit: 20
@@ -90,7 +90,7 @@ const AdminApplicationsPage = () => {
 
   const handleSearch = () => {
     fetchApplications({ 
-      admin_status: statusFilter,
+      status: statusFilter === 'all' ? undefined : statusFilter,
       search: searchTerm || undefined,
       page: 1,
       limit: 20
@@ -160,7 +160,7 @@ const AdminApplicationsPage = () => {
       closeActionModal();
       // Recargar la lista
       fetchApplications({ 
-        admin_status: statusFilter,
+        status: statusFilter === 'all' ? undefined : statusFilter,
         search: searchTerm || undefined,
         page: pagination.page,
         limit: pagination.limit
@@ -174,31 +174,21 @@ const AdminApplicationsPage = () => {
     }
   };
 
-  const getAdminStatusBadge = (adminStatus: AdminReviewStatus) => {
-    const config = ADMIN_STATUS_CONFIG[adminStatus];
-    switch (adminStatus) {
-      case 'pending_review':
-        return (
-          <Badge variant="secondary" className="bg-warning/10 text-warning border-warning/20">
-            <Clock className="w-3 h-3 mr-1" />
-            {config.label}
-          </Badge>
-        );
-      case 'approved':
-        return (
-          <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            {config.label}
-          </Badge>
-        );
-      case 'rejected':
-        return (
-          <Badge variant="secondary" className="bg-destructive/10 text-destructive border-destructive/20">
-            <XCircle className="w-3 h-3 mr-1" />
-            {config.label}
-          </Badge>
-        );
-    }
+  const getAdminStatusBadge = (status: ApplicationStatus) => {
+    const config = ADMIN_STATUS_CONFIG[status];
+    const Icon = status === 'pending' ? Clock : status === 'approved' ? CheckCircle : status === 'accepted' ? CheckCircle : XCircle;
+    
+    return (
+      <Badge variant="secondary" className={`
+        ${status === 'pending' ? 'bg-warning/10 text-warning border-warning/20' : ''}
+        ${status === 'approved' ? 'bg-info/10 text-info border-info/20' : ''}
+        ${status === 'accepted' ? 'bg-success/10 text-success border-success/20' : ''}
+        ${status === 'rejected' ? 'bg-destructive/10 text-destructive border-destructive/20' : ''}
+      `}>
+        <Icon className="w-3 h-3 mr-1" />
+        {config.label}
+      </Badge>
+    );
   };
 
   return (
@@ -209,8 +199,14 @@ const AdminApplicationsPage = () => {
           <div>
             <h1 className="text-2xl font-bold mb-2">Gestión de Postulaciones</h1>
             <p className="text-white/80">
-              {pagination.total > 0 
-                ? `${pagination.total} ${pagination.total === 1 ? 'postulación' : 'postulaciones'} ${statusFilter === 'all' ? 'totales' : ADMIN_STATUS_CONFIG[statusFilter]?.label.toLowerCase() || ''}`
+              {pagination?.total > 0 
+                ? `${pagination.total} ${pagination.total === 1 ? 'postulación' : 'postulaciones'} ${
+                    statusFilter === 'all' ? 'totales' : 
+                    statusFilter === 'pending' ? 'pendientes' :
+                    statusFilter === 'approved' ? 'aprobadas' :
+                    statusFilter === 'rejected' ? 'rechazadas' :
+                    'aceptadas'
+                  }`
                 : 'Aprueba o rechaza las postulaciones de estudiantes'
               }
             </p>
@@ -233,8 +229,9 @@ const AdminApplicationsPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="pending_review">Pendientes de Revisión</SelectItem>
+                  <SelectItem value="pending">Pendientes</SelectItem>
                   <SelectItem value="approved">Aprobadas</SelectItem>
+                  <SelectItem value="accepted">Aceptadas</SelectItem>
                   <SelectItem value="rejected">Rechazadas</SelectItem>
                 </SelectContent>
               </Select>
@@ -287,36 +284,48 @@ const AdminApplicationsPage = () => {
             <Card key={application.id} className="shadow-card hover:shadow-floating transition-all duration-300">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-1 flex items-center gap-2">
+                  <div className="flex-1 space-y-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
                       <User className="h-5 w-5" />
                       {application.student_name}
                     </CardTitle>
-                    <CardDescription className="space-y-1">
+                    <div className="space-y-1 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4" />
                         <span>{application.student_email}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" />
-                        <span className="font-medium">{application.offer_title}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4" />
-                        <span>{application.offer_organization_name}</span>
-                      </div>
-                    </CardDescription>
+                      {application.student_legajo && (
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          <span>Legajo: {application.student_legajo}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {getAdminStatusBadge(application.admin_status)}
+                  {getAdminStatusBadge(application.status as any)}
+                </div>
+                
+                {/* Información de la oferta */}
+                <div className="mt-3 pt-3 border-t space-y-1">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">{application.offer_title}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Building2 className="h-4 w-4" />
+                    <span>{application.organization_name}</span>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Información adicional */}
-                <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                  <Badge variant="outline">{application.offer_position}</Badge>
-                  <Badge variant="outline">{application.offer_location}</Badge>
-                  <Badge variant="outline">{application.offer_modality}</Badge>
-                </div>
+                {/* Información adicional de la oferta */}
+                {(application.offer_position || application.offer_location || application.offer_modality) && (
+                  <div className="flex flex-wrap gap-2 text-sm">
+                    {application.offer_position && <Badge variant="outline">{application.offer_position}</Badge>}
+                    {application.offer_location && <Badge variant="outline">{application.offer_location}</Badge>}
+                    {application.offer_modality && <Badge variant="outline">{application.offer_modality}</Badge>}
+                  </div>
+                )}
 
                 {/* Mensaje del estudiante */}
                 {application.message && (
@@ -341,11 +350,11 @@ const AdminApplicationsPage = () => {
                 </div>
 
                 {/* Motivo de rechazo si existe */}
-                {application.admin_status === 'rejected' && application.admin_rejection_reason && (
+                {application.status === 'rejected' && application.rejection_reason && (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription className="text-sm">
-                      <strong>Motivo del rechazo:</strong> {application.admin_rejection_reason}
+                      <strong>Motivo del rechazo:</strong> {application.rejection_reason}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -362,7 +371,7 @@ const AdminApplicationsPage = () => {
                     Ver Detalles
                   </Button>
                   
-                  {application.admin_status === 'pending_review' && (
+                  {application.status === 'pending' && (
                     <>
                       <Button 
                         variant="default" 
@@ -492,10 +501,16 @@ const AdminApplicationsPage = () => {
                 <h4 className="font-semibold mb-2">Oferta</h4>
                 <div className="space-y-1 text-sm">
                   <p><strong>Título:</strong> {detailModal.application.offer_title}</p>
-                  <p><strong>Organización:</strong> {detailModal.application.offer_organization_name}</p>
-                  <p><strong>Posición:</strong> {detailModal.application.offer_position}</p>
-                  <p><strong>Ubicación:</strong> {detailModal.application.offer_location}</p>
-                  <p><strong>Modalidad:</strong> {detailModal.application.offer_modality}</p>
+                  <p><strong>Organización:</strong> {detailModal.application.organization_name}</p>
+                  {detailModal.application.offer_position && (
+                    <p><strong>Posición:</strong> {detailModal.application.offer_position}</p>
+                  )}
+                  {detailModal.application.offer_location && (
+                    <p><strong>Ubicación:</strong> {detailModal.application.offer_location}</p>
+                  )}
+                  {detailModal.application.offer_modality && (
+                    <p><strong>Modalidad:</strong> {detailModal.application.offer_modality}</p>
+                  )}
                 </div>
               </div>
 

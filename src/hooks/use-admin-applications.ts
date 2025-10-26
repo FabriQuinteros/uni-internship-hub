@@ -38,9 +38,8 @@ export const useAdminApplications = () => {
       
       if (filters.page) url.searchParams.append('page', filters.page.toString());
       if (filters.limit) url.searchParams.append('limit', filters.limit.toString());
-      if (filters.admin_status && filters.admin_status !== 'all') {
-        url.searchParams.append('admin_status', filters.admin_status);
-      }
+      
+      // El backend usa "status" para el filtro (pending, approved, rejected, accepted)
       if (filters.status && filters.status !== 'all') {
         url.searchParams.append('status', filters.status);
       }
@@ -52,15 +51,27 @@ export const useAdminApplications = () => {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       
-      const data: AdminApplicationsResponse = await response.json();
+      const result = await response.json();
 
-      setApplications(data.data.applications);
-      setPagination({
-        page: data.data.page,
-        limit: data.data.limit,
-        total: data.data.total,
-        total_pages: data.data.total_pages
-      });
+      // Manejo de respuesta del backend
+      if (result.data && result.data.applications) {
+        setApplications(result.data.applications);
+        setPagination({
+          page: result.data.page || 1,
+          limit: result.data.limit || 20,
+          total: result.data.total || 0,
+          total_pages: result.data.total_pages || 1
+        });
+      } else {
+        // Formato alternativo
+        setApplications([]);
+        setPagination({
+          page: 1,
+          limit: 20,
+          total: 0,
+          total_pages: 0
+        });
+      }
     } catch (err: any) {
       const errorMessage = err.message || 'Error al cargar las postulaciones';
       setError(errorMessage);

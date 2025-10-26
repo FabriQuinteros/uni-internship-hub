@@ -3,9 +3,9 @@
  */
 
 /**
- * Estado de revisión del administrador
+ * Estados de postulación según el backend
  */
-export type AdminReviewStatus = 'pending_review' | 'approved' | 'rejected';
+export type ApplicationStatus = 'pending' | 'approved' | 'accepted' | 'rejected';
 
 /**
  * Postulación vista desde administrador
@@ -15,24 +15,24 @@ export interface AdminApplication {
   student_id: number;
   offer_id: number;
   
-  // Estado de la postulación
-  status: 'pending' | 'accepted' | 'rejected' | 'finalized';
-  admin_status: AdminReviewStatus; // Estado de revisión del admin
+  // Estado de la postulación (único campo que usa el backend)
+  status: ApplicationStatus;
   
   // Fechas
   applied_at: string;
-  reviewed_at?: string; // Cuando el admin la revisó
-  evaluated_at?: string; // Cuando la organización la evaluó
+  admin_reviewed_at?: string; // Cuando el admin la revisó
+  admin_reviewed_by?: number; // ID del admin que la revisó
+  org_evaluated_at?: string; // Cuando la organización la evaluó
+  org_evaluated_by?: number; // ID de la org que la evaluó
   
   // Mensajes
   message?: string; // Mensaje del estudiante
-  admin_rejection_reason?: string; // Motivo de rechazo del admin
-  rejectionReason?: string; // Motivo de rechazo de la organización
+  rejection_reason?: string; // Motivo de rechazo (puede ser del admin o de la org)
   
   // Datos del estudiante
   student_name: string;
   student_email: string;
-  student_legajo: string;
+  student_legajo?: string; // FALTA EN BACKEND
   student_phone?: string;
   student_avatar?: string;
   student_career?: string;
@@ -41,10 +41,14 @@ export interface AdminApplication {
   
   // Datos de la oferta
   offer_title: string;
-  offer_position: string;
-  offer_organization_name: string;
-  offer_location: string;
-  offer_modality: string;
+  offer_position?: string; // FALTA EN BACKEND
+  offer_location?: string; // FALTA EN BACKEND
+  offer_modality?: string; // FALTA EN BACKEND
+  
+  // Datos de la organización
+  organization_id: number;
+  organization_name: string;
+  organization_logo?: string;
   
   // Perfil completo del estudiante (opcional)
   student_profile?: {
@@ -60,11 +64,12 @@ export interface AdminApplication {
  * Filtros para búsqueda de postulaciones de admin
  */
 export interface AdminApplicationsFilters {
-  admin_status?: AdminReviewStatus | 'all';
-  status?: 'pending' | 'accepted' | 'rejected' | 'finalized' | 'all';
+  status?: ApplicationStatus | 'all';
   search?: string; // Buscar por nombre estudiante u oferta
   page?: number;
   limit?: number;
+  offer_id?: number;
+  student_id?: number;
 }
 
 /**
@@ -74,10 +79,14 @@ export interface AdminApplicationsResponse {
   message: string;
   data: {
     applications: AdminApplication[];
-    page: number;
-    limit: number;
+    page?: number;
+    limit?: number;
     total: number;
-    total_pages: number;
+    total_pages?: number;
+    pending_count: number;
+    approved_count: number;
+    rejected_count: number;
+    accepted_count: number;
   };
 }
 
@@ -107,18 +116,24 @@ export interface RejectApplicationRequest {
  * Estadísticas de postulaciones para admin
  */
 export interface AdminApplicationsStats {
-  total: number;
-  pending_review: number;
-  approved: number;
-  rejected: number;
-  finalized: number;
+  total_applications: number;
+  pending_count: number;
+  approved_count: number;
+  rejected_count: number;
+  accepted_count: number;
+  approval_rate: number;
+  acceptance_rate: number;
 }
 
 /**
  * Configuración de estados para UI
+ * - pending: Esperando revisión del admin
+ * - approved: Pre-aprobada por admin, esperando evaluación de org
+ * - rejected: Rechazada (por admin o por org)
+ * - accepted: Aceptada por la organización
  */
 export const ADMIN_STATUS_CONFIG = {
-  pending_review: {
+  pending: {
     label: 'Pendiente de Revisión',
     variant: 'warning' as const,
     description: 'Esperando aprobación del administrador',
@@ -127,13 +142,19 @@ export const ADMIN_STATUS_CONFIG = {
   approved: {
     label: 'Aprobada',
     variant: 'success' as const,
-    description: 'Aprobada por el administrador',
+    description: 'Aprobada por el administrador, esperando evaluación de la organización',
     color: 'text-success'
   },
   rejected: {
-    label: 'Rechazada por Admin',
+    label: 'Rechazada',
     variant: 'destructive' as const,
-    description: 'Rechazada por el administrador',
+    description: 'Rechazada por el administrador o la organización',
     color: 'text-destructive'
+  },
+  accepted: {
+    label: 'Aceptada',
+    variant: 'default' as const,
+    description: 'Aceptada por la organización',
+    color: 'text-primary'
   }
 } as const;

@@ -40,7 +40,8 @@ import {
   GraduationCap,
   Calendar,
   Filter,
-  ArrowLeft
+  ArrowLeft,
+  Info
 } from "lucide-react";
 import { useOrganizationApplications, type OfferApplication } from "@/hooks/use-organization-applications";
 import { useToast } from "@/hooks/use-toast";
@@ -50,7 +51,7 @@ const OfferApplicationsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'accepted' | 'rejected'>('all');
   const [evaluationModal, setEvaluationModal] = useState<{
     open: boolean;
     application: OfferApplication | null;
@@ -112,7 +113,7 @@ const OfferApplicationsPage = () => {
 
     const success = await evaluateApplication(evaluationModal.application.id, {
       status: evaluationModal.decision,
-      rejectionReason: evaluationModal.decision === 'rejected' ? evaluationMessage : undefined
+      reason: evaluationModal.decision === 'rejected' ? evaluationMessage : undefined
     });
 
     if (success) {
@@ -136,13 +137,20 @@ const OfferApplicationsPage = () => {
     }
   };
 
-  const getStatusBadge = (status: 'pending' | 'accepted' | 'rejected' | 'finalized') => {
+  const getStatusBadge = (status: 'pending' | 'approved' | 'accepted' | 'rejected' | 'finalized') => {
     switch (status) {
       case 'pending':
         return (
           <Badge variant="secondary" className="bg-warning/10 text-warning border-warning/20">
             <Clock className="w-3 h-3 mr-1" />
             Pendiente
+          </Badge>
+        );
+      case 'approved':
+        return (
+          <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Pre-aprobada
           </Badge>
         );
       case 'accepted':
@@ -198,6 +206,69 @@ const OfferApplicationsPage = () => {
         </div>
       </div>
 
+      {/* Banner Informativo */}
+      <Alert className="bg-blue-50 border-blue-200">
+        <Info className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-900">
+          <strong>Flujo de Aprobación:</strong> Solo verás postulaciones <strong>pre-aprobadas por la administración</strong>. 
+          Estas han sido revisadas y cumplen con los requisitos básicos. Ahora puedes <strong>aceptarlas</strong> para confirmar al estudiante 
+          o <strong>rechazarlas</strong> indicando el motivo.
+        </AlertDescription>
+      </Alert>
+
+      {/* Estadísticas */}
+      {!loading && pagination.total > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="shadow-card">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Pre-aprobadas</p>
+                  <h3 className="text-2xl font-bold text-blue-600">
+                    {applications.filter(app => app.status === 'approved').length}
+                  </h3>
+                </div>
+                <div className="p-3 bg-blue-500/10 rounded-full">
+                  <Clock className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Aceptadas</p>
+                  <h3 className="text-2xl font-bold text-success">
+                    {applications.filter(app => app.status === 'accepted').length}
+                  </h3>
+                </div>
+                <div className="p-3 bg-success/10 rounded-full">
+                  <CheckCircle className="h-6 w-6 text-success" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Rechazadas</p>
+                  <h3 className="text-2xl font-bold text-destructive">
+                    {applications.filter(app => app.status === 'rejected').length}
+                  </h3>
+                </div>
+                <div className="p-3 bg-destructive/10 rounded-full">
+                  <XCircle className="h-6 w-6 text-destructive" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Filtros */}
       <Card className="shadow-card">
         <CardContent className="pt-6">
@@ -209,7 +280,7 @@ const OfferApplicationsPage = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="pending">Pendientes</SelectItem>
+                <SelectItem value="approved">Pre-aprobadas</SelectItem>
                 <SelectItem value="accepted">Aceptadas</SelectItem>
                 <SelectItem value="rejected">Rechazadas</SelectItem>
               </SelectContent>
@@ -321,7 +392,7 @@ const OfferApplicationsPage = () => {
                 </div>
 
                 {/* Acciones */}
-                {application.status === 'pending' && (
+                {application.status === 'approved' && (
                   <div className="flex gap-2 pt-2 border-t">
                     <Button 
                       variant="default" 
