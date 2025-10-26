@@ -64,6 +64,8 @@ export interface Offer {
   description?: string;
   requirements?: string;
   modality?: string;
+  duration?: string;
+  location?: string;
   duration_text?: string;
   location_text?: string;
   salary?: number;

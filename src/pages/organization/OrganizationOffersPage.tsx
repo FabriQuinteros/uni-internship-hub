@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,6 +24,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { offerService } from '@/services/offerService';
+import OrganizationOfferForm from './OrganizationOfferForm';
 import { Offer, OfferStatus } from '@/types/api';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -103,7 +111,7 @@ const OfferCard: React.FC<OfferCardProps> = ({
               <DollarSign className="h-4 w-4 text-green-600" />
               <div>
                 <p className="font-medium">${offer.salary.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">Salario</p>
+                <p className="text-xs text-muted-foreground">Incentivo económico</p>
               </div>
             </div>
           )}
@@ -286,6 +294,20 @@ export default function OrganizationOffersPage() {
     rejected: offers.filter(o => o.status === 'rejected').length,
   };
 
+  // Details modal state
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsOfferId, setDetailsOfferId] = useState<number | null>(null);
+
+  const openDetails = (offerId: number) => {
+    setDetailsOfferId(offerId);
+    setDetailsOpen(true);
+  };
+
+  const closeDetails = () => {
+    setDetailsOpen(false);
+    setDetailsOfferId(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -380,12 +402,35 @@ export default function OrganizationOffersPage() {
               offer={offer}
               onEdit={() => navigate(`/organization/offers/${offer.id}/edit`)}
               onSubmitForApproval={() => offer.id && handleSubmitForApproval(offer.id)}
-              onView={() => navigate(`/organization/offers/${offer.id}`)}
+              onView={() => openDetails(offer.id)}
               isSubmitting={offer.id ? submittingOffers.has(offer.id) : false}
             />
           ))}
         </div>
       )}
+      {/* Details dialog */}
+      <Dialog open={detailsOpen} onOpenChange={(open) => { if (!open) closeDetails(); setDetailsOpen(open); }}>
+        <DialogContent className="w-full sm:max-w-4xl max-h-[85vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Detalles de la oferta</DialogTitle>
+          </DialogHeader>
+          {detailsOfferId && (
+            <OrganizationOfferForm
+              offerId={detailsOfferId}
+              readOnly
+              onClose={() => {
+                closeDetails();
+              }}
+              onDeleted={async () => {
+                // after delete, refresh list
+                await loadOffers();
+                closeDetails();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
