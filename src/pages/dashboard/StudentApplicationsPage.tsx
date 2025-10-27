@@ -270,6 +270,21 @@ const StudentApplicationsPage = () => {
                 </div>
               )}
 
+              {/* Mensaje de felicitaciones para postulaciones aceptadas */}
+              {application.status === 'accepted' && (
+                <Alert className="bg-green-50 border-green-200">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-900">
+                    <strong className="block mb-1">¡Felicitaciones! 🎉</strong>
+                    <span className="text-sm">
+                      Tu postulación ha sido aceptada. La Facultad se pondrá en contacto contigo 
+                      a la brevedad para coordinar los próximos pasos y formalizar tu incorporación 
+                      a la pasantía. Mantente atento a tu correo electrónico.
+                    </span>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Fecha de postulación */}
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />

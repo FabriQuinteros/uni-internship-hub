@@ -18,7 +18,7 @@ import {
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
-import { StudentOffer, formatDeadline, getShiftLabel, getShiftIcon } from '@/types/student-offers';
+import { StudentOffer, formatDeadline, getShiftLabel } from '@/types/student-offers';
 import { useCatalogStore } from '@/store/unifiedCatalogStore';
 
 interface OfferCardProps {
@@ -128,7 +128,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onViewDetails }) =>
           <div className="flex items-center gap-2 text-sm">
             <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
             <span>{offer.weekly_hours}h/semana</span>
-            <span className="text-muted-foreground">• {getShiftIcon(offer.shift)} {getShiftLabel(offer.shift)}</span>
+            <span className="text-muted-foreground">• {getShiftLabel(offer.shift)}</span>
           </div>
 
           <div className="flex items-center gap-2 text-sm">

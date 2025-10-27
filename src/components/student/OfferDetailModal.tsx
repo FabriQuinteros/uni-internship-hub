@@ -21,7 +21,7 @@ import {
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
-import { StudentOfferDetail, formatDeadline, getShiftLabel, getShiftIcon } from '@/types/student-offers';
+import { StudentOfferDetail, formatDeadline, getShiftLabel } from '@/types/student-offers';
 import { useCatalogStore } from '@/store/unifiedCatalogStore';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -158,7 +158,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                       Horario
                     </div>
                     <div className="text-sm font-medium">
-                      {offer.weekly_hours}h/sem • {getShiftIcon(offer.shift)} {getShiftLabel(offer.shift)}
+                      {offer.weekly_hours}h/sem • {getShiftLabel(offer.shift)}
                     </div>
                   </div>
 

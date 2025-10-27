@@ -103,19 +103,13 @@ export interface StudentOffersState {
  */
 export const SHIFT_CONFIG = {
   morning: { 
-    label: 'Mañana', 
-    icon: '🌅',
-    description: 'Turno matutino'
+    label: 'Turno mañana',
   },
   afternoon: { 
-    label: 'Tarde', 
-    icon: '🌆',
-    description: 'Turno vespertino'
+    label: 'Turno tarde',
   },
   mixed: { 
-    label: 'Mixto', 
-    icon: '🔄',
-    description: 'Turnos rotativos o flexibles'
+    label: 'Jornada completa',
   },
 } as const;
 
@@ -124,13 +118,6 @@ export const SHIFT_CONFIG = {
  */
 export const getShiftLabel = (shift: 'morning' | 'afternoon' | 'mixed'): string => {
   return SHIFT_CONFIG[shift]?.label || shift;
-};
-
-/**
- * Helper para obtener el icono del turno
- */
-export const getShiftIcon = (shift: 'morning' | 'afternoon' | 'mixed'): string => {
-  return SHIFT_CONFIG[shift]?.icon || '⏰';
 };
 
 /**
