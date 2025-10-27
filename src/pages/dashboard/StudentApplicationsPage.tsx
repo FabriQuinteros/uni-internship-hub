@@ -211,7 +211,7 @@ const StudentApplicationsPage = () => {
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="pending">En Revisión</SelectItem>
-                <SelectItem value="approved">Aprobadas por Admin</SelectItem>
+                <SelectItem value="approved">Aprobadas por la Facultad</SelectItem>
                 <SelectItem value="accepted">Aceptadas</SelectItem>
                 <SelectItem value="rejected">Rechazadas</SelectItem>
               </SelectContent>
@@ -219,15 +219,6 @@ const StudentApplicationsPage = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Info sobre cancelación */}
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription className="text-sm">
-          <strong>💡 Información:</strong> Puedes cancelar tus postulaciones mientras estén <strong>En Revisión</strong> o <strong>Aprobadas por Admin</strong>. 
-          Una vez que la organización las acepta o rechaza, ya no podrás cancelarlas.
-        </AlertDescription>
-      </Alert>
 
       {/* Error Alert */}
       {error && (

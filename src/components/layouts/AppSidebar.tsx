@@ -58,12 +58,6 @@ const navigationItems = {
       url: "/student/applications",
       icon: Send,
       description: "Estado de aplicaciones"
-    },
-    {
-      title: "Favoritos",
-      url: "/student/favorites",
-      icon: Heart,
-      description: "Ofertas guardadas"
     }
   ],
   organization: [

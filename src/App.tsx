@@ -18,6 +18,7 @@ import OrganizationProfilePage from "./pages/dashboard/OrganizationProfilePage";
 import OrganizationOffersPage from './pages/organization/OrganizationOffersPage';
 import OrganizationOfferForm from './pages/organization/OrganizationOfferForm';
 import OfferApplicationsPage from './pages/organization/OfferApplicationsPage';
+import AllApplicationsPage from './pages/organization/AllApplicationsPage';
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminOffersManagementPage from "./pages/admin/AdminOffersManagementPage";
 import AdminApplicationsPage from "./pages/admin/AdminApplicationsPage";
@@ -92,6 +93,7 @@ const App = () => (
                   <Route path="offers/new" element={<OrganizationOfferForm />} />
                   <Route path="offers/:offerId/edit" element={<OrganizationOfferForm />} />
                   <Route path="offers/:offerId/applications" element={<OfferApplicationsPage />} />
+                  <Route path="applications" element={<AllApplicationsPage />} />
                   <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </DashboardLayout>
