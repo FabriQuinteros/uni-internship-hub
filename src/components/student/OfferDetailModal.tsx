@@ -21,9 +21,10 @@ import {
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
-import { StudentOfferDetail, formatDeadline, getShiftLabel, getShiftIcon } from '@/types/student-offers';
+import { StudentOfferDetail, formatDeadline, getShiftLabel, getShiftIcon, StudentApplication } from '@/types/student-offers';
 import { useCatalogStore } from '@/store/unifiedCatalogStore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useStudentOffers } from '@/hooks/use-student-offers';
 
 interface OfferDetailModalProps {
   offer: StudentOfferDetail | null;
@@ -40,6 +41,11 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
   loading = false,
   onApply
 }) => {
+  // Obtener información de postulación desde el hook
+  const { hasApplied, getApplication } = useStudentOffers();
+  
+  const application = offer ? getApplication(offer.id) : undefined;
+  const isApplied = offer ? hasApplied(offer.id) : false;
   // Obtener catálogos del store unificado con useMemo para cachear
   const catalogs = useCatalogStore(state => state.catalogs);
   
@@ -77,7 +83,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
   };
 
   const getTechnologies = () => {
-    if (!offer) return [];
+    if (!offer || !offer.technologies || offer.technologies.length === 0) return [];
     return offer.technologies
       .map(techId => technologies.find(t => t.id === techId))
       .filter(Boolean);
@@ -126,6 +132,35 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
 
             <ScrollArea className="max-h-[60vh] pr-4">
               <div className="space-y-6">
+                {/* Información de la organización */}
+                {(offer.organization_description || offer.organization_industry || offer.organization_address) && (
+                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-primary" />
+                      Sobre la Organización
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      {offer.organization_industry && (
+                        <div>
+                          <span className="text-muted-foreground">Industria: </span>
+                          <span className="font-medium">{offer.organization_industry}</span>
+                        </div>
+                      )}
+                      {offer.organization_address && (
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                          <span>{offer.organization_address}</span>
+                        </div>
+                      )}
+                      {offer.organization_description && (
+                        <p className="text-muted-foreground mt-2">
+                          {offer.organization_description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Información rápida */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
                   <div className="space-y-1">
@@ -149,7 +184,14 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                       <Calendar className="h-3 w-3" />
                       Duración
                     </div>
-                    <div className="text-sm font-medium">{getDurationName()}</div>
+                    <div className="text-sm font-medium">
+                      {getDurationName()}
+                      {offer.duration_months && offer.duration_months > 0 && (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({offer.duration_months} {offer.duration_months === 1 ? 'mes' : 'meses'})
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-1">
@@ -158,7 +200,17 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                       Horario
                     </div>
                     <div className="text-sm font-medium">
-                      {offer.weekly_hours}h/sem • {getShiftIcon(offer.shift)} {getShiftLabel(offer.shift)}
+                      {offer.weekly_hours}h/semana
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      Turno
+                    </div>
+                    <div className="text-sm font-medium">
+                      {getShiftIcon(offer.shift)} {getShiftLabel(offer.shift)}
                     </div>
                   </div>
 
@@ -172,7 +224,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                     </div>
                   </div>
 
-                  {offer.salary > 0 && (
+                  {offer.salary && offer.salary > 0 && (
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <DollarSign className="h-3 w-3" />
@@ -245,6 +297,43 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
 
                 <Separator />
 
+                {/* Información de postulación si existe */}
+                {isApplied && application && (
+                  <>
+                    <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-primary" />
+                        Información de tu Postulación
+                      </h4>
+                      <div className="text-sm space-y-2">
+                        <div>
+                          <span className="text-muted-foreground">Postulado el:</span>{" "}
+                          <span className="font-medium">
+                            {new Date(application.applied_at).toLocaleDateString('es-AR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                        {application.message && (
+                          <div>
+                            <span className="text-muted-foreground">Tu mensaje:</span>
+                            <p className="mt-1 text-foreground">{application.message}</p>
+                          </div>
+                        )}
+                        {application.rejection_reason && (
+                          <div className="text-destructive">
+                            <span className="font-medium">Motivo de rechazo:</span>
+                            <p className="mt-1">{application.rejection_reason}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Separator />
+                  </>
+                )}
+
                 {/* Fechas importantes */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-3 rounded-lg border bg-card">
@@ -270,7 +359,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
 
             {/* Botón de postulación */}
             <div className="pt-4 border-t">
-              {offer.has_applied ? (
+              {isApplied ? (
                 <>
                   <Button 
                     className="w-full"

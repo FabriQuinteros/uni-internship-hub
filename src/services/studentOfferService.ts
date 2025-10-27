@@ -11,7 +11,8 @@ import {
   StudentOfferDetail,
   StudentOffersResponse,
   StudentOfferDetailResponse,
-  StudentOffersFilters
+  StudentOffersFilters,
+  StudentApplicationsResponse
 } from '@/types/student-offers';
 
 /**
@@ -118,6 +119,50 @@ const studentOfferServiceInternal = {
       };
     }
   },
+
+  /**
+   * Obtiene las postulaciones del estudiante
+   * @param page - Página actual (opcional)
+   * @param limit - Cantidad de registros por página (opcional)
+   * @returns Lista de postulaciones del estudiante
+   */
+  async getMyApplications(page?: number, limit?: number): Promise<ApiHandlerResult<StudentApplicationsResponse['data']>> {
+    try {
+      const url = new URL(API_CONFIG.ENDPOINTS.STUDENTS.APPLICATIONS.LIST, API_CONFIG.BASE_URL);
+      
+      if (page) url.searchParams.append('page', String(page));
+      if (limit) url.searchParams.append('limit', String(limit));
+
+      const response = await httpClient.get(url.toString());
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          message: `Error ${response.status}: ${response.statusText}`,
+          error: `Error al obtener postulaciones`,
+          type: 'server_error' as const,
+          data: undefined
+        };
+      }
+      
+      const result = await response.json() as StudentApplicationsResponse;
+      
+      return {
+        success: true,
+        message: result.message || 'Postulaciones obtenidas exitosamente',
+        data: result.data,
+        type: 'unknown' as const
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al obtener postulaciones',
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        type: 'server_error' as const,
+        data: undefined
+      };
+    }
+  },
 };
 
 /**
@@ -149,6 +194,20 @@ export const studentOfferService = {
     }
     if (!result.data) {
       throw new Error('Oferta no encontrada');
+    }
+    return result.data;
+  },
+
+  /**
+   * Obtiene las postulaciones del estudiante (lanza excepción en error)
+   */
+  async getMyApplications(page?: number, limit?: number) {
+    const result = await studentOfferServiceInternal.getMyApplications(page, limit);
+    if (!result.success) {
+      throw new Error(result.message || 'Error al obtener postulaciones');
+    }
+    if (!result.data) {
+      throw new Error('No se recibieron datos del servidor');
     }
     return result.data;
   },

@@ -1,6 +1,6 @@
 /**
  * Página principal de exploración de ofertas para estudiantes
- * Incluye grid de ofertas, filtros y paginación
+ * Incluye lista de ofertas, filtros y paginación
  */
 
 import { useState, useEffect } from 'react';
@@ -27,7 +27,7 @@ import { useApplyOffer } from '@/hooks/use-apply-offer';
 const StudentOffersPage = () => {
   const { toast } = useToast();
   const {
-    offers,
+    offersWithApplicationStatus,
     totalOffers,
     currentPage,
     totalPages,
@@ -43,6 +43,8 @@ const StudentOffersPage = () => {
     loadOfferDetail,
     clearSelectedOffer,
     refreshOffers,
+    hasApplied,
+    getApplication,
   } = useStudentOffers();
 
   const { applying, error: applyError, applyToOffer, reset: resetApply } = useApplyOffer();
@@ -57,6 +59,7 @@ const StudentOffersPage = () => {
   useEffect(() => {
     // Cargar catálogos solo una vez al montar el componente
     loadAllCatalogs().catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Array de dependencias vacío = solo se ejecuta al montar
 
   const handleViewDetails = async (offerId: number) => {
@@ -90,7 +93,7 @@ const StudentOffersPage = () => {
       handleCloseModal();
       resetApply();
       
-      // Refrescar la lista de ofertas para actualizar el estado "has_applied"
+      // Refrescar la lista de ofertas para actualizar el estado
       await refreshOffers();
     }
   };
@@ -140,23 +143,23 @@ const StudentOffersPage = () => {
         </Alert>
       )}
 
-      {/* Grid de Ofertas */}
+      {/* Lista de Ofertas */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="h-[400px]">
+            <Card key={i} className="h-[200px]">
               <CardContent className="p-6 space-y-4">
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
                 <Skeleton className="h-20 w-full" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-32 ml-auto" />
               </CardContent>
             </Card>
           ))}
         </div>
-      ) : offers.length === 0 ? (
+      ) : offersWithApplicationStatus.length === 0 ? (
         <Card className="shadow-card">
           <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
             <div className="rounded-full bg-muted p-6">
@@ -180,9 +183,9 @@ const StudentOffersPage = () => {
         </Card>
       ) : (
         <>
-          {/* Grid de Ofertas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {offers.map((offer) => (
+          {/* Lista de Ofertas */}
+          <div className="space-y-4">
+            {offersWithApplicationStatus.map((offer) => (
               <OfferCard
                 key={offer.id}
                 offer={offer}

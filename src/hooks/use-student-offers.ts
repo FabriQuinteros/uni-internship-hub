@@ -10,7 +10,9 @@ import {
   StudentOffer,
   StudentOfferDetail,
   StudentOffersFilters,
-  StudentOffersState
+  StudentOffersState,
+  StudentApplication,
+  StudentOfferWithApplication
 } from '@/types/student-offers';
 
 /**
@@ -34,6 +36,11 @@ interface StudentOffersActions {
   loadOfferDetail: (id: number) => Promise<void>;
   clearSelectedOffer: () => void;
   
+  // Postulaciones
+  refetchApplications: () => Promise<void>;
+  hasApplied: (offerId: number) => boolean;
+  getApplication: (offerId: number) => StudentApplication | undefined;
+  
   // Utilidades
   clearError: () => void;
 }
@@ -41,7 +48,11 @@ interface StudentOffersActions {
 /**
  * Tipo de retorno del hook
  */
-export type UseStudentOffersReturn = StudentOffersState & StudentOffersActions;
+export type UseStudentOffersReturn = StudentOffersState & 
+  StudentOffersActions & {
+    applications: StudentApplication[];
+    offersWithApplicationStatus: StudentOfferWithApplication[];
+  };
 
 /**
  * Hook principal para ofertas de estudiantes
@@ -55,7 +66,7 @@ export const useStudentOffers = (): UseStudentOffersReturn => {
     totalOffers: 0,
     currentPage: 1,
     totalPages: 1,
-    limit: 12, // 12 ofertas por página para un grid 3x4
+    limit: 12,
     loading: false,
     loadingDetail: false,
     error: null,
@@ -63,12 +74,60 @@ export const useStudentOffers = (): UseStudentOffersReturn => {
     selectedOffer: null,
   });
 
+  const [applications, setApplications] = useState<StudentApplication[]>([]);
+  const [loadingApplications, setLoadingApplications] = useState(false);
+
   /**
    * Actualiza el estado de forma inmutable
    */
   const updateState = useCallback((updates: Partial<StudentOffersState>) => {
     setState(prev => ({ ...prev, ...updates }));
   }, []);
+
+  /**
+   * Carga las postulaciones del estudiante
+   */
+  const refetchApplications = useCallback(async () => {
+    setLoadingApplications(true);
+    try {
+      // Cargar todas las postulaciones (sin límite para tener el set completo)
+      const data = await studentOfferService.getMyApplications(1, 1000);
+      setApplications(data?.applications || []);
+    } catch (error) {
+      console.error('Error loading applications:', error);
+    } finally {
+      setLoadingApplications(false);
+    }
+  }, []);
+
+  /**
+   * Verifica si el estudiante ya se postuló a una oferta
+   */
+  const hasApplied = useCallback((offerId: number): boolean => {
+    return applications.some((app) => app.offer_id === offerId);
+  }, [applications]);
+
+  /**
+   * Obtiene la postulación si existe
+   */
+  const getApplication = useCallback((offerId: number): StudentApplication | undefined => {
+    return applications.find((app) => app.offer_id === offerId);
+  }, [applications]);
+
+  /**
+   * Combina ofertas con información de postulación
+   */
+  const offersWithApplicationStatus = useCallback((): StudentOfferWithApplication[] => {
+    return state.offers.map((offer) => {
+      const application = getApplication(offer.id);
+      return {
+        ...offer,
+        has_applied: !!application,
+        application_id: application?.id,
+        application_status: application?.status,
+      };
+    });
+  }, [state.offers, getApplication]);
 
   /**
    * Carga las ofertas con filtros
@@ -94,8 +153,8 @@ export const useStudentOffers = (): UseStudentOffersReturn => {
         loading: false
       });
       
-    } catch (error: any) {
-      const errorMessage = error.message || 'Error al cargar ofertas';
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar ofertas';
       updateState({ 
         error: errorMessage, 
         loading: false,
@@ -115,7 +174,8 @@ export const useStudentOffers = (): UseStudentOffersReturn => {
    */
   const refreshOffers = useCallback(async () => {
     await fetchOffers(state.filters);
-  }, [fetchOffers, state.filters]);
+    await refetchApplications();
+  }, [fetchOffers, refetchApplications, state.filters]);
 
   /**
    * Navega a una página específica
@@ -173,8 +233,8 @@ export const useStudentOffers = (): UseStudentOffersReturn => {
         selectedOffer: details, 
         loadingDetail: false 
       });
-    } catch (error: any) {
-      const errorMessage = error.message || 'Error al cargar detalles de la oferta';
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al cargar detalles de la oferta';
       updateState({ 
         error: errorMessage, 
         loadingDetail: false 
@@ -202,14 +262,19 @@ export const useStudentOffers = (): UseStudentOffersReturn => {
     updateState({ error: null });
   }, [updateState]);
 
-  // Carga inicial de ofertas
+  // Carga inicial de ofertas y postulaciones
   useEffect(() => {
     fetchOffers();
+    refetchApplications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Solo en mount inicial
 
   return {
     // Estado
     ...state,
+    applications,
+    offersWithApplicationStatus: offersWithApplicationStatus(),
+    loading: state.loading || loadingApplications,
     
     // Acciones
     fetchOffers,
@@ -221,6 +286,9 @@ export const useStudentOffers = (): UseStudentOffersReturn => {
     clearFilters,
     loadOfferDetail,
     clearSelectedOffer,
+    refetchApplications,
+    hasApplied,
+    getApplication,
     clearError,
   };
 };
