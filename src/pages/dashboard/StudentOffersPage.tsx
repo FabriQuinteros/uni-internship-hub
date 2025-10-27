@@ -168,12 +168,12 @@ const StudentOffersPage = () => {
             <div className="text-center space-y-2">
               <h3 className="text-xl font-semibold">No se encontraron ofertas</h3>
               <p className="text-muted-foreground max-w-md">
-                {filters.search || filters.technology_id || filters.modality_id || filters.location_id || filters.position_id
+                {filters.search || filters.modality_id || filters.location_id || filters.position_id
                   ? 'Intenta ajustar los filtros para ver más resultados'
                   : 'No hay ofertas disponibles en este momento. Vuelve pronto para ver nuevas oportunidades.'
                 }
               </p>
-              {(filters.search || filters.technology_id || filters.modality_id || filters.location_id || filters.position_id) && (
+              {(filters.search || filters.modality_id || filters.location_id || filters.position_id) && (
                 <Button onClick={clearFilters} variant="outline" className="mt-4">
                   Limpiar Filtros
                 </Button>

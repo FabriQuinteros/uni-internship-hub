@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, X, Filter, RefreshCw } from 'lucide-react';
+import { Search, X, Filter } from 'lucide-react';
 import { StudentOffersFilters } from '@/types/student-offers';
 import { useCatalogStore } from '@/store/unifiedCatalogStore';
 
@@ -40,11 +40,6 @@ export const OffersFilterPanel: React.FC<OffersFilterPanelProps> = ({
   // Obtener catálogos del store - usando useMemo para cachear y evitar loops
   const catalogs = useCatalogStore(state => state.catalogs);
   
-  const technologies = useMemo(() => 
-    catalogs.technologies?.filter(item => item.is_active !== false) || [], 
-    [catalogs.technologies]
-  );
-  
   const modalities = useMemo(() => 
     catalogs.modalities?.filter(item => item.is_active !== false) || [], 
     [catalogs.modalities]
@@ -65,7 +60,7 @@ export const OffersFilterPanel: React.FC<OffersFilterPanelProps> = ({
     onSearch(searchTerm);
   };
 
-  const handleFilterChange = (key: keyof StudentOffersFilters, value: any) => {
+  const handleFilterChange = (key: keyof StudentOffersFilters, value: number | string | undefined) => {
     onFiltersChange({
       ...filters,
       [key]: value === 'all' ? undefined : value
@@ -78,7 +73,6 @@ export const OffersFilterPanel: React.FC<OffersFilterPanelProps> = ({
   };
 
   const activeFiltersCount = [
-    filters.technology_id,
     filters.modality_id,
     filters.location_id,
     filters.position_id,
@@ -141,29 +135,7 @@ export const OffersFilterPanel: React.FC<OffersFilterPanelProps> = ({
           </div>
         </form>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Filtro por tecnología */}
-          <div className="space-y-2">
-            <Label htmlFor="technology">Tecnología</Label>
-            <Select
-              value={filters.technology_id ? String(filters.technology_id) : 'all'}
-              onValueChange={(value) => handleFilterChange('technology_id', value === 'all' ? undefined : Number(value))}
-              disabled={loading}
-            >
-              <SelectTrigger id="technology">
-                <SelectValue placeholder="Todas las tecnologías" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las tecnologías</SelectItem>
-                {technologies.map((tech) => (
-                  <SelectItem key={tech.id} value={String(tech.id)}>
-                    {tech.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Filtro por modalidad */}
           <div className="space-y-2">
             <Label htmlFor="modality">Modalidad</Label>
@@ -238,19 +210,10 @@ export const OffersFilterPanel: React.FC<OffersFilterPanelProps> = ({
               variant="outline"
               onClick={handleClearAll}
               disabled={loading}
-              className="flex-1"
+              className="w-full"
             >
               <X className="h-4 w-4 mr-2" />
               Limpiar Filtros
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => onFiltersChange(filters)}
-              disabled={loading}
-              className="flex-1"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Actualizar
             </Button>
           </div>
         )}

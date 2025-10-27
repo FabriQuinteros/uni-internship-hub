@@ -173,7 +173,6 @@ export interface StudentOffersFilters {
   page?: number; // Número de página, default: 1
   limit?: number; // Cantidad por página (max: 50), default: 10
   search?: string; // Buscar en título o descripción
-  technology_id?: number; // Filtrar por tecnología específica
   modality_id?: number; // Filtrar por modalidad (presencial, remoto, híbrido)
   location_id?: number; // Filtrar por ubicación
   position_id?: number; // Filtrar por posición
