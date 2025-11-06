@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { useOrganizationApplications, type OfferApplication } from "@/hooks/use-organization-applications";
 import { useToast } from "@/hooks/use-toast";
+import { StudentProfileModal } from "@/components/organization/StudentProfileModal";
 
 const OfferApplicationsPage = () => {
   const { offerId } = useParams<{ offerId: string }>();
@@ -62,6 +63,13 @@ const OfferApplicationsPage = () => {
     decision: null
   });
   const [evaluationMessage, setEvaluationMessage] = useState("");
+  const [profileModal, setProfileModal] = useState<{
+    open: boolean;
+    student: any | null;
+  }>({
+    open: false,
+    student: null
+  });
 
   const { 
     applications, 
@@ -96,6 +104,32 @@ const OfferApplicationsPage = () => {
       decision: null
     });
     setEvaluationMessage("");
+  };
+
+  const openProfileModal = (application: OfferApplication) => {
+    setProfileModal({
+      open: true,
+      student: {
+        name: application.student_name,
+        legajo: application.student_legajo,
+        email: application.student_email,
+        phone: application.student_profile?.phone || application.student_phone,
+        location: application.student_profile?.location || application.student_location,
+        academic_formation: application.student_profile?.academic_formation,
+        availability: application.student_profile?.availability || application.student_availability,
+        previous_experience: application.student_profile?.previous_experience,
+        career: application.career,
+        university: application.university,
+        applied_at: application.applied_at
+      }
+    });
+  };
+
+  const closeProfileModal = () => {
+    setProfileModal({
+      open: false,
+      student: null
+    });
   };
 
   const handleEvaluate = async () => {
@@ -334,6 +368,17 @@ const OfferApplicationsPage = () => {
                         <span>{application.student_email}</span>
                       </div>
                     </CardDescription>
+                    <div className="mt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openProfileModal(application)}
+                        className="text-primary hover:bg-primary/10"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Ver Perfil Completo
+                      </Button>
+                    </div>
                   </div>
                   {getStatusBadge(application.status)}
                 </div>
@@ -496,6 +541,13 @@ const OfferApplicationsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Perfil del Estudiante */}
+      <StudentProfileModal
+        open={profileModal.open}
+        onClose={closeProfileModal}
+        student={profileModal.student}
+      />
     </div>
   );
 };
