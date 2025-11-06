@@ -35,6 +35,32 @@ export interface AvailabilityCatalog {
   is_active: boolean;
 }
 
+// Interfaz para skills/habilidades del estudiante
+export interface StudentSkill {
+  id: number;
+  student_id: number;
+  technology_id: number;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  technology?: {
+    id: number;
+    name: string;
+    category: 'technology' | 'skill';
+  };
+}
+
+// Interfaz para idiomas del estudiante
+export interface StudentLanguage {
+  id: number;
+  student_id: number;
+  language_id: number;
+  level: 'basic' | 'intermediate' | 'advanced' | 'native';
+  language?: {
+    id: number;
+    name: string;
+    code_iso?: string;
+  };
+}
+
 // Interfaz completa del perfil del estudiante (con IDs de catálogos)
 export interface StudentProfile {
   id: number;
@@ -59,6 +85,9 @@ export interface StudentProfile {
   // Datos expandidos de catálogos (incluidos en responses)
   location?: LocationCatalog;
   availability?: AvailabilityCatalog;
+  // Datos adicionales del perfil completo
+  skills?: StudentSkill[];           // Habilidades técnicas del estudiante
+  languages?: StudentLanguage[];     // Idiomas que maneja el estudiante
 }
 
 // Interfaz para actualización de perfil de estudiante (campos editables)
