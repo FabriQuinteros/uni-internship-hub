@@ -4,6 +4,20 @@
  */
 
 import { authService } from '@/services/authService';
+import { formatResponseError, formatExceptionError, FormattedError } from '@/lib/errorFormatter';
+
+/**
+ * Error lanzado por el httpClient cuando hay un error formateado.
+ * Contiene el `FormattedError` para que la UI pueda mostrar `formatted.userMessage`.
+ */
+export class HttpError extends Error {
+  public formatted: FormattedError;
+  constructor(formatted: FormattedError) {
+    super(formatted.userMessage || 'Error en la petición HTTP');
+    this.name = 'HttpError';
+    this.formatted = formatted;
+  }
+}
 
 // Tipos para los interceptores
 export interface RequestConfig {
@@ -149,15 +163,32 @@ class HttpInterceptors {
     try {
       // Interceptar la petición para agregar token
       const interceptedOptions = this.interceptRequest(url, options);
-      
+
       // Realizar la petición
       const response = await fetch(url, interceptedOptions);
-      
-      // Interceptar la respuesta para manejar errores
-      return await this.interceptResponse(response, url);
+
+      // Interceptar la respuesta para manejar errores (401/403, etc.)
+      await this.interceptResponse(response, url);
+
+      // Si la respuesta no es OK, formatear y lanzar HttpError para manejo centralizado
+      if (!response.ok) {
+        const formatted = await formatResponseError(response, url);
+        throw new HttpError(formatted);
+      }
+
+      return response;
     } catch (error) {
-      console.error('Error en petición HTTP:', error);
-      throw error;
+      // Si ya es un HttpError, propagarlo
+      if ((error as any)?.name === 'HttpError') throw error;
+
+      // Formatear excepciones de red y lanzar como HttpError
+      try {
+        const formatted = formatExceptionError(error);
+        throw new HttpError(formatted);
+      } catch (e) {
+        console.error('Error en petición HTTP:', error);
+        throw error;
+      }
     }
   }
 

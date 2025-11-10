@@ -2,6 +2,7 @@ import { httpClient } from '@/lib/httpInterceptors';
 import { API_CONFIG } from '@/config/api.config';
 import { ApiHandlerResult } from '@/types/api';
 import { Offer } from '@/types/api';
+import { formatResponseError, formatExceptionError } from '@/lib/errorFormatter';
 
 const offerServiceInternal = {
   async create(offer: Partial<Offer>, orgID: number): Promise<ApiHandlerResult<Offer>> {
@@ -13,26 +14,11 @@ const offerServiceInternal = {
       );
 
       if (!response.ok) {
-        // Try to parse backend error body to return a helpful message
-        let serverMsg = response.statusText;
-        try {
-          const errBody = await response.json();
-          if (errBody && (errBody.message || errBody.error)) {
-            serverMsg = errBody.message || errBody.error;
-          } else {
-            serverMsg = JSON.stringify(errBody);
-          }
-        } catch (e) {
-          try {
-            serverMsg = await response.text();
-          } catch {
-            // keep statusText
-          }
-        }
+        const formatted = await formatResponseError(response, `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.CREATE}`);
         return {
           success: false,
-          message: `Error ${response.status}: ${serverMsg}`,
-          error: serverMsg,
+          message: formatted.userMessage,
+          error: formatted.developerMessage || String(formatted.original),
           type: 'server_error' as const,
           data: undefined
         };
@@ -47,10 +33,11 @@ const offerServiceInternal = {
         type: 'unknown' as const
       };
     } catch (error) {
+      const formatted = formatExceptionError(error);
       return {
         success: false,
-        message: 'Error al crear oferta',
-        error: error instanceof Error ? error.message : 'Error desconocido',
+        message: formatted.userMessage,
+        error: formatted.developerMessage || String(formatted.original),
         type: 'server_error' as const,
         data: undefined
       };
@@ -65,18 +52,11 @@ const offerServiceInternal = {
       );
 
       if (!response.ok) {
-        let serverMsg = response.statusText;
-        try {
-          const errBody = await response.json();
-          if (errBody && (errBody.message || errBody.error)) serverMsg = errBody.message || errBody.error;
-          else serverMsg = JSON.stringify(errBody);
-        } catch {
-          try { serverMsg = await response.text(); } catch {}
-        }
+        const formatted = await formatResponseError(response, `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.UPDATE(id)}`);
         return {
           success: false,
-          message: `Error ${response.status}: ${serverMsg}`,
-          error: serverMsg,
+          message: formatted.userMessage,
+          error: formatted.developerMessage || String(formatted.original),
           type: 'server_error' as const,
           data: undefined
         };
@@ -91,10 +71,11 @@ const offerServiceInternal = {
         type: 'unknown' as const
       };
     } catch (error) {
+      const formatted = formatExceptionError(error);
       return {
         success: false,
-        message: 'Error al actualizar oferta',
-        error: error instanceof Error ? error.message : 'Error desconocido',
+        message: formatted.userMessage,
+        error: formatted.developerMessage || String(formatted.original),
         type: 'server_error' as const,
         data: undefined
       };
@@ -109,18 +90,11 @@ const offerServiceInternal = {
       );
 
       if (!response.ok) {
-        let serverMsg = response.statusText;
-        try {
-          const errBody = await response.json();
-          if (errBody && (errBody.message || errBody.error)) serverMsg = errBody.message || errBody.error;
-          else serverMsg = JSON.stringify(errBody);
-        } catch {
-          try { serverMsg = await response.text(); } catch {}
-        }
+        const formatted = await formatResponseError(response, `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.SEND_TO_APPROVAL(id)}`);
         return {
           success: false,
-          message: `Error ${response.status}: ${serverMsg}`,
-          error: serverMsg,
+          message: formatted.userMessage,
+          error: formatted.developerMessage || String(formatted.original),
           type: 'server_error' as const,
           data: undefined
         };
@@ -135,10 +109,11 @@ const offerServiceInternal = {
         type: 'unknown' as const
       };
     } catch (error) {
+      const formatted = formatExceptionError(error);
       return {
         success: false,
-        message: 'Error al enviar oferta a aprobación',
-        error: error instanceof Error ? error.message : 'Error desconocido',
+        message: formatted.userMessage,
+        error: formatted.developerMessage || String(formatted.original),
         type: 'server_error' as const,
         data: undefined
       };
@@ -150,18 +125,11 @@ const offerServiceInternal = {
       const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.GET(id)}`);
 
       if (!response.ok) {
-        let serverMsg = response.statusText;
-        try {
-          const errBody = await response.json();
-          if (errBody && (errBody.message || errBody.error)) serverMsg = errBody.message || errBody.error;
-          else serverMsg = JSON.stringify(errBody);
-        } catch {
-          try { serverMsg = await response.text(); } catch {}
-        }
+        const formatted = await formatResponseError(response, `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.GET(id)}`);
         return {
           success: false,
-          message: `Error ${response.status}: ${serverMsg}`,
-          error: serverMsg,
+          message: formatted.userMessage,
+          error: formatted.developerMessage || String(formatted.original),
           type: 'server_error' as const,
           data: undefined
         };
@@ -176,10 +144,11 @@ const offerServiceInternal = {
         type: 'unknown' as const
       };
     } catch (error) {
+      const formatted = formatExceptionError(error);
       return {
         success: false,
-        message: 'Error al obtener oferta',
-        error: error instanceof Error ? error.message : 'Error desconocido',
+        message: formatted.userMessage,
+        error: formatted.developerMessage || String(formatted.original),
         type: 'server_error' as const,
         data: undefined
       };
@@ -193,18 +162,11 @@ const offerServiceInternal = {
       );
 
       if (!response.ok) {
-        let serverMsg = response.statusText;
-        try {
-          const errBody = await response.json();
-          if (errBody && (errBody.message || errBody.error)) serverMsg = errBody.message || errBody.error;
-          else serverMsg = JSON.stringify(errBody);
-        } catch {
-          try { serverMsg = await response.text(); } catch {}
-        }
+        const formatted = await formatResponseError(response, `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.DELETE(id)}`);
         return {
           success: false,
-          message: `Error ${response.status}: ${serverMsg}`,
-          error: serverMsg,
+          message: formatted.userMessage,
+          error: formatted.developerMessage || String(formatted.original),
           type: 'server_error' as const,
           data: undefined
         };
@@ -217,10 +179,11 @@ const offerServiceInternal = {
         type: 'unknown' as const
       };
     } catch (error) {
+      const formatted = formatExceptionError(error);
       return {
         success: false,
-        message: 'Error al eliminar oferta',
-        error: error instanceof Error ? error.message : 'Error desconocido',
+        message: formatted.userMessage,
+        error: formatted.developerMessage || String(formatted.original),
         type: 'server_error' as const,
         data: undefined
       };
@@ -236,10 +199,11 @@ const offerServiceInternal = {
       const response = await httpClient.get(url.toString());
       
       if (!response.ok) {
+        const formatted = await formatResponseError(response, url.toString());
         return {
           success: false,
-          message: `Error ${response.status}: ${response.statusText}`,
-          error: `Error al listar ofertas`,
+          message: formatted.userMessage,
+          error: formatted.developerMessage || String(formatted.original) || `Error al listar ofertas`,
           type: 'server_error' as const,
           data: undefined
         };
@@ -254,10 +218,11 @@ const offerServiceInternal = {
         type: 'unknown' as const
       };
     } catch (error) {
+      const formatted = formatExceptionError(error);
       return {
         success: false,
-        message: 'Error al listar ofertas',
-        error: error instanceof Error ? error.message : 'Error desconocido',
+        message: formatted.userMessage,
+        error: formatted.developerMessage || String(formatted.original),
         type: 'server_error' as const,
         data: undefined
       };
