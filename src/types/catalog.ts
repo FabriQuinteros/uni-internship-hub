@@ -1,4 +1,4 @@
-export type CatalogType = 'technologies' | 'positions' | 'durations' | 'locations' | 'modalities';
+export type CatalogType = 'technologies' | 'positions' | 'durations' | 'locations' | 'modalities' | 'availability';
 
 export interface BaseCatalogItem {
   id: number;
@@ -27,7 +27,11 @@ export interface Modality extends BaseCatalogItem {
   description?: string;
 }
 
-export type CatalogItem = Technology | Position | Duration | Location | Modality;
+export interface Availability extends BaseCatalogItem {
+  description?: string;
+}
+
+export type CatalogItem = Technology | Position | Duration | Location | Modality | Availability;
 
 export interface ApiListResponse<T> {
   message: string;
@@ -70,12 +74,18 @@ export interface CreateModalityRequest {
   description?: string;
 }
 
+export interface CreateAvailabilityRequest {
+  name: string;
+  description?: string;
+}
+
 export type CreateCatalogRequest = 
   | CreateTechnologyRequest 
   | CreatePositionRequest 
   | CreateDurationRequest 
   | CreateLocationRequest 
-  | CreateModalityRequest;
+  | CreateModalityRequest
+  | CreateAvailabilityRequest;
 
 export interface UpdateTechnologyRequest {
   name?: string;
@@ -108,12 +118,19 @@ export interface UpdateModalityRequest {
   is_active?: boolean;
 }
 
+export interface UpdateAvailabilityRequest {
+  name?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
 export type UpdateCatalogRequest = 
   | UpdateTechnologyRequest 
   | UpdatePositionRequest 
   | UpdateDurationRequest 
   | UpdateLocationRequest 
-  | UpdateModalityRequest;
+  | UpdateModalityRequest
+  | UpdateAvailabilityRequest;
 
 export interface CatalogFormField {
   name: string;

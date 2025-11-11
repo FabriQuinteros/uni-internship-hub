@@ -1,6 +1,5 @@
-import { Bell, Search, User, LogOut, Settings, UserCircle, Wifi, WifiOff } from "lucide-react";
+import { Bell, User, LogOut, Settings, UserCircle, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -25,6 +24,7 @@ import { useState, useEffect } from "react";
 import { systemService } from "@/services/systemService";
 import { API_CONFIG } from "@/config/api.config";
 import { toast } from "@/components/ui/use-toast";
+import BackendNotificationCenter from "@/components/notifications/BackendNotificationCenter";
 
 interface DashboardHeaderProps {
   userRole: 'student' | 'organization' | 'admin';
@@ -95,22 +95,18 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/auth/login');
+  const handleLogout = async () => {
+    // Redirigir primero para evitar cualquier delay visual
+    navigate('/auth/login', { replace: true });
+    // Luego hacer el logout en segundo plano
+    await logout();
   };
 
   return (
     <header className="h-16 border-b bg-card/50 backdrop-blur-sm px-6 flex items-center justify-between">
-      {/* Search */}
-      <div className="flex-1 max-w-md">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar..."
-            className="pl-10 bg-background"
-          />
-        </div>
+      {/* Logo/Title area */}
+      <div className="flex-1">
+        <h2 className="text-lg font-semibold">Dashboard</h2>
       </div>
 
       {/* Right side */}
@@ -147,22 +143,14 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
         </TooltipProvider>
 
         {/* Notifications */}
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="h-5 w-5" />
-          <Badge 
-            variant="destructive" 
-            className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-          >
-            3
-          </Badge>
-        </Button>
+        <BackendNotificationCenter />
 
         {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={user?.imageUrl} alt={user?.name} />
+                <AvatarImage src="" alt={user?.name} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {user?.name?.charAt(0) || 'U'}
                 </AvatarFallback>

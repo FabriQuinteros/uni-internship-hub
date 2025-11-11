@@ -8,14 +8,9 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+
 import { useToast } from '@/hooks/use-toast';
+import { organizationService } from '@/services/organizationService';
 import { HeroButton } from '../ui/button-variants';
 
 /**
@@ -47,29 +42,35 @@ const registerSchema = z.object({
     .email('El formato del email no es válido')
     .min(1, 'El email es requerido'),
   password: z.string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .regex(/[A-Z]/, 'La contraseña debe contener al menos una mayúscula')
-    .regex(/[a-z]/, 'La contraseña debe contener al menos una minúscula')
-    .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
+    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
   confirmPassword: z.string()
     .min(1, 'Por favor confirma tu contraseña'),
   companyName: z.string()
-    .min(1, 'El nombre de la empresa es requerido'),
+    .min(1, 'El nombre de la empresa es requerido')
+    .max(255, 'El nombre de la empresa no puede exceder 255 caracteres'),
   industry: z.string()
-    .min(1, 'El rubro es requerido'),
+    .min(1, 'El rubro es requerido')
+    .max(100, 'El rubro no puede exceder 100 caracteres'),
   website: z.string()
     .url('El formato de la URL no es válido')
+    .max(255, 'La URL no puede exceder 255 caracteres')
     .optional()
     .or(z.literal('')),
   description: z.string()
-    .min(20, 'La descripción debe tener al menos 20 caracteres'),
+    .max(1000, 'La descripción no puede exceder 1000 caracteres')
+    .optional()
+    .or(z.literal('')),
   address: z.string()
-    .min(1, 'La dirección es requerida'),
+    .max(255, 'La dirección no puede exceder 255 caracteres')
+    .optional()
+    .or(z.literal('')),
   contactName: z.string()
-    .min(1, 'El nombre de contacto es requerido'),
+    .min(1, 'El nombre de contacto es requerido')
+    .max(255, 'El nombre de contacto no puede exceder 255 caracteres'),
   contactPhone: z.string()
-    .min(1, 'El teléfono de contacto es requerido')
-    .regex(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4}$/, 'El formato del teléfono no es válido'),
+    .regex(/^[+]?[(]?[0-9\s\-()]{7,20}$/, 'El formato del teléfono no es válido')
+    .optional()
+    .or(z.literal('')),
   termsAccepted: z.boolean()
     .refine((val) => val === true, 'Debes aceptar los términos y condiciones'),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -80,17 +81,7 @@ const registerSchema = z.object({
 // Tipos inferidos del esquema
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-// Lista de industrias predefinidas
-const industries = [
-  'Tecnología',
-  'Salud',
-  'Educación',
-  'Finanzas',
-  'Manufactura',
-  'Comercio',
-  'Servicios',
-  'Otro'
-];
+
 
 /**
  * Componente principal del formulario de registro de organizaciones
@@ -104,7 +95,7 @@ const industries = [
  * 
  * @returns {JSX.Element} Formulario de registro con validaciones y feedback
  */
-export function OrganizationRegisterForm() {
+export function OrganizationRegisterForm(): JSX.Element {
   // Estados para controlar la visibilidad de las contraseñas
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -138,20 +129,55 @@ export function OrganizationRegisterForm() {
     }
   });
 
+  const fillTestData = () => {
+    setValue('email', 'test@techcorp.com');
+    setValue('password', 'TestPass123');
+    setValue('confirmPassword', 'TestPass123');
+    setValue('companyName', 'TechCorp Solutions');
+    setValue('industry', 'Tecnología y Desarrollo de Software');
+    setValue('website', 'https://www.techcorp.com');
+    setValue('description', 'Empresa líder en desarrollo de software con más de 10 años de experiencia en el mercado, especializada en soluciones tecnológicas innovadoras.');
+    setValue('address', 'Av. Corrientes 1234, CABA, Buenos Aires, Argentina');
+    setValue('contactName', 'Juan Pérez');
+    setValue('contactPhone', '+54 11 4567-8900');
+    setValue('termsAccepted', true);
+    
+    toast({
+      title: "Formulario rellenado",
+      description: "Se han cargado datos de prueba en todos los campos",
+    });
+  };
+
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
     try {
       console.log('Datos del formulario:', data); // Para depuración
       
-      // Aquí iría la llamada a la API para registrar la organización
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulación de llamada API
+      // Preparar datos completos según la especificación del backend
+      const registerData = {
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        companyName: data.companyName,
+        industry: data.industry,
+        website: data.website || undefined, // Enviar undefined si está vacío para campos opcionales
+        description: data.description || undefined,
+        address: data.address || undefined,
+        contactName: data.contactName,
+        contactPhone: data.contactPhone || undefined,
+        termsAccepted: data.termsAccepted
+      };
+      
+      const result = await organizationService.register(registerData);
+      console.log('Respuesta del backend:', result);
 
       toast({
         title: "Registro exitoso",
-        description: "Tu cuenta será revisada por un administrador",
+        description: "Tu cuenta ha sido creada exitosamente. Será revisada por un administrador.",
       });
-
-      navigate('/auth/confirmation');
+      
+      // Redirigir a login después del registro exitoso
+      navigate('/auth/login');
     } catch (error: any) {
       console.error('Error en el registro:', error);
       toast({
@@ -166,6 +192,18 @@ export function OrganizationRegisterForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Botón de prueba para desarrollo */}
+      <div className="flex justify-end mb-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={fillTestData}
+          className="text-sm bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100"
+        >
+          🧪 Rellenar con datos de prueba
+        </Button>
+      </div>
+      
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="email" className="text-foreground">
@@ -248,26 +286,12 @@ export function OrganizationRegisterForm() {
         <Label htmlFor="industry">
           Industria <span className="text-red-500">*</span>
         </Label>
-        <Select 
-          defaultValue={watch('industry')}
-          onValueChange={(value) => {
-            setValue('industry', value, {
-              shouldValidate: true,
-              shouldDirty: true
-            });
-          }}
-        >
-          <SelectTrigger className={errors.industry ? 'border-red-500' : ''}>
-            <SelectValue placeholder="Selecciona una industria" />
-          </SelectTrigger>
-          <SelectContent>
-            {industries.map((industry) => (
-              <SelectItem key={industry} value={industry}>
-                {industry}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Input
+          id="industry"
+          {...register('industry')}
+          className={errors.industry ? 'border-red-500' : ''}
+          placeholder="Ej: Tecnología, Salud, Educación, Finanzas..."
+        />
         {errors.industry && (
           <p className="text-sm text-red-500">{errors.industry.message}</p>
         )}
@@ -385,5 +409,3 @@ export function OrganizationRegisterForm() {
     </form>
   );
 }
-
-export default OrganizationRegisterForm;

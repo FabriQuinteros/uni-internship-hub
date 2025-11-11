@@ -14,6 +14,14 @@ interface LocationState {
 }
 
 const LoginPage = () => {
+  // Función para determinar el tab por defecto basado en la URL
+  const getDefaultTab = () => {
+    const path = window.location.pathname;
+    if (path === "/auth/organization") return "organization";
+    // Los administradores y estudiantes usan la misma pestaña
+    return "student";
+  };
+
   // Estado para mostrar/ocultar la contraseña
   const [showPassword, setShowPassword] = useState(false);
   // Estado para el proceso de inicio de sesión
@@ -21,6 +29,10 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  // Estado para recordar sesión
+  const [rememberSession, setRememberSession] = useState(false);
+  // Estado para trackear la pestaña activa
+  const [activeTab, setActiveTab] = useState(getDefaultTab());
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,9 +63,40 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
-      await login(email, password);
-    } catch (err) {
-      setError("Credenciales inválidas");
+      await login(email, password, rememberSession);
+      
+      // Obtener el usuario logueado para validar el rol
+      const { user } = useAuth.getState();
+      
+      if (user) {
+        // Validar que el rol del usuario coincida con la pestaña activa
+        const expectedRole = activeTab === 'organization' ? 'organization' : ['student', 'admin'];
+        
+        if (activeTab === 'organization' && user.role !== 'organization') {
+          // Si está en pestaña de organización pero el usuario no es organización
+          setError("Esta cuenta no pertenece a una organización. Usa la pestaña de Estudiantes.");
+          await useAuth.getState().logout(); // Desloguear
+          return;
+        }
+        
+        if (activeTab === 'student' && user.role === 'organization') {
+          // Si está en pestaña de estudiante pero el usuario es organización
+          setError("Esta cuenta pertenece a una organización. Usa la pestaña de Organizaciones.");
+          await useAuth.getState().logout(); // Desloguear
+          return;
+        }
+        
+        // Si llegamos aquí, el rol es correcto, la redirección se manejará automáticamente
+      }
+    } catch (err: any) {
+      // Mejorar mensajes de error específicos
+      if (err.message === 'Usuario no encontrado') {
+        setError("El usuario no existe o las credenciales son incorrectas");
+      } else if (err.message === 'Rol no autorizado') {
+        setError("No tienes permisos para acceder a esta sección");
+      } else {
+        setError("Error al iniciar sesión. Verifica tus credenciales");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -71,12 +114,6 @@ const LoginPage = () => {
       title: "Organizaciones",
       description: "Publica ofertas y conecta con talento universitario",
       features: ["Crear ofertas", "Gestionar candidatos", "Ver estadísticas"]
-    },
-    admin: {
-      icon: Users,
-      title: "Administradores",
-      description: "Gestiona el ecosistema universitario de pasantías",
-      features: ["Aprobar ofertas", "Gestionar usuarios", "Ver métricas"]
     }
   };
 
@@ -99,11 +136,11 @@ const LoginPage = () => {
 
         {/* Tabs para selección de rol 
             El valor por defecto se determina dinámicamente basado en la URL actual
-            Esto permite que al acceder directamente a /auth/organization
-            se muestre automáticamente la pestaña de organizaciones */}
-        <Tabs defaultValue={window.location.pathname === "/auth/organization" ? "organization" : "student"} className="w-full">
+            Esto permite que al acceder directamente a /auth/organization o /auth/admin
+            se muestre automáticamente la pestaña correspondiente */}
+        <Tabs defaultValue={getDefaultTab()} onValueChange={setActiveTab} className="w-full">
           {/* Role Selector */}
-          <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm border-white/20">
+          <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm border-white/20">
             {Object.entries(roleInfo).map(([key, info]) => {
               const Icon = info.icon;
               return (
@@ -203,11 +240,19 @@ const LoginPage = () => {
                           </div>
                         </div>
 
+                        {error && (
+                          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                            <p className="text-sm text-destructive">{error}</p>
+                          </div>
+                        )}
+
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <input
                               type="checkbox"
                               id="remember"
+                              checked={rememberSession}
+                              onChange={(e) => setRememberSession(e.target.checked)}
                               className="rounded border-border"
                             />
                             <Label htmlFor="remember" className="text-sm">
@@ -231,6 +276,10 @@ const LoginPage = () => {
                         >
                           {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                         </HeroButton>
+
+                        {error && (
+                          <p className="text-sm text-red-500 mt-2">{error}</p>
+                        )}
 
                         {key === 'student' && (
                           <div className="text-center pt-4">

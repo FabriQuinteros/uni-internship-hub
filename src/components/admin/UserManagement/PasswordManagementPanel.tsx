@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { getUsers, forcePasswordReset } from '@/services/userService'
+import { StudentService } from '@/services/studentService'
 import { User } from '@/types/user'
 import { UserWithActions } from '@/types/password-management'
 
@@ -107,7 +107,7 @@ const PasswordManagementPanel = () => {
 
     setIsLoading(true)
     try {
-      await forcePasswordReset(selectedUser.email)
+      await StudentService.forcePasswordReset(selectedUser.email)
       toast({
         title: "Éxito",
         description: "Se ha enviado el correo de restablecimiento",
