@@ -19,7 +19,8 @@ import {
   ChevronRight,
   Pause,
   Play,
-  CheckCircle
+  CheckCircle,
+  KeyRound
 } from 'lucide-react';
 import { StudentDetailsModal } from './StudentDetailsModal';
 import { ConfirmationModal } from '../common/ConfirmationModal';
@@ -47,6 +48,7 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
   const [updatingStudents, setUpdatingStudents] = useState<Set<string>>(new Set());
   
   // Estado unificado para las acciones (siguiendo el patrón de OrganizationManagementPanel)
@@ -228,6 +230,35 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
   const handleViewDetails = (student: Student) => {
     setSelectedStudent(student);
     setShowDetailsModal(true);
+  };
+
+  const handlePasswordResetClick = (student: Student) => {
+    setSelectedStudent(student);
+    setShowPasswordResetModal(true);
+  };
+
+  const confirmPasswordReset = async () => {
+    if (!selectedStudent) return;
+    
+    setLoading(true);
+    try {
+      await StudentService.forcePasswordReset(selectedStudent.email);
+      toast({
+        title: "Éxito",
+        description: `Se ha enviado el correo de restablecimiento de contraseña a ${selectedStudent.email}`,
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo enviar el correo de restablecimiento",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+      setShowPasswordResetModal(false);
+      setSelectedStudent(null);
+    }
   };
 
   // Funciones de navegación y filtros
@@ -478,6 +509,17 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
                                     👁️
                                   </Button>
                                   
+                                  {/* Botón de resetear contraseña */}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handlePasswordResetClick(student)}
+                                    className="text-xs px-2"
+                                    title="Resetear contraseña"
+                                  >
+                                    <KeyRound className="h-3 w-3" />
+                                  </Button>
+                                  
                                   {/* Acciones de estado disponibles */}
                                   {actions.map((action, index) => {
                                     const Icon = action.icon;
@@ -594,6 +636,20 @@ export const StudentManagementPanel: React.FC = (): JSX.Element => {
                 : ""
             }
             confirmText="Confirmar"
+            cancelText="Cancelar"
+          />
+
+          <ConfirmationModal
+            isOpen={showPasswordResetModal}
+            onClose={() => setShowPasswordResetModal(false)}
+            onConfirm={confirmPasswordReset}
+            title="Confirmar restablecimiento de contraseña"
+            description={
+              selectedStudent
+                ? `¿Estás seguro de que deseas enviar un correo de restablecimiento de contraseña a ${selectedStudent.firstName} ${selectedStudent.lastName} (${selectedStudent.email})? El estudiante recibirá un enlace para crear una nueva contraseña.`
+                : ""
+            }
+            confirmText="Enviar correo"
             cancelText="Cancelar"
           />
         </div>
