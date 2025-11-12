@@ -4,6 +4,20 @@ import { ApiHandlerResult } from '@/types/api';
 import { Offer } from '@/types/api';
 import { formatResponseError, formatExceptionError } from '@/lib/errorFormatter';
 
+/**
+ * Filtros disponibles para listar ofertas de la organización
+ */
+export interface OrganizationOffersFilters {
+  status?: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'closed';
+  technology?: number;
+  shift?: 'morning' | 'afternoon' | 'night' | 'flexible';
+  modality?: number;
+  location?: number;
+  duration?: number;
+  date_from?: string; // YYYY-MM-DD
+  date_to?: string;   // YYYY-MM-DD
+}
+
 const offerServiceInternal = {
   async create(offer: Partial<Offer>, orgID: number): Promise<ApiHandlerResult<Offer>> {
     try {
@@ -190,11 +204,22 @@ const offerServiceInternal = {
     }
   },
 
-  async list(orgID: number, status?: string): Promise<ApiHandlerResult<Offer[]>> {
+  async list(orgID: number, filters?: OrganizationOffersFilters): Promise<ApiHandlerResult<Offer[]>> {
     try {
       const url = new URL(API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.LIST, API_CONFIG.BASE_URL);
       url.searchParams.append('orgID', String(orgID));
-      if (status) url.searchParams.append('status', status);
+      
+      // Agregar filtros opcionales
+      if (filters) {
+        if (filters.status) url.searchParams.append('status', filters.status);
+        if (filters.technology) url.searchParams.append('technology', String(filters.technology));
+        if (filters.shift) url.searchParams.append('shift', filters.shift);
+        if (filters.modality) url.searchParams.append('modality', String(filters.modality));
+        if (filters.location) url.searchParams.append('location', String(filters.location));
+        if (filters.duration) url.searchParams.append('duration', String(filters.duration));
+        if (filters.date_from) url.searchParams.append('date_from', filters.date_from);
+        if (filters.date_to) url.searchParams.append('date_to', filters.date_to);
+      }
       
       const response = await httpClient.get(url.toString());
       
@@ -265,8 +290,8 @@ export const offerService = {
     return true;
   },
 
-  async list(orgID: number, status?: string) {
-    const result = await offerServiceInternal.list(orgID, status);
+  async list(orgID: number, filters?: OrganizationOffersFilters) {
+    const result = await offerServiceInternal.list(orgID, filters);
     if (!result.success) throw new Error(result.message);
     return result.data || [];
   }

@@ -24,13 +24,14 @@ import {
   RefreshCw,
   UserCheck
 } from 'lucide-react';
-import { offerService } from '@/services/offerService';
+import { offerService, OrganizationOffersFilters } from '@/services/offerService';
 import OrganizationOfferForm from './OrganizationOfferForm';
 import { Offer, OfferStatus } from '@/types/api';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import OfferStatusBadge, { useOfferStatusActions } from '@/components/ui/OfferStatusBadge';
 import RejectionReasonAlert from '@/components/ui/RejectionReasonAlert';
+import { OffersFilterPanel } from '@/components/organization/OffersFilterPanel';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -257,16 +258,17 @@ export default function OrganizationOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
   const [submittingOffers, setSubmittingOffers] = useState<Set<number>>(new Set());
+  const [filters, setFilters] = useState<OrganizationOffersFilters>({});
   const { user } = useAuth();
   const orgID = Number(user?.id) || 1;
 
   /**
-   * Carga las ofertas de la organización
+   * Carga las ofertas de la organización con filtros
    */
   const loadOffers = async () => {
     setLoading(true);
     try {
-      const data = await offerService.list(orgID);
+      const data = await offerService.list(orgID, filters);
       setOffers(data || []);
     } catch (err: any) {
       console.error('Error loading offers', err);
@@ -316,7 +318,21 @@ export default function OrganizationOffersPage() {
   // Carga inicial
   useEffect(() => {
     loadOffers();
-  }, []);
+  }, [filters]); // Recargar cuando cambien los filtros
+
+  /**
+   * Manejo de cambio de filtros
+   */
+  const handleFiltersChange = (newFilters: OrganizationOffersFilters) => {
+    setFilters(newFilters);
+  };
+
+  /**
+   * Limpiar todos los filtros
+   */
+  const handleClearFilters = () => {
+    setFilters({});
+  };
 
   // Estadísticas rápidas
   const stats = {
@@ -405,6 +421,13 @@ export default function OrganizationOffersPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Panel de Filtros */}
+      <OffersFilterPanel
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        onClearFilters={handleClearFilters}
+      />
 
       {/* Lista de ofertas */}
       {loading ? (
