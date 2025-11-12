@@ -7,9 +7,53 @@ import {
   UpdateStudentProfileRequest, 
   StudentProfileResponse,
   StudentStats,
-  Student
+  Student,
+  LocationCatalog,
+  AvailabilityCatalog
 } from '@/types/user';
 import { PasswordResetResponse } from '@/types/password-management';
+
+/**
+ * Normaliza los campos de ubicación del backend (mayúsculas a minúsculas)
+ */
+function normalizeLocation(location: any): LocationCatalog | undefined {
+  if (!location) return undefined;
+  
+  return {
+    id: location.ID || location.id || 0,
+    name: location.Name || location.name || '',
+    province: location.Province || location.province || '',
+    country: location.Country || location.country || '',
+    is_active: location.IsActive !== undefined ? location.IsActive : (location.is_active || false)
+  };
+}
+
+/**
+ * Normaliza los campos de disponibilidad del backend (mayúsculas a minúsculas)
+ */
+function normalizeAvailability(availability: any): AvailabilityCatalog | undefined {
+  if (!availability) return undefined;
+  
+  return {
+    id: availability.ID || availability.id || 0,
+    name: availability.Name || availability.name || '',
+    description: availability.Description || availability.description,
+    is_active: availability.IsActive !== undefined ? availability.IsActive : (availability.is_active || false)
+  };
+}
+
+/**
+ * Normaliza el perfil del estudiante desde el backend
+ */
+function normalizeStudentProfile(profile: any): StudentProfile {
+  return {
+    ...profile,
+    location: profile.location ? normalizeLocation(profile.location) : undefined,
+    availability: profile.availability ? normalizeAvailability(profile.availability) : undefined,
+    // Asegurar que user tenga un email válido
+    user: profile.user && profile.user.email ? profile.user : undefined
+  };
+}
 
 /**
  * Servicio para operaciones relacionadas con estudiantes
@@ -61,7 +105,7 @@ export class StudentService {
       }
       
       const data: StudentProfileResponse = await response.json();
-      return data.data;
+      return normalizeStudentProfile(data.data);
     } catch (error: any) {
       console.error('Error al obtener perfil de estudiante:', error);
       throw new Error(error.message || 'Error al obtener el perfil');
@@ -94,7 +138,7 @@ export class StudentService {
       }
       
       const data: StudentProfileResponse = await response.json();
-      return data.data;
+      return normalizeStudentProfile(data.data);
     } catch (error: any) {
       console.error('Error al actualizar perfil de estudiante:', error);
       throw error; // Re-throw para que el caller pueda manejar errores específicos
@@ -125,7 +169,7 @@ export class StudentService {
       }
       
       const data: StudentProfileResponse = await response.json();
-      return data.data;
+      return normalizeStudentProfile(data.data);
     } catch (error: any) {
       console.error('Error al obtener perfil de estudiante por ID:', error);
       throw error;

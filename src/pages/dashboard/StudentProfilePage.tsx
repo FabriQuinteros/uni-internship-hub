@@ -292,10 +292,6 @@ export const StudentProfilePage: React.FC = () => {
                     <div className="mt-1">
                       <p className="text-lg">{locationDisplay.name}, {locationDisplay.province}</p>
                       <p className="text-sm text-gray-500">{locationDisplay.country}</p>
-                      <Badge variant="outline" className="mt-1">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        Catálogo
-                      </Badge>
                     </div>
                   ) : (
                     <p className="text-lg mt-1 text-gray-500">No especificada</p>
@@ -354,10 +350,6 @@ export const StudentProfilePage: React.FC = () => {
                       {availabilityDisplay.description && (
                         <p className="text-sm text-gray-500 mt-1">{availabilityDisplay.description}</p>
                       )}
-                      <Badge variant="outline" className="mt-2">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Catálogo
-                      </Badge>
                     </div>
                   ) : (
                     <p className="text-lg mt-1 text-gray-500">No especificada</p>

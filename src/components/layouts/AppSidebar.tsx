@@ -96,12 +96,6 @@ const navigationItems = {
       url: "/organization/applications",
       icon: Users,
       description: "Candidatos recibidos"
-    },
-    {
-      title: "Estadísticas",
-      url: "/organization/analytics",
-      icon: BarChart3,
-      description: "Métricas y reportes"
     }
   ],
   admin: [
