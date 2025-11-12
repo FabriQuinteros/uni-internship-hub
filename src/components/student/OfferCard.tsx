@@ -83,9 +83,21 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onViewDetails }) =>
             <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
               {offer.title}
             </CardTitle>
-            <CardDescription className="mt-1">
-              {offer.organization_name || 'Organización'}
-            </CardDescription>
+            {/* Solo mostrar nombre de empresa si está disponible (cuando postulación es accepted) */}
+            {offer.organization_name && (
+              <CardDescription className="mt-1">
+                {offer.organization_name}
+              </CardDescription>
+            )}
+            {/* Mostrar rubro de la empresa si está disponible */}
+            {offer.industry && (
+              <Badge 
+                variant="secondary" 
+                className="mt-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+              >
+                {offer.industry}
+              </Badge>
+            )}
           </div>
           <div className="flex flex-col gap-2 shrink-0">
             {offer.has_applied && (

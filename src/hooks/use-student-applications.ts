@@ -1,6 +1,9 @@
 /**
  * Hook para gestión de postulaciones del estudiante
  * Endpoint: GET /api/students/applications
+ * 
+ * IMPORTANTE: El nombre de la organización SOLO se muestra cuando status === 'accepted'
+ * En estados 'pending', 'approved', 'rejected' el campo organization_name viene como null
  */
 
 import { useState, useCallback } from 'react';
@@ -11,7 +14,7 @@ export interface StudentApplication {
   id: number;
   offer_id: number;
   offer_title: string;
-  organization_name: string;
+  organization_name?: string | null; // Solo presente cuando status === 'accepted'
   organization_logo?: string;
   status: 'pending' | 'approved' | 'accepted' | 'rejected' | 'finalized';
   applied_at: string;

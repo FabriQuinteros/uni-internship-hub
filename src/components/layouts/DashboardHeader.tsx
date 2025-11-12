@@ -1,4 +1,4 @@
-import { Bell, User, LogOut, Settings, UserCircle, Wifi, WifiOff } from "lucide-react";
+import { Bell, User, LogOut, Settings, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,19 +11,9 @@ import {
   DropdownMenuGroup,
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { systemService } from "@/services/systemService";
-import { API_CONFIG } from "@/config/api.config";
-import { toast } from "@/components/ui/use-toast";
 import BackendNotificationCenter from "@/components/notifications/BackendNotificationCenter";
 
 interface DashboardHeaderProps {
@@ -33,8 +23,6 @@ interface DashboardHeaderProps {
 export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [apiStatus, setApiStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
-  const [isCheckingApi, setIsCheckingApi] = useState(false);
 
   const getRoleBadge = () => {
     const roleConfig = {
@@ -49,50 +37,6 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
         {config.text}
       </Badge>
     );
-  };
-
-  const checkApiConnection = async () => {
-    setIsCheckingApi(true);
-    try {
-      const message = await systemService.ping();
-      setApiStatus('connected');
-      toast({
-        title: "✅ API Conectada",
-        description: `Backend: "${message}"`,
-        variant: "default",
-      });
-    } catch (error) {
-      setApiStatus('disconnected');
-      toast({
-        title: "❌ Error de API",
-        description: "No se pudo conectar con el servidor",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCheckingApi(false);
-    }
-  };
-
-  useEffect(() => {
-    checkApiConnection();
-  }, []);
-
-  const getApiStatusIcon = () => {
-    if (apiStatus === 'connected') {
-      return <Wifi className="h-4 w-4 text-green-600" />;
-    } else if (apiStatus === 'disconnected') {
-      return <WifiOff className="h-4 w-4 text-red-600" />;
-    } else {
-      return <Wifi className="h-4 w-4 text-yellow-600 animate-pulse" />;
-    }
-  };
-
-  const getApiStatusText = () => {
-    switch (apiStatus) {
-      case 'connected': return 'API Conectada';
-      case 'disconnected': return 'API Desconectada';
-      default: return 'Verificando API...';
-    }
   };
 
   const handleLogout = async () => {
@@ -111,37 +55,6 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
 
       {/* Right side */}
       <div className="flex items-center space-x-4">
-        {/* API Status */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={checkApiConnection}
-                disabled={isCheckingApi}
-                className="flex items-center gap-2"
-              >
-                {getApiStatusIcon()}
-                <span className="hidden md:inline text-xs">
-                  {isCheckingApi ? 'Verificando...' : getApiStatusText()}
-                </span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs">
-              <div className="space-y-1">
-                <p className="font-medium">{getApiStatusText()}</p>
-                <p className="text-xs text-muted-foreground">
-                  URL: {API_CONFIG.BASE_URL}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Click para verificar conexión
-                </p>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
         {/* Notifications */}
         <BackendNotificationCenter />
 

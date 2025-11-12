@@ -28,6 +28,16 @@ export interface AuthUser {
   iat?: number; // JWT issued at timestamp
 }
 
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface LoginResult {
   success: boolean;
   token?: string;
@@ -354,6 +364,46 @@ class AuthService {
     const mockSignature = 'dev-signature';
 
     return `${encodedHeader}.${encodedPayload}.${mockSignature}`;
+  }
+
+  /**
+   * Resetea la contraseña de un usuario usando un token
+   */
+  async resetPassword(token: string, newPassword: string): Promise<ResetPasswordResponse> {
+    try {
+      const requestUrl = `${this.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD}`;
+      
+      const response = await fetch(requestUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          new_password: newPassword
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || 'Error al resetear la contraseña'
+        };
+      }
+
+      return {
+        success: true,
+        message: data.message || 'Contraseña actualizada exitosamente'
+      };
+    } catch (error: any) {
+      console.error('❌ Error en resetPassword:', error);
+      return {
+        success: false,
+        message: error.message || 'Error de conexión'
+      };
+    }
   }
 }
 

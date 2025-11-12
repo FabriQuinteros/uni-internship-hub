@@ -5,10 +5,12 @@
 
 /**
  * Oferta resumida para listado de estudiantes
+ * NOTA: organization_id y organization_name NO se envían por privacidad
+ * Los estudiantes solo ven el nombre de la empresa cuando su postulación tiene status: "accepted"
  */
 export interface StudentOffer {
   id: number;
-  organization_id: number;
+  organization_id?: number; // Ya NO se envía desde el backend (ofertas anónimas)
   position_id: number;
   duration_id: number;
   location_id: number;
@@ -26,13 +28,14 @@ export interface StudentOffer {
   technologies: number[]; // IDs de tecnologías
   created_at: string; // ISO 8601
   updated_at: string; // ISO 8601
+  industry?: string; // Rubro de la empresa (ej: "Tecnología", "Finanzas", "Salud")
   
   // Campos expandidos (si el backend los envía)
   position_name?: string;
   modality_name?: string;
   duration_name?: string;
   location_name?: string;
-  organization_name?: string;
+  organization_name?: string; // Ya NO se envía desde el backend (ofertas anónimas)
   has_applied?: boolean; // Si el estudiante ya se postuló
   application_status?: 'pending' | 'accepted' | 'rejected' | 'finalized'; // Estado de la postulación
 }

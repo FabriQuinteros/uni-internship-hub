@@ -9,6 +9,9 @@ import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import LandingPage from "./pages/LandingPage";
 import UnifiedLoginPage from "./pages/auth/UnifiedLoginPage";
 import RegisterOrganization from "./pages/auth/RegisterOrganization";
+import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import StudentProfilePage from "./pages/dashboard/StudentProfilePage";
 import StudentOffersPage from "./pages/dashboard/StudentOffersPage";
@@ -26,7 +29,6 @@ import CatalogsPage from "./pages/admin/CatalogsPage";
 import OrganizationManagementPage from "./pages/admin/OrganizationManagementPage";
 import StudentManagement from "./pages/admin/StudentManagement";
 import NotFound from "./pages/NotFound";
-import RegisterPageStudent from "./pages/auth/RegisterPageStudent";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +68,9 @@ const App = () => (
           {/* Rutas de registro */}
           <Route path="/auth/register-organization" element={<RegisterOrganization />} />
           <Route path="/auth/register/student" element={<RegisterPageStudent />} />
+          {/* Rutas de recuperación de contraseña */}
+          <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
           {/* Student Routes */}
           <Route path="/student/*" element={

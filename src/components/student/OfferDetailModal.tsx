@@ -110,10 +110,22 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <DialogTitle className="text-2xl">{offer.title}</DialogTitle>
-                  <DialogDescription className="text-base mt-2 flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    {offer.organization_name || 'Organización'}
-                  </DialogDescription>
+                  {/* Solo mostrar nombre de empresa si está disponible (cuando postulación es accepted) */}
+                  {offer.organization_name && (
+                    <DialogDescription className="text-base mt-2 flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      {offer.organization_name}
+                    </DialogDescription>
+                  )}
+                  {/* Mostrar rubro de la empresa si está disponible */}
+                  {offer.industry && (
+                    <Badge 
+                      variant="secondary" 
+                      className="mt-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+                    >
+                      {offer.industry}
+                    </Badge>
+                  )}
                 </div>
                 {isClosingSoon() && (
                   <Badge variant="destructive" className="shrink-0">

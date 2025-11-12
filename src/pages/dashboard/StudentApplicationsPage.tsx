@@ -252,10 +252,13 @@ const StudentApplicationsPage = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <CardTitle className="text-lg mb-1">{application.offer_title}</CardTitle>
-                  <CardDescription className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    {application.organization_name}
-                  </CardDescription>
+                  {/* Solo mostrar el nombre de la empresa si está disponible (status === 'accepted') */}
+                  {application.organization_name && (
+                    <CardDescription className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      {application.organization_name}
+                    </CardDescription>
+                  )}
                 </div>
                 {getStatusBadge(application.status)}
               </div>
@@ -277,9 +280,9 @@ const StudentApplicationsPage = () => {
                   <AlertDescription className="text-green-900">
                     <strong className="block mb-1">¡Felicitaciones! 🎉</strong>
                     <span className="text-sm">
-                      Tu postulación ha sido aceptada. La Facultad se pondrá en contacto contigo 
-                      a la brevedad para coordinar los próximos pasos y formalizar tu incorporación 
-                      a la pasantía. Mantente atento a tu correo electrónico.
+                      Tu postulación ha sido aceptada por <strong>{application.organization_name}</strong>. 
+                      La Facultad se pondrá en contacto contigo a la brevedad para coordinar los próximos 
+                      pasos y formalizar tu incorporación a la pasantía. Mantente atento a tu correo electrónico.
                     </span>
                   </AlertDescription>
                 </Alert>
