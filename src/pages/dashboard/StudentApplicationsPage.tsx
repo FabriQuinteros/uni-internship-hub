@@ -115,6 +115,7 @@ const StudentApplicationsPage = () => {
     setOfferModalOpen(true);
     
     try {
+      // Intentar obtener el detalle completo de la oferta
       const offer = await studentOfferService.getOfferDetail(offerId);
       // Marcar como ya aplicado y agregar el estado de la aplicación
       setSelectedOffer({
@@ -123,12 +124,35 @@ const StudentApplicationsPage = () => {
         application_status: applicationStatus as any
       });
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo cargar el detalle de la oferta",
-        variant: "destructive"
-      });
-      setOfferModalOpen(false);
+      // Si falla (ej: oferta cerrada), intentar construir con los datos que tenemos
+      const application = applications.find(app => app.offer_id === offerId);
+      
+      if (application) {
+        // Crear un objeto de oferta parcial con los datos disponibles
+        const partialOffer: any = {
+          id: offerId,
+          title: application.offer_title,
+          organization_name: application.organization_name,
+          organization_logo: application.organization_logo,
+          position: application.offer_details?.position,
+          modality: application.offer_details?.modality,
+          location: application.offer_details?.location,
+          status: 'closed', // Asumimos que está cerrada si no se puede obtener
+          has_applied: true,
+          application_status: applicationStatus as any,
+          _isPartialData: true // Flag para indicar que es información parcial
+        };
+        
+        setSelectedOffer(partialOffer);
+      } else {
+        // Si no hay información, mostrar error
+        toast({
+          title: "Error",
+          description: "No se pudo cargar el detalle de la oferta",
+          variant: "destructive"
+        });
+        setOfferModalOpen(false);
+      }
     } finally {
       setLoadingOffer(false);
     }

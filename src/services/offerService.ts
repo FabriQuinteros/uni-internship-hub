@@ -134,6 +134,45 @@ const offerServiceInternal = {
     }
   },
 
+  async close(id: number, orgID: number, reason?: string): Promise<ApiHandlerResult<Offer>> {
+    try {
+      const body = reason ? { reason } : {};
+      const response = await httpClient.put(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.CLOSE(id)}?orgID=${orgID}`,
+        body
+      );
+
+      if (!response.ok) {
+        const formatted = await formatResponseError(response, `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.CLOSE(id)}`);
+        return {
+          success: false,
+          message: formatted.userMessage,
+          error: formatted.developerMessage || String(formatted.original),
+          type: 'server_error' as const,
+          data: undefined
+        };
+      }
+
+      const result = await response.json() as Offer;
+      
+      return {
+        success: true,
+        message: 'Oferta cerrada exitosamente',
+        data: result,
+        type: 'unknown' as const
+      };
+    } catch (error) {
+      const formatted = formatExceptionError(error);
+      return {
+        success: false,
+        message: formatted.userMessage,
+        error: formatted.developerMessage || String(formatted.original),
+        type: 'server_error' as const,
+        data: undefined
+      };
+    }
+  },
+
   async get(id: number): Promise<ApiHandlerResult<Offer>> {
     try {
       const response = await httpClient.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORGANIZATIONS.OFFERS.GET(id)}`);
@@ -274,6 +313,13 @@ export const offerService = {
     const result = await offerServiceInternal.sendToApproval(id, orgID);
     if (!result.success) throw new Error(result.message);
     if (!result.data) throw new Error('No data from send to approval');
+    return result.data;
+  },
+
+  async close(id: number, orgID: number, reason?: string) {
+    const result = await offerServiceInternal.close(id, orgID, reason);
+    if (!result.success) throw new Error(result.message);
+    if (!result.data) throw new Error('No data from close offer');
     return result.data;
   },
 

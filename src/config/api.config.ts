@@ -67,6 +67,7 @@ export const API_CONFIG = {
                 GET: (id: number) => `/api/organizations/offers/${id}`,
                 UPDATE: (id: number) => `/api/organizations/offers/${id}`,
                 SEND_TO_APPROVAL: (id: number) => `/api/organizations/offers/${id}/send`,
+                CLOSE: (id: number) => `/api/organizations/offers/${id}/close`,
                 DELETE: (id: number) => `/api/organizations/offers/${id}`,
                 APPLICATIONS: (id: number) => `/api/organizations/offers/${id}/applications`,
             },

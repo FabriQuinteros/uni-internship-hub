@@ -11,12 +11,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { CloseOfferDialog } from '@/components/organization/CloseOfferDialog';
 
 interface OrganizationOfferFormProps {
   offerId?: number;
   readOnly?: boolean;
   onClose?: () => void;
   onDeleted?: () => void;
+  onOfferClosed?: () => void; // Callback cuando se cierra una oferta
 }
 
 export default function OrganizationOfferForm(props?: OrganizationOfferFormProps) {
@@ -29,6 +41,9 @@ export default function OrganizationOfferForm(props?: OrganizationOfferFormProps
   const [form, setForm] = useState<Partial<Offer>>({ status: 'draft' });
   const [saving, setSaving] = useState(false);
   const [createdOfferId, setCreatedOfferId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [closeOfferDialogOpen, setCloseOfferDialogOpen] = useState(false);
+  const [isClosingOffer, setIsClosingOffer] = useState(false);
   const params = useParams();
   const routeOfferId = params.offerId ? Number(params.offerId) : null;
   const propOfferId = props?.offerId;
@@ -163,12 +178,12 @@ export default function OrganizationOfferForm(props?: OrganizationOfferFormProps
   const handleDelete = async () => {
     if (!createdOfferId && !editingOfferId) return;
     const idToDelete = createdOfferId || editingOfferId!;
-    const confirmed = confirm('¿Estás seguro que deseas eliminar esta oferta? Esta acción no se puede deshacer.');
-    if (!confirmed) return;
+    
     setSaving(true);
     try {
       await offerService.delete(idToDelete, orgID);
       toast({ title: 'Eliminada', description: 'La oferta fue eliminada.' });
+      setDeleteDialogOpen(false); // Cerrar el diálogo
       // If parent provided an onClose or onDeleted handler, use it so we don't force navigation from a modal
       if (props?.onDeleted) props.onDeleted();
       if (props?.onClose) props.onClose();
@@ -178,6 +193,27 @@ export default function OrganizationOfferForm(props?: OrganizationOfferFormProps
       toast({ title: 'Error', description: err?.message || String(err), variant: 'destructive' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCloseOffer = async (reason?: string) => {
+    if (!createdOfferId && !editingOfferId) return;
+    const idToClose = createdOfferId || editingOfferId!;
+    
+    setIsClosingOffer(true);
+    try {
+      await offerService.close(idToClose, orgID, reason);
+      toast({ title: 'Oferta Cerrada', description: 'La oferta fue cerrada exitosamente.' });
+      setCloseOfferDialogOpen(false); // Cerrar el diálogo
+      // Llamar callback si existe
+      if (props?.onOfferClosed) props?.onOfferClosed();
+      if (props?.onClose) props.onClose();
+      else navigate('/organization/offers');
+    } catch (err: any) {
+      console.error('Error closing offer', err);
+      toast({ title: 'Error', description: err?.message || String(err), variant: 'destructive' });
+    } finally {
+      setIsClosingOffer(false);
     }
   };
 
@@ -365,26 +401,67 @@ export default function OrganizationOfferForm(props?: OrganizationOfferFormProps
               </div>
             )}
 
-            {/* When in read-only (details) mode, show a close and delete action */}
+            {/* When in read-only (details) mode, show close offer and delete actions */}
             {isReadOnly ? (
               <>
                 <div className="flex-1">
                   <Button variant="outline" className="w-full" onClick={() => props?.onClose ? props.onClose() : navigate('/organization/offers')}>Cerrar</Button>
                 </div>
+                {form.status !== 'closed' && (
+                  <div className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      className="w-full text-orange-600 hover:text-orange-700 hover:bg-orange-50" 
+                      onClick={() => setCloseOfferDialogOpen(true)}
+                    >
+                      Cerrar Oferta
+                    </Button>
+                  </div>
+                )}
                 <div className="flex-1">
-                  <Button variant="destructive" className="w-full" disabled={saving} onClick={() => handleDelete()}>Eliminar</Button>
+                  <Button variant="destructive" className="w-full" disabled={saving} onClick={() => setDeleteDialogOpen(true)}>Eliminar</Button>
                 </div>
               </>
             ) : (
               editingOfferId && (form.status === 'draft') && (
                 <div className="flex-1">
-                  <Button variant="destructive" className="w-full" disabled={saving} onClick={() => handleDelete()}>Eliminar</Button>
+                  <Button variant="destructive" className="w-full" disabled={saving} onClick={() => setDeleteDialogOpen(true)}>Eliminar</Button>
                 </div>
               )
             )}
           </div>
         </div>
       </div>
+
+      {/* Diálogo de confirmación para eliminar oferta */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará permanentemente la oferta y no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {saving ? 'Eliminando...' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Diálogo para cerrar oferta */}
+      <CloseOfferDialog
+        open={closeOfferDialogOpen}
+        onOpenChange={setCloseOfferDialogOpen}
+        onConfirm={handleCloseOffer}
+        isLoading={isClosingOffer}
+        offerTitle={form.title || 'esta oferta'}
+      />
     </div>
   );
 }

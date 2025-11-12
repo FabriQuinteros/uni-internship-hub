@@ -22,7 +22,8 @@ import {
   DollarSign,
   Users,
   RefreshCw,
-  UserCheck
+  UserCheck,
+  XCircle
 } from 'lucide-react';
 import { offerService, OrganizationOffersFilters } from '@/services/offerService';
 import OrganizationOfferForm from './OrganizationOfferForm';
@@ -32,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import OfferStatusBadge, { useOfferStatusActions } from '@/components/ui/OfferStatusBadge';
 import RejectionReasonAlert from '@/components/ui/RejectionReasonAlert';
 import { OffersFilterPanel } from '@/components/organization/OffersFilterPanel';
+import { CloseOfferDialog } from '@/components/organization/CloseOfferDialog';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -42,6 +44,7 @@ interface OfferCardProps {
   offer: Offer;
   onEdit: () => void;
   onSubmitForApproval: () => void;
+  onClose: () => void;
   onView: () => void;
   onViewApplications: () => void;
   isSubmitting: boolean;
@@ -51,6 +54,7 @@ const OfferCard: React.FC<OfferCardProps> = ({
   offer,
   onEdit,
   onSubmitForApproval,
+  onClose,
   onView,
   onViewApplications,
   isSubmitting
@@ -183,65 +187,65 @@ const OfferCard: React.FC<OfferCardProps> = ({
 
         {/* Botones de acción */}
         <div className="flex flex-col gap-2">
-          {/* Botón Ver Postulaciones (solo para ofertas aprobadas) */}
-          {offer.status === 'approved' && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={onViewApplications}
-              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90"
-            >
-              <UserCheck className="h-4 w-4" />
-              Ver Postulaciones
-            </Button>
-          )}
-          
-          {/* Botones de gestión */}
-          <div className="flex items-center justify-between">
+          {/* Botones principales: Ver Detalles y Ver Postulaciones lado a lado */}
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={onView}
-              className="flex items-center gap-2"
+              className="flex-1 flex items-center justify-center gap-2"
             >
               <Eye className="h-4 w-4" />
               Ver Detalles
             </Button>
             
-            <div className="flex items-center gap-2">
-              {actions.canEdit && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onEdit}
-                  className="flex items-center gap-2"
-                >
-                  <Edit className="h-4 w-4" />
-                  Editar
-                </Button>
-              )}
-              
-              {actions.canSubmit && (
-                <Button
-                  size="sm"
-                  onClick={onSubmitForApproval}
-                  disabled={isSubmitting}
-                  className="flex items-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      {offer.status === 'rejected' ? 'Reenviar' : 'Enviar para Aprobación'}
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
+            {offer.status === 'approved' && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={onViewApplications}
+                className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90"
+              >
+                <UserCheck className="h-4 w-4" />
+                Ver Postulaciones
+              </Button>
+            )}
+          </div>
+          
+          {/* Botones de gestión */}
+          <div className="flex items-center gap-2">
+            {actions.canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onEdit}
+                className="flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Editar
+              </Button>
+            )}
+            
+            {actions.canSubmit && (
+              <Button
+                size="sm"
+                onClick={onSubmitForApproval}
+                disabled={isSubmitting}
+                className="flex items-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    {offer.status === 'rejected' ? 'Reenviar' : 'Enviar para Aprobación'}
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>
@@ -259,6 +263,9 @@ export default function OrganizationOffersPage() {
   const [loading, setLoading] = useState(false);
   const [submittingOffers, setSubmittingOffers] = useState<Set<number>>(new Set());
   const [filters, setFilters] = useState<OrganizationOffersFilters>({});
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+  const [offerToClose, setOfferToClose] = useState<Offer | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
   const { user } = useAuth();
   const orgID = Number(user?.id) || 1;
 
@@ -312,6 +319,49 @@ export default function OrganizationOffersPage() {
         newSet.delete(offerId);
         return newSet;
       });
+    }
+  };
+
+  /**
+   * Abre el diálogo para cerrar una oferta
+   */
+  const handleOpenCloseDialog = (offer: Offer) => {
+    setOfferToClose(offer);
+    setCloseDialogOpen(true);
+  };
+
+  /**
+   * Cierra una oferta con motivo opcional
+   */
+  const handleConfirmClose = async (reason?: string) => {
+    if (!offerToClose?.id) return;
+    
+    setIsClosing(true);
+    
+    try {
+      await offerService.close(offerToClose.id, orgID, reason);
+      
+      toast({
+        title: 'Éxito',
+        description: 'Oferta cerrada exitosamente',
+        variant: 'default',
+      });
+      
+      // Cerrar el diálogo
+      setCloseDialogOpen(false);
+      setOfferToClose(null);
+      
+      // Recargar ofertas
+      await loadOffers();
+      
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: err.message || 'Error al cerrar la oferta',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsClosing(false);
     }
   };
 
@@ -458,6 +508,7 @@ export default function OrganizationOffersPage() {
               offer={offer}
               onEdit={() => navigate(`/organization/offers/${offer.id}/edit`)}
               onSubmitForApproval={() => offer.id && handleSubmitForApproval(offer.id)}
+              onClose={() => handleOpenCloseDialog(offer)}
               onView={() => openDetails(offer.id)}
               onViewApplications={() => navigate(`/organization/offers/${offer.id}/applications`)}
               isSubmitting={offer.id ? submittingOffers.has(offer.id) : false}
@@ -483,10 +534,24 @@ export default function OrganizationOffersPage() {
                 await loadOffers();
                 closeDetails();
               }}
+              onOfferClosed={async () => {
+                // after closing offer, refresh list
+                await loadOffers();
+                closeDetails();
+              }}
             />
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Close offer dialog */}
+      <CloseOfferDialog
+        open={closeDialogOpen}
+        onOpenChange={setCloseDialogOpen}
+        onConfirm={handleConfirmClose}
+        isLoading={isClosing}
+        offerTitle={offerToClose?.title || ''}
+      />
     </div>
   );
 }
