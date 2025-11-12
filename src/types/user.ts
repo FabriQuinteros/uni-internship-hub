@@ -26,6 +26,12 @@ export interface LocationCatalog {
   province: string;
   country: string;
   is_active: boolean;
+  // Soporte para mayúsculas (inconsistencia del backend)
+  ID?: number;
+  Name?: string;
+  Province?: string;
+  Country?: string;
+  IsActive?: boolean;
 }
 
 export interface AvailabilityCatalog {
@@ -33,6 +39,11 @@ export interface AvailabilityCatalog {
   name: string;
   description?: string;
   is_active: boolean;
+  // Soporte para mayúsculas (inconsistencia del backend)
+  ID?: number;
+  Name?: string;
+  Description?: string;
+  IsActive?: boolean;
 }
 
 // Interfaz para skills/habilidades del estudiante
