@@ -9,6 +9,7 @@ import {
   StudentStats,
   Student
 } from '@/types/user';
+import { PasswordResetResponse } from '@/types/password-management';
 
 /**
  * Servicio para operaciones relacionadas con estudiantes
@@ -211,6 +212,31 @@ export class StudentService {
     } catch (error: any) {
       console.error('Error updating student status:', error);
       throw new Error('No se pudo actualizar el estado del estudiante');
+    }
+  }
+
+  /**
+   * Fuerza el restablecimiento de contraseña de un usuario (solo para admin)
+   * Envía un correo electrónico al usuario con un enlace para restablecer su contraseña
+   * @param email - Email del usuario
+   * @returns Promise con la respuesta del restablecimiento
+   */
+  static async forcePasswordReset(email: string): Promise<PasswordResetResponse> {
+    try {
+      const response = await httpClient.post(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD}`,
+        { email }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('Error al forzar restablecimiento de contraseña:', error);
+      throw new Error('No se pudo enviar el correo de restablecimiento');
     }
   }
 }

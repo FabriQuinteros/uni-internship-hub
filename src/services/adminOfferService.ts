@@ -57,9 +57,10 @@ const adminOfferServiceInternal = {
       
       const result = await response.json() as PendingOffersResponse;
       
+      // El backend devuelve: { message, data: { offers, page, limit, total, total_pages } }
       return {
         success: true,
-        message: 'Ofertas obtenidas exitosamente',
+        message: result.message || 'Ofertas obtenidas exitosamente',
         data: result.data,
         type: 'unknown' as const
       };
@@ -135,12 +136,13 @@ const adminOfferServiceInternal = {
         };
       }
       
-      const result = await response.json() as OfferDetails;
+      const result = await response.json() as { message: string; data: { offer: OfferDetails } };
       
+      // El backend devuelve: { message, data: { offer } }
       return {
         success: true,
-        message: 'Detalles de oferta obtenidos exitosamente',
-        data: result,
+        message: result.message || 'Detalles de oferta obtenidos exitosamente',
+        data: result.data.offer,
         type: 'unknown' as const
       };
     } catch (error) {
@@ -185,9 +187,10 @@ const adminOfferServiceInternal = {
       
       const result = await response.json() as AllOffersResponse;
       
+      // El backend devuelve: { message, data: { offers, page, limit, total, total_pages } }
       return {
         success: true,
-        message: 'Ofertas obtenidas exitosamente',
+        message: result.message || 'Ofertas obtenidas exitosamente',
         data: result.data,
         type: 'unknown' as const
       };
@@ -298,7 +301,7 @@ export const adminOfferService = {
    * Aprueba una oferta (lanza excepción en error)
    */
   async approveOffer(id: number) {
-    const request: ApproveRejectRequest = { decision: 'approve' };
+    const request: ApproveRejectRequest = { decision: 'approved' as any };
     const result = await adminOfferServiceInternal.approveRejectOffer(id, request);
     if (!result.success) {
       throw new Error(result.message || 'Error al aprobar la oferta');
@@ -315,7 +318,7 @@ export const adminOfferService = {
     }
 
     const request: ApproveRejectRequest = { 
-      decision: 'reject', 
+      decision: 'rejected' as any, 
       rejection_reason: rejectionReason.trim() 
     };
     

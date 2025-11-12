@@ -21,7 +21,8 @@ import {
   Calendar,
   DollarSign,
   Users,
-  RefreshCw
+  RefreshCw,
+  UserCheck
 } from 'lucide-react';
 import { offerService } from '@/services/offerService';
 import OrganizationOfferForm from './OrganizationOfferForm';
@@ -41,6 +42,7 @@ interface OfferCardProps {
   onEdit: () => void;
   onSubmitForApproval: () => void;
   onView: () => void;
+  onViewApplications: () => void;
   isSubmitting: boolean;
 }
 
@@ -49,6 +51,7 @@ const OfferCard: React.FC<OfferCardProps> = ({
   onEdit,
   onSubmitForApproval,
   onView,
+  onViewApplications,
   isSubmitting
 }) => {
   const actions = useOfferStatusActions(offer.status as OfferStatus);
@@ -147,6 +150,20 @@ const OfferCard: React.FC<OfferCardProps> = ({
           )}
         </div>
 
+        {/* Mostrar info de postulaciones para ofertas aprobadas */}
+        {offer.status === 'approved' && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-blue-900">
+              <UserCheck className="h-4 w-4 text-blue-600" />
+              <span className="font-medium">Oferta activa</span>
+              <span className="text-blue-600">• Recibiendo postulaciones</span>
+            </div>
+            <p className="text-xs text-blue-700 mt-1">
+              Haz clic en "Ver Postulaciones" para gestionar los candidatos pre-aprobados por la administración
+            </p>
+          </div>
+        )}
+
         {/* Alerta de rechazo */}
         {offer.status === 'rejected' && offer.rejection_reason && (
           <div className="mb-4">
@@ -164,50 +181,66 @@ const OfferCard: React.FC<OfferCardProps> = ({
         <Separator className="my-4" />
 
         {/* Botones de acción */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onView}
-            className="flex items-center gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            Ver Detalles
-          </Button>
+        <div className="flex flex-col gap-2">
+          {/* Botón Ver Postulaciones (solo para ofertas aprobadas) */}
+          {offer.status === 'approved' && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onViewApplications}
+              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90"
+            >
+              <UserCheck className="h-4 w-4" />
+              Ver Postulaciones
+            </Button>
+          )}
           
-          <div className="flex items-center gap-2">
-            {actions.canEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onEdit}
-                className="flex items-center gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                Editar
-              </Button>
-            )}
+          {/* Botones de gestión */}
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onView}
+              className="flex items-center gap-2"
+            >
+              <Eye className="h-4 w-4" />
+              Ver Detalles
+            </Button>
             
-            {actions.canSubmit && (
-              <Button
-                size="sm"
-                onClick={onSubmitForApproval}
-                disabled={isSubmitting}
-                className="flex items-center gap-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    {offer.status === 'rejected' ? 'Reenviar' : 'Enviar para Aprobación'}
-                  </>
-                )}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {actions.canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onEdit}
+                  className="flex items-center gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  Editar
+                </Button>
+              )}
+              
+              {actions.canSubmit && (
+                <Button
+                  size="sm"
+                  onClick={onSubmitForApproval}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      {offer.status === 'rejected' ? 'Reenviar' : 'Enviar para Aprobación'}
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
@@ -403,6 +436,7 @@ export default function OrganizationOffersPage() {
               onEdit={() => navigate(`/organization/offers/${offer.id}/edit`)}
               onSubmitForApproval={() => offer.id && handleSubmitForApproval(offer.id)}
               onView={() => openDetails(offer.id)}
+              onViewApplications={() => navigate(`/organization/offers/${offer.id}/applications`)}
               isSubmitting={offer.id ? submittingOffers.has(offer.id) : false}
             />
           ))}

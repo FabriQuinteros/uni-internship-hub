@@ -28,6 +28,16 @@ export interface AuthUser {
   iat?: number; // JWT issued at timestamp
 }
 
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface LoginResult {
   success: boolean;
   token?: string;
@@ -130,20 +140,24 @@ class AuthService {
    * Realiza el logout del usuario
    */
   async logout(): Promise<void> {
-    try {
-      // Intentar llamar al endpoint de logout si hay token
-      const token = this.getToken();
-      if (token) {
+    // Limpiar el token INMEDIATAMENTE (sincrónico)
+    const token = this.getToken();
+    localStorage.removeItem(this.TOKEN_KEY);
+    
+    // Intentar llamar al endpoint de logout en segundo plano si había token
+    if (token) {
+      try {
         await fetch(`${this.BASE_URL}/api/auth/logout`, {
           method: 'POST',
-          headers: this.getAuthHeaders(),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
         });
+      } catch (error) {
+        console.log('Error en logout del servidor:', error);
+        // No es crítico si falla, el token ya fue eliminado localmente
       }
-    } catch (error) {
-      console.log('Error en logout:', error);
-    } finally {
-      // SIEMPRE limpiar el token localmente
-      localStorage.removeItem(this.TOKEN_KEY);
     }
   }
 
@@ -350,6 +364,46 @@ class AuthService {
     const mockSignature = 'dev-signature';
 
     return `${encodedHeader}.${encodedPayload}.${mockSignature}`;
+  }
+
+  /**
+   * Resetea la contraseña de un usuario usando un token
+   */
+  async resetPassword(token: string, newPassword: string): Promise<ResetPasswordResponse> {
+    try {
+      const requestUrl = `${this.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD}`;
+      
+      const response = await fetch(requestUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          new_password: newPassword
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || 'Error al resetear la contraseña'
+        };
+      }
+
+      return {
+        success: true,
+        message: data.message || 'Contraseña actualizada exitosamente'
+      };
+    } catch (error: any) {
+      console.error('❌ Error en resetPassword:', error);
+      return {
+        success: false,
+        message: error.message || 'Error de conexión'
+      };
+    }
   }
 }
 

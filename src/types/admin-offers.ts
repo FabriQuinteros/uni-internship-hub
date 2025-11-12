@@ -7,7 +7,7 @@
 export type OfferStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'closed';
 
 // Tipos de decisión para aprobación/rechazo
-export type ApprovalDecision = 'approve' | 'reject';
+export type ApprovalDecision = 'approved' | 'rejected';
 
 /**
  * Interface para una oferta pendiente de aprobación (vista admin)

@@ -13,7 +13,10 @@ import {
   Shield,
   Database,
   GraduationCap,
-  Building2
+  Building2,
+  FileCheck,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 
 import {
@@ -27,6 +30,16 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useState, useEffect } from "react";
+import { systemService } from "@/services/systemService";
+import { API_CONFIG } from "@/config/api.config";
 
 interface AppSidebarProps {
   userRole: 'student' | 'organization' | 'admin';
@@ -57,12 +70,6 @@ const navigationItems = {
       url: "/student/applications",
       icon: Send,
       description: "Estado de aplicaciones"
-    },
-    {
-      title: "Favoritos",
-      url: "/student/favorites",
-      icon: Heart,
-      description: "Ofertas guardadas"
     }
   ],
   organization: [
@@ -106,7 +113,7 @@ const navigationItems = {
     },
     {
       title: "Gestión Estudiantes",
-      url: "/admin/users",
+      url: "/admin/students",
       icon: Users,
       description: "Estudiantes"
     },
@@ -123,6 +130,12 @@ const navigationItems = {
       description: "Todas las ofertas del sistema"
     },
     {
+      title: "Gestión de Postulaciones",
+      url: "/admin/applications",
+      icon: FileCheck,
+      description: "Revisar y aprobar postulaciones"
+    },
+    {
       title: "Configuración",
       url: "/admin/catalogs",
       icon: Settings,
@@ -134,6 +147,8 @@ const navigationItems = {
 export function AppSidebar({ userRole }: AppSidebarProps) {
   const location = useLocation();
   const currentPath = location.pathname;
+  const [apiStatus, setApiStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [isCheckingApi, setIsCheckingApi] = useState(false);
 
   const items = navigationItems[userRole];
   const isActive = (path: string) => currentPath === path || currentPath.startsWith(path + '/');
@@ -146,11 +161,45 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
 
   const RoleIcon = roleInfo[userRole].icon;
 
+  const checkApiConnection = async () => {
+    setIsCheckingApi(true);
+    try {
+      await systemService.ping();
+      setApiStatus('connected');
+    } catch (error) {
+      setApiStatus('disconnected');
+    } finally {
+      setIsCheckingApi(false);
+    }
+  };
+
+  useEffect(() => {
+    checkApiConnection();
+  }, []);
+
+  const getApiStatusIcon = () => {
+    if (apiStatus === 'connected') {
+      return <Wifi className="h-4 w-4 text-green-600" />;
+    } else if (apiStatus === 'disconnected') {
+      return <WifiOff className="h-4 w-4 text-red-600" />;
+    } else {
+      return <Wifi className="h-4 w-4 text-yellow-600 animate-pulse" />;
+    }
+  };
+
+  const getApiStatusText = () => {
+    switch (apiStatus) {
+      case 'connected': return 'API Conectada';
+      case 'disconnected': return 'API Desconectada';
+      default: return 'Verificando API...';
+    }
+  };
+
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="h-full">
       {/* Header */}
       <div className="p-2 border-b border-sidebar-border">
-        <div className="flex items-center gap-2 px-2 py-1">
+        <div className="flex items-center gap-2 px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-sidebar-accent shrink-0">
             <BookOpen className="h-5 w-5 text-sidebar-foreground" />
           </div>
@@ -166,7 +215,7 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navegación Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Navegación Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
@@ -181,9 +230,9 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
                       tooltip={item.title}
                       size="lg"
                     >
-                      <NavLink to={item.url}>
-                        <Icon />
-                        <div className="flex flex-col gap-0.5 leading-none">
+                      <NavLink to={item.url} className="group-data-[collapsible=icon]:justify-center">
+                        <Icon className="shrink-0" />
+                        <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
                           <span className="font-medium">{item.title}</span>
                           <span className="text-xs opacity-70">{item.description}</span>
                         </div>
@@ -197,9 +246,45 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer with collapse trigger */}
-      <div className="mt-auto border-t border-sidebar-border p-2">
-        <SidebarTrigger className="w-full" />
+      {/* Footer with API status and collapse trigger */}
+      <div className="mt-auto border-t border-sidebar-border">
+        {/* API Status Button */}
+        <div className="p-2 border-b border-sidebar-border">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={checkApiConnection}
+                  disabled={isCheckingApi}
+                  className="w-full flex items-center justify-start gap-2 group-data-[collapsible=icon]:justify-center"
+                >
+                  {getApiStatusIcon()}
+                  <span className="text-xs group-data-[collapsible=icon]:hidden">
+                    {isCheckingApi ? 'Verificando...' : getApiStatusText()}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <div className="space-y-1">
+                  <p className="font-medium">{getApiStatusText()}</p>
+                  <p className="text-xs text-muted-foreground">
+                    URL: {API_CONFIG.BASE_URL}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Click para verificar conexión
+                  </p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        
+        {/* Collapse Trigger */}
+        <div className="p-2">
+          <SidebarTrigger className="w-full" />
+        </div>
       </div>
     </Sidebar>
   );

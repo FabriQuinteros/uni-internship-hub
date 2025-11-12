@@ -75,19 +75,19 @@ export const useAuth = create<AuthState>()(
       },
       
       logout: async () => {
-        set({ isLoading: true });
+        // Limpiar el estado INMEDIATAMENTE para redirigir sin delay
+        set({ 
+          user: null, 
+          isAuthenticated: false, 
+          isLoading: false,
+          error: null 
+        });
         
+        // Intentar llamar al endpoint de logout en segundo plano
         try {
           await authService.logout();
         } catch (error) {
           console.error('Error durante logout:', error);
-        } finally {
-          set({ 
-            user: null, 
-            isAuthenticated: false, 
-            isLoading: false,
-            error: null 
-          });
         }
       },
       
