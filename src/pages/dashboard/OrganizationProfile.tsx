@@ -92,43 +92,46 @@ const OrganizationProfilePage = () => {
 
   return (
     <DashboardLayout userRole="organization">
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="space-y-6 md:space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              onClick={handleBackToDashboard}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Volver al Dashboard</span>
-            </Button>
-            
-            <div className="flex items-center space-x-2">
-              <Building className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold">Perfil de Organización</h1>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            {!isEditing && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <Button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center space-x-2"
+                variant="outline"
+                onClick={handleBackToDashboard}
+                className="flex items-center gap-2"
+                size="sm"
               >
-                <span>Editar Perfil</span>
+                <ArrowLeft className="h-4 w-4" />
+                <span>Volver</span>
               </Button>
-            )}
+              
+              <div className="flex items-center gap-3">
+                <Building className="h-6 w-6 text-primary shrink-0" />
+                <h1 className="text-2xl md:text-3xl font-bold">Perfil de Organización</h1>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {!isEditing && (
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2"
+                >
+                  <span>Editar Perfil</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Estado del perfil */}
-        <Card className="border-l-4 border-l-success">
-          <CardContent className="pt-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-success" />
-              <div>
+        <Card className="border-l-4 border-l-success shadow-sm">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-success shrink-0 mt-0.5" />
+              <div className="space-y-1">
                 <p className="font-medium text-success">Perfil Completado</p>
                 <p className="text-sm text-muted-foreground">
                   Tu perfil está completo y tu organización está habilitada para publicar ofertas
