@@ -177,8 +177,6 @@ const OfferCard: React.FC<OfferCardProps> = ({
               rejectedAt={offer.updated_at}
               variant="alert"
               collapsible
-              onEdit={onEdit}
-              onResubmit={actions.canSubmit ? onSubmitForApproval : undefined}
             />
           </div>
         )}

@@ -128,29 +128,11 @@ const RejectionReasonAlert: React.FC<RejectionReasonAlertProps> = ({
                   </div>
                 )}
                 
-                {/* Botones de acción */}
-                <div className="flex gap-2 pt-2">
-                  {onEdit && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={onEdit}
-                      className="border-red-300 text-red-700 hover:bg-red-100 hover:border-red-400"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Editar Oferta
-                    </Button>
-                  )}
-                  {onResubmit && (
-                    <Button
-                      size="sm"
-                      onClick={onResubmit}
-                      className="bg-red-600 hover:bg-red-700 text-white"
-                    >
-                      <Send className="h-3 w-3 mr-1" />
-                      Reenviar para Aprobación
-                    </Button>
-                  )}
+                {/* Instrucción sobre acciones disponibles */}
+                <div className="bg-red-100 border-l-4 border-red-600 p-3 rounded">
+                  <p className="text-xs text-red-700 font-medium">
+                    💡 Puedes editar tu oferta y reenviarla usando los botones debajo de esta notificación.
+                  </p>
                 </div>
               </AlertDescription>
             )}
@@ -227,29 +209,11 @@ const RejectionReasonAlert: React.FC<RejectionReasonAlertProps> = ({
             </div>
           )}
           
-          {/* Botones de acción */}
-          <div className="flex gap-2 pt-2">
-            {onEdit && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onEdit}
-                className="border-red-300 text-red-700 hover:bg-red-100 hover:border-red-400"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar Oferta
-              </Button>
-            )}
-            {onResubmit && (
-              <Button
-                size="sm"
-                onClick={onResubmit}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Reenviar para Aprobación
-              </Button>
-            )}
+          {/* Instrucción sobre acciones disponibles */}
+          <div className="bg-red-100 border-l-4 border-red-600 p-3 rounded">
+            <p className="text-xs text-red-700 font-medium">
+              💡 Puedes editar tu oferta y reenviarla usando los botones debajo de esta notificación.
+            </p>
           </div>
         </CardContent>
       )}
