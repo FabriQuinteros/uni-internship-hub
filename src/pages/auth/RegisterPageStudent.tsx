@@ -71,26 +71,6 @@ const RegisterPageStudent = () => {
     }
   });
 
-  // TODO: ELIMINAR ESTA FUNCIÓN ANTES DE PRODUCCIÓN - Solo para desarrollo/testing
-  const fillTestData = () => {
-    const testData = {
-      first_name: 'Juan',
-      last_name: 'Pérez',
-      email: 'juan.perez@universidad.edu',
-      legajo: 'EST001',
-      phone: '+54 11 1234-5678',
-      password: 'TestPassword123',
-      confirmPassword: 'TestPassword123',
-    };
-
-    Object.entries(testData).forEach(([key, value]) => {
-      setValue(key as keyof RegisterFormData, value, {
-        shouldValidate: true,
-        shouldDirty: true
-      });
-    });
-  };
-
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
     try {
@@ -187,29 +167,6 @@ const RegisterPageStudent = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="relative">
-                {/* TODO: ELIMINAR ANTES DE PRODUCCIÓN - Botón de datos de prueba solo para desarrollo */}
-                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                        Datos de Prueba
-                      </h3>
-                      <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                        Completa el formulario automáticamente con datos de prueba
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={fillTestData}
-                      className="bg-blue-100 hover:bg-blue-200 text-blue-900 border-blue-300"
-                    >
-                      Llenar Datos de Prueba
-                    </Button>
-                  </div>
-                </div>
-
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Nombre */}

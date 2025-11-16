@@ -284,13 +284,6 @@ const UnifiedLoginPage = () => {
             </form>
           </CardContent>
         </Card>
-
-        {/* Información adicional */}
-        <div className="text-center mt-6">
-          <p className="text-white/70 text-sm">
-            Sistema seguro con autenticación JWT
-          </p>
-        </div>
       </div>
     </div>
   );

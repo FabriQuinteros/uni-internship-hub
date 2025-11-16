@@ -120,15 +120,6 @@ class AuthService {
     } catch (error) {
       console.error('Error en login:', error);
       
-      // Fallback: Si la API no está disponible, permitir login con credenciales de desarrollo
-      console.warn('🔧 API no disponible - Usando modo de desarrollo');
-      console.log('📧 Credenciales válidas: estudiante@universidad.edu, empresa@org.com, admin@uni.edu');
-      const devLoginResult = this.tryDevelopmentLogin(email, password);
-      
-      if (devLoginResult.success) {
-        return devLoginResult;
-      }
-      
       return {
         success: false,
         error: 'Error de conexión. Verifica que la API esté ejecutándose.',
@@ -275,95 +266,6 @@ class AuthService {
    */
   clearAuth(): void {
     localStorage.removeItem(this.TOKEN_KEY);
-  }
-
-  /**
-   * Login de desarrollo para cuando la API no está disponible
-   * SOLO PARA DESARROLLO - NO USAR EN PRODUCCIÓN
-   */
-  private tryDevelopmentLogin(email: string, password: string): LoginResult {
-    const devCredentials = {
-      'estudiante@universidad.edu': {
-        id: '1',
-        email: 'estudiante@universidad.edu',
-        role: 'student' as const,
-        first_name: 'María',
-        last_name: 'González'
-      },
-      'empresa@org.com': {
-        id: '2',
-        email: 'empresa@org.com',
-        role: 'organization' as const,
-        name: 'Tech Solutions Inc.'
-      },
-      'admin@uni.edu': {
-        id: '3',
-        email: 'admin@uni.edu',
-        role: 'admin' as const,
-        name: 'Administrador del Sistema'
-      }
-    };
-
-    const user = devCredentials[email as keyof typeof devCredentials];
-    
-    if (!user) {
-      console.log('❌ Email no encontrado en credenciales de desarrollo');
-      return {
-        success: false,
-        error: 'Credenciales de desarrollo no válidas'
-      };
-    }
-
-    // Aceptar cualquier contraseña que no esté vacía
-    if (!password || password.trim().length === 0) {
-      return {
-        success: false,
-        error: 'La contraseña no puede estar vacía'
-      };
-    }
-
-    console.log('✅ Login de desarrollo exitoso para:', user.role);
-
-    // Crear un token JWT simulado para desarrollo
-    const mockToken = this.createMockJWT(user);
-    localStorage.setItem(this.TOKEN_KEY, mockToken);
-
-    return {
-      success: true,
-      token: mockToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        first_name: 'first_name' in user ? user.first_name : undefined,
-        last_name: 'last_name' in user ? user.last_name : undefined,
-        name: 'name' in user ? user.name : undefined,
-        first_login: false,
-        permissions: user.role === 'admin' ? ['read', 'write', 'delete'] : ['read']
-      }
-    };
-  }
-
-  /**
-   * Crea un token JWT simulado para desarrollo
-   */
-  private createMockJWT(user: any): string {
-    const header = { alg: 'HS256', typ: 'JWT' };
-    const payload = {
-      id: parseInt(user.id),
-      role: user.role,
-      permissions: user.role === 'admin' ? ['read', 'write', 'delete'] : ['read'],
-      first_login: false,
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 horas
-      iat: Math.floor(Date.now() / 1000)
-    };
-
-    // Simular JWT con base64 (NO es seguro para producción)
-    const encodedHeader = btoa(JSON.stringify(header));
-    const encodedPayload = btoa(JSON.stringify(payload));
-    const mockSignature = 'dev-signature';
-
-    return `${encodedHeader}.${encodedPayload}.${mockSignature}`;
   }
 
   /**

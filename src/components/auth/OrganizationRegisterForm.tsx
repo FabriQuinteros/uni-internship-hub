@@ -129,25 +129,6 @@ export function OrganizationRegisterForm(): JSX.Element {
     }
   });
 
-  const fillTestData = () => {
-    setValue('email', 'test@techcorp.com');
-    setValue('password', 'TestPass123');
-    setValue('confirmPassword', 'TestPass123');
-    setValue('companyName', 'TechCorp Solutions');
-    setValue('industry', 'Tecnología y Desarrollo de Software');
-    setValue('website', 'https://www.techcorp.com');
-    setValue('description', 'Empresa líder en desarrollo de software con más de 10 años de experiencia en el mercado, especializada en soluciones tecnológicas innovadoras.');
-    setValue('address', 'Av. Corrientes 1234, CABA, Buenos Aires, Argentina');
-    setValue('contactName', 'Juan Pérez');
-    setValue('contactPhone', '+54 11 4567-8900');
-    setValue('termsAccepted', true);
-    
-    toast({
-      title: "Formulario rellenado",
-      description: "Se han cargado datos de prueba en todos los campos",
-    });
-  };
-
   const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
     try {
@@ -192,18 +173,6 @@ export function OrganizationRegisterForm(): JSX.Element {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Botón de prueba para desarrollo */}
-      <div className="flex justify-end mb-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={fillTestData}
-          className="text-sm bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100"
-        >
-          🧪 Rellenar con datos de prueba
-        </Button>
-      </div>
-      
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="email" className="text-foreground">
