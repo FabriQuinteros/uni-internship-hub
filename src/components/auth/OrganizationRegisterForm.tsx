@@ -125,7 +125,7 @@ export function OrganizationRegisterForm(): JSX.Element {
       address: '',
       contactName: '',
       contactPhone: '',
-      termsAccepted: false
+      termsAccepted: true
     }
   });
 
@@ -342,20 +342,12 @@ export function OrganizationRegisterForm(): JSX.Element {
       {/* Cierre del grid container */}
       </div>
 
-      <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="termsAccepted"
-          {...register('termsAccepted')}
-          className="h-4 w-4 rounded border-gray-300"
-        />
-        <Label htmlFor="termsAccepted">
-          Acepto los términos y condiciones <span className="text-red-500">*</span>
-        </Label>
-      </div>
-      {errors.termsAccepted && (
-        <p className="text-sm text-red-500">{errors.termsAccepted.message}</p>
-      )}
+      {/* Campo oculto para términos y condiciones */}
+      <input
+        type="hidden"
+        {...register('termsAccepted')}
+        value="true"
+      />
 
       <div className="pt-6">
         <HeroButton

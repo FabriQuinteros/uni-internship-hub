@@ -32,7 +32,7 @@ export default function RegisterOrganization() {
             <BookOpen className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold text-foreground">PasantíasUNI</span>
           </Link>
-          <Link to="/auth/organization">
+          <Link to="/auth/login">
             <HeroButton variant="secondary" className="text-secondary-foreground">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver al login
