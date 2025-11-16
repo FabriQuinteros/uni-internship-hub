@@ -77,15 +77,15 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onViewDetails }) =>
 
   return (
     <Card className="shadow-card hover:shadow-floating transition-all duration-300 flex flex-col h-full group">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
+      <CardHeader className="p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
+            <CardTitle className="text-base md:text-lg line-clamp-2 group-hover:text-primary transition-colors break-words">
               {offer.title}
             </CardTitle>
             {/* Solo mostrar nombre de empresa si está disponible (cuando postulación es accepted) */}
             {offer.organization_name && (
-              <CardDescription className="mt-1">
+              <CardDescription className="mt-1 text-xs md:text-sm break-words">
                 {offer.organization_name}
               </CardDescription>
             )}
@@ -93,15 +93,15 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onViewDetails }) =>
             {offer.industry && (
               <Badge 
                 variant="secondary" 
-                className="mt-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+                className="mt-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 text-xs"
               >
                 {offer.industry}
               </Badge>
             )}
           </div>
-          <div className="flex flex-col gap-2 shrink-0">
+          <div className="flex flex-row sm:flex-col gap-2 shrink-0">
             {offer.has_applied && (
-              <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+              <Badge variant="secondary" className="bg-success/10 text-success border-success/20 text-xs">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Ya postulado
               </Badge>
@@ -116,47 +116,49 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onViewDetails }) =>
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col gap-4">
+      <CardContent className="flex-1 flex flex-col gap-3 md:gap-4 p-4 md:p-6 pt-0">
         {/* Descripción */}
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
           {offer.description}
         </p>
 
         {/* Información principal */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm">
-            <Briefcase className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="flex items-center gap-2 text-xs md:text-sm">
+            <Briefcase className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground shrink-0" />
             <span className="truncate">{getPositionName()}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="truncate">{getLocationName()}</span>
-            <Badge variant="outline" className="ml-auto shrink-0 text-xs">
+          <div className="flex items-center gap-2 text-xs md:text-sm flex-wrap">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <MapPin className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground shrink-0" />
+              <span className="truncate">{getLocationName()}</span>
+            </div>
+            <Badge variant="outline" className="shrink-0 text-xs">
               {getModalityName()}
             </Badge>
           </div>
 
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="flex items-center gap-2 text-xs md:text-sm flex-wrap">
+            <Clock className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground shrink-0" />
             <span>{offer.weekly_hours}h/semana</span>
             <span className="text-muted-foreground">• {getShiftLabel(offer.shift)}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="flex items-center gap-2 text-xs md:text-sm">
+            <Calendar className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground shrink-0" />
             <span className="truncate">{getDurationName()}</span>
           </div>
 
           {offer.salary > 0 && (
-            <div className="flex items-center gap-2 text-sm font-medium text-primary">
-              <DollarSign className="h-4 w-4 shrink-0" />
+            <div className="flex items-center gap-2 text-xs md:text-sm font-medium text-primary">
+              <DollarSign className="h-3 w-3 md:h-4 md:w-4 shrink-0" />
               <span>${offer.salary.toLocaleString('es-AR')}</span>
             </div>
           )}
 
-          <div className="flex items-center gap-2 text-sm">
-            <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="flex items-center gap-2 text-xs md:text-sm">
+            <Users className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground shrink-0" />
             <span>{offer.quota} {offer.quota === 1 ? 'vacante' : 'vacantes'}</span>
           </div>
         </div>
@@ -182,8 +184,8 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onViewDetails }) =>
         )}
 
         {/* Footer */}
-        <div className="mt-auto pt-4 border-t space-y-3">
-          <div className="flex items-center justify-between text-sm">
+        <div className="mt-auto pt-3 md:pt-4 border-t space-y-2 md:space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs md:text-sm">
             <span className="text-muted-foreground">Cierre de postulaciones:</span>
             <span className={`font-medium ${isClosingSoon() ? 'text-destructive' : ''}`}>
               {formatDeadline(offer.application_deadline)}
@@ -192,11 +194,11 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onViewDetails }) =>
 
           <Button 
             onClick={() => onViewDetails(offer.id)}
-            className="w-full"
+            className="w-full text-xs md:text-sm h-9 md:h-10"
             variant={offer.has_applied ? "outline" : "default"}
             disabled={offer.has_applied}
           >
-            <Eye className="h-4 w-4 mr-2" />
+            <Eye className="h-3 w-3 md:h-4 md:w-4 mr-2" />
             {offer.has_applied ? 'Ya postulado' : 'Ver Detalles'}
           </Button>
         </div>

@@ -134,16 +134,16 @@ export const BackendNotificationCenter: React.FC = () => {
         <Button
           variant="ghost"
           size="sm"
-          className="relative h-9 w-9 rounded-full"
+          className="relative h-8 w-8 md:h-9 md:w-9 rounded-full"
           aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} sin leer)` : ''}`}
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 flex items-center justify-center p-0 text-[10px] md:text-xs"
             >
-              {unreadCount > 99 ? '99+' : unreadCount}
+              {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
           )}
         </Button>
@@ -151,19 +151,19 @@ export const BackendNotificationCenter: React.FC = () => {
 
       <DropdownMenuContent
         align="end"
-        className="w-96 p-0"
+        className="w-[calc(100vw-2rem)] max-w-sm md:w-96 p-0"
         sideOffset={8}
       >
         {/* Header del panel */}
-        <div className="flex items-center justify-between p-4 pb-2">
+        <div className="flex items-center justify-between p-3 md:p-4 pb-2">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground">Notificaciones</h3>
+            <h3 className="font-semibold text-sm md:text-base text-foreground">Notificaciones</h3>
             {loading && (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <Loader2 className="h-3 w-3 md:h-4 md:w-4 animate-spin text-muted-foreground" />
             )}
           </div>
           {unreadCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-[10px] md:text-xs">
               {unreadCount} sin leer
             </Badge>
           )}
@@ -171,23 +171,24 @@ export const BackendNotificationCenter: React.FC = () => {
 
         {/* Acciones globales */}
         {!error && notifications.length > 0 && (
-          <div className="flex items-center gap-2 px-4 pb-2">
+          <div className="flex items-center gap-2 px-3 md:px-4 pb-2">
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs h-7"
+                className="text-[10px] md:text-xs h-7"
                 onClick={markAllAsRead}
                 disabled={loading}
               >
                 <CheckCheck className="h-3 w-3 mr-1" />
-                Marcar todas como leídas
+                <span className="hidden sm:inline">Marcar todas como leídas</span>
+                <span className="sm:hidden">Marcar todas</span>
               </Button>
             )}
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs h-7"
+              className="text-[10px] md:text-xs h-7"
               onClick={refresh}
               disabled={loading}
             >

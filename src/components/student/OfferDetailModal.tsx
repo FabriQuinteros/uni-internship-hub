@@ -102,7 +102,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh]">
+      <DialogContent className="max-w-3xl max-h-[90vh] w-[95vw] p-4 md:p-6">
         {loading ? (
           <>
             <DialogHeader>
@@ -121,17 +121,17 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
         ) : offer ? (
           <>
             <DialogHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <DialogTitle className="text-2xl">{offer.title}</DialogTitle>
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
+                <div className="flex-1 min-w-0 w-full">
+                  <DialogTitle className="text-xl md:text-2xl break-words">{offer.title}</DialogTitle>
                   {/* Solo mostrar nombre de empresa si está disponible (cuando postulación es accepted) */}
                   {offer.organization_name ? (
-                    <DialogDescription className="text-base mt-2 flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      {offer.organization_name}
+                    <DialogDescription className="text-sm md:text-base mt-2 flex items-center gap-2">
+                      <Building2 className="h-4 w-4 shrink-0" />
+                      <span className="break-words">{offer.organization_name}</span>
                     </DialogDescription>
                   ) : (
-                    <DialogDescription className="text-base mt-2">
+                    <DialogDescription className="text-sm md:text-base mt-2">
                       Información de la oferta de pasantía
                     </DialogDescription>
                   )}
@@ -139,14 +139,14 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                   {offer.industry && (
                     <Badge 
                       variant="secondary" 
-                      className="mt-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+                      className="mt-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 text-xs"
                     >
                       {offer.industry}
                     </Badge>
                   )}
                 </div>
                 {isClosingSoon() && (
-                  <Badge variant="destructive" className="shrink-0">
+                  <Badge variant="destructive" className="shrink-0 text-xs">
                     <AlertCircle className="h-3 w-3 mr-1" />
                     Cierra pronto
                   </Badge>
@@ -154,7 +154,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
               </div>
             </DialogHeader>
 
-            <ScrollArea className="max-h-[60vh] pr-4">
+            <ScrollArea className="max-h-[60vh] pr-2 md:pr-4">
               <div className="space-y-6">
                 {/* Alerta cuando es información parcial (oferta cerrada/no disponible) */}
                 {isPartialData ? (
@@ -193,26 +193,26 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                     {/* Contenido completo cuando la oferta está disponible */}
 
                 {/* Información rápida */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 p-3 md:p-4 bg-muted/30 rounded-lg">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Briefcase className="h-3 w-3" />
+                      <Briefcase className="h-3 w-3 shrink-0" />
                       Posición
                     </div>
-                    <div className="text-sm font-medium">{getPositionName()}</div>
+                    <div className="text-sm font-medium break-words">{getPositionName()}</div>
                   </div>
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
+                      <MapPin className="h-3 w-3 shrink-0" />
                       Ubicación
                     </div>
-                    <div className="text-sm font-medium">{getLocationName()}</div>
+                    <div className="text-sm font-medium break-words">{getLocationName()}</div>
                   </div>
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
+                      <Calendar className="h-3 w-3 shrink-0" />
                       Duración
                     </div>
                     <div className="text-sm font-medium">{getDurationName()}</div>
@@ -220,7 +220,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
+                      <Clock className="h-3 w-3 shrink-0" />
                       Horario
                     </div>
                     <div className="text-sm font-medium">
@@ -230,7 +230,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Users className="h-3 w-3" />
+                      <Users className="h-3 w-3 shrink-0" />
                       Vacantes
                     </div>
                     <div className="text-sm font-medium">
@@ -241,7 +241,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                   {offer.salary > 0 && (
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <DollarSign className="h-3 w-3" />
+                        <DollarSign className="h-3 w-3 shrink-0" />
                         Remuneración
                       </div>
                       <div className="text-sm font-medium text-primary">

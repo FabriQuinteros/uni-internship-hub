@@ -104,21 +104,21 @@ const StudentOffersPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="bg-gradient-hero rounded-lg p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Explorar Ofertas</h1>
-            <p className="text-white/80">
+      <div className="bg-gradient-hero rounded-lg p-4 md:p-6 text-white">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold mb-2 break-words">Explorar Ofertas</h1>
+            <p className="text-white/80 text-sm md:text-base">
               {totalOffers > 0 
                 ? `Encontramos ${totalOffers} ${totalOffers === 1 ? 'oferta disponible' : 'ofertas disponibles'} para ti`
                 : 'Busca y postúlate a las mejores oportunidades'
               }
             </p>
           </div>
-          <div className="hidden md:block">
-            <Search className="h-16 w-16 text-white/20" />
+          <div className="hidden sm:block shrink-0">
+            <Search className="h-12 w-12 md:h-16 md:w-16 text-white/20" />
           </div>
         </div>
       </div>
@@ -142,36 +142,36 @@ const StudentOffersPage = () => {
 
       {/* Grid de Ofertas */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="h-[400px]">
-              <CardContent className="p-6 space-y-4">
+            <Card key={i} className="h-[380px] md:h-[400px]">
+              <CardContent className="p-4 md:p-6 space-y-3 md:space-y-4">
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-16 md:h-20 w-full" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-9 md:h-10 w-full" />
               </CardContent>
             </Card>
           ))}
         </div>
       ) : offers.length === 0 ? (
         <Card className="shadow-card">
-          <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
-            <div className="rounded-full bg-muted p-6">
-              <Inbox className="h-12 w-12 text-muted-foreground" />
+          <CardContent className="flex flex-col items-center justify-center py-12 md:py-16 space-y-4 px-4">
+            <div className="rounded-full bg-muted p-4 md:p-6">
+              <Inbox className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground" />
             </div>
             <div className="text-center space-y-2">
-              <h3 className="text-xl font-semibold">No se encontraron ofertas</h3>
-              <p className="text-muted-foreground max-w-md">
+              <h3 className="text-lg md:text-xl font-semibold">No se encontraron ofertas</h3>
+              <p className="text-sm md:text-base text-muted-foreground max-w-md">
                 {filters.search || filters.technology_id || filters.modality_id || filters.location_id || filters.position_id
                   ? 'Intenta ajustar los filtros para ver más resultados'
                   : 'No hay ofertas disponibles en este momento. Vuelve pronto para ver nuevas oportunidades.'
                 }
               </p>
               {(filters.search || filters.technology_id || filters.modality_id || filters.location_id || filters.position_id) && (
-                <Button onClick={clearFilters} variant="outline" className="mt-4">
+                <Button onClick={clearFilters} variant="outline" className="mt-4 text-sm">
                   Limpiar Filtros
                 </Button>
               )}
@@ -181,7 +181,7 @@ const StudentOffersPage = () => {
       ) : (
         <>
           {/* Grid de Ofertas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {offers.map((offer) => (
               <OfferCard
                 key={offer.id}

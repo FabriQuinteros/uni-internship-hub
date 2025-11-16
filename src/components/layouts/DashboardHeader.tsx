@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import BackendNotificationCenter from "@/components/notifications/BackendNotificationCenter";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 
 interface DashboardHeaderProps {
   userRole: 'student' | 'organization' | 'admin';
@@ -47,24 +49,27 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
   };
 
   return (
-    <header className="h-16 border-b bg-card/50 backdrop-blur-sm px-6 flex items-center justify-between">
-      {/* Logo/Title area */}
-      <div className="flex-1">
-        <h2 className="text-lg font-semibold">Dashboard</h2>
+    <header className="sticky top-0 z-50 h-14 md:h-16 border-b bg-card/95 backdrop-blur-sm px-3 md:px-6 flex items-center justify-between gap-2">
+      {/* Mobile menu trigger */}
+      <div className="flex items-center gap-2">
+        <SidebarTrigger className="md:hidden" />
+        <Separator orientation="vertical" className="h-6 md:hidden" />
+        {/* Logo/Title area */}
+        <h2 className="text-base md:text-lg font-semibold truncate">Dashboard</h2>
       </div>
 
       {/* Right side */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Notifications */}
         <BackendNotificationCenter />
 
         {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-10 w-10">
+            <Button variant="ghost" className="relative h-8 w-8 md:h-10 md:w-10 rounded-full">
+              <Avatar className="h-8 w-8 md:h-10 md:w-10">
                 <AvatarImage src="" alt={user?.name} />
-                <AvatarFallback className="bg-primary text-primary-foreground">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs md:text-sm">
                   {user?.name?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
