@@ -29,6 +29,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -143,6 +144,7 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
   const currentPath = location.pathname;
   const [apiStatus, setApiStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [isCheckingApi, setIsCheckingApi] = useState(false);
+  const { isMobile } = useSidebar();
 
   const items = navigationItems[userRole];
   const isActive = (path: string) => currentPath === path || currentPath.startsWith(path + '/');
@@ -244,35 +246,52 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
       <div className="mt-auto border-t border-sidebar-border">
         {/* API Status Button */}
         <div className="p-2 border-b border-sidebar-border">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={checkApiConnection}
-                  disabled={isCheckingApi}
-                  className="w-full flex items-center justify-start gap-2 group-data-[collapsible=icon]:justify-center"
-                >
-                  {getApiStatusIcon()}
-                  <span className="text-xs group-data-[collapsible=icon]:hidden">
-                    {isCheckingApi ? 'Verificando...' : getApiStatusText()}
-                  </span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <div className="space-y-1">
-                  <p className="font-medium">{getApiStatusText()}</p>
-                  <p className="text-xs text-muted-foreground">
-                    URL: {API_CONFIG.BASE_URL}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Click para verificar conexión
-                  </p>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {isMobile ? (
+            // En móvil: sin tooltip, solo botón simple
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={checkApiConnection}
+              disabled={isCheckingApi}
+              className="w-full flex items-center justify-start gap-2"
+            >
+              {getApiStatusIcon()}
+              <span className="text-xs">
+                {isCheckingApi ? 'Verificando...' : getApiStatusText()}
+              </span>
+            </Button>
+          ) : (
+            // En desktop: con tooltip
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={checkApiConnection}
+                    disabled={isCheckingApi}
+                    className="w-full flex items-center justify-start gap-2 group-data-[collapsible=icon]:justify-center"
+                  >
+                    {getApiStatusIcon()}
+                    <span className="text-xs group-data-[collapsible=icon]:hidden">
+                      {isCheckingApi ? 'Verificando...' : getApiStatusText()}
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  <div className="space-y-1">
+                    <p className="font-medium">{getApiStatusText()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      URL: {API_CONFIG.BASE_URL}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Click para verificar conexión
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
         
         {/* Collapse Trigger */}
