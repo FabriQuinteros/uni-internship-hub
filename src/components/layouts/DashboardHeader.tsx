@@ -48,6 +48,25 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
     await logout();
   };
 
+  const getProfilePath = () => {
+    const paths = {
+      student: '/student/profile',
+      organization: '/organization/profile',
+      admin: '/admin/dashboard', // Admin no tiene página de perfil separada
+    };
+    return paths[userRole];
+  };
+
+  const getSettingsPath = () => {
+    // Por ahora todas redirigen al dashboard ya que settings no está implementado
+    const paths = {
+      student: '/student/dashboard',
+      organization: '/organization/dashboard',
+      admin: '/admin/dashboard',
+    };
+    return paths[userRole];
+  };
+
   return (
     <header className="sticky top-0 z-50 h-14 md:h-16 border-b bg-card/95 backdrop-blur-sm px-3 md:px-6 flex items-center justify-between gap-2">
       {/* Mobile menu trigger */}
@@ -89,12 +108,14 @@ export const DashboardHeader = ({ userRole }: DashboardHeaderProps) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <UserCircle className="mr-2 h-4 w-4" />
-                <span>Perfil</span>
-                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              {userRole !== 'admin' && (
+                <DropdownMenuItem onClick={() => navigate(getProfilePath())}>
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  <span>Perfil</span>
+                  <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => navigate(getSettingsPath())}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Configuración</span>
                 <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
